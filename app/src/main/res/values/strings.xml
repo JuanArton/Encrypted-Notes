@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Encrypted Notes</string>
+    <string name="login_using_google_account">Login using google account</string>
+    <string name="login_gagal">Login gagal</string>
+    <string name="unexpected_type_of_credential">Unexpected type of credential</string>
+    <string name="failed_to_get_credential">Failed to get credential</string>
+</resources>
