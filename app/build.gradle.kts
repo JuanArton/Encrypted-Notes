@@ -97,4 +97,10 @@ dependencies {
 
     implementation (libs.androidx.credentials)
     implementation (libs.androidx.credentials.play.services.auth)
+
+    implementation(libs.androidx.paging.runtime)
+
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.bcprov.jdk15on)
+    implementation(libs.bcpkix.jdk15on)
 }

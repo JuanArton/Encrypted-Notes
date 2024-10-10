@@ -1,23 +1,74 @@
 package com.juanarton.encnotes.core.data.repository
 
+import android.app.Activity
+import android.content.Context
+import android.database.sqlite.SQLiteConstraintException
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.juanarton.encnotes.R
+import com.juanarton.encnotes.core.data.api.APIResponse
+import com.juanarton.encnotes.core.data.domain.LoggedUser
+import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.domain.repository.INotesAppRepository
+import com.juanarton.encnotes.core.data.source.local.LocalDataSource
 import com.juanarton.encnotes.core.data.source.local.SharedPrefDataSource
+import com.juanarton.encnotes.core.data.source.remote.FirebaseDataSource
+import com.juanarton.encnotes.core.data.source.remote.NetworkBoundRes
+import com.juanarton.encnotes.core.data.source.remote.Resource
+import com.juanarton.encnotes.core.data.utils.DataMapper
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
 class NotesAppRepository @Inject constructor(
-    private val sharedPrefDataSource: SharedPrefDataSource
+    private val localDataSource: LocalDataSource,
+    private val sharedPrefDataSource: SharedPrefDataSource,
+    private val firebaseDataSource: FirebaseDataSource,
+    private val context: Context
 ): INotesAppRepository {
-    override fun setIsLoggedIn(isLoggedIn: Boolean) = flow {
-        emit(sharedPrefDataSource.setIsLoggedIn(isLoggedIn))
+    override fun signInWithGoogle(
+        option: GetSignInWithGoogleOption,
+        activity: Activity
+    ): Flow<Resource<LoggedUser>> {
+        return object : NetworkBoundRes<LoggedUser, LoggedUser>() {
+            override suspend fun createCall(): Flow<APIResponse<LoggedUser>> {
+                return firebaseDataSource.signInWithGoogle(option, activity)
+            }
+
+            override fun loadFromNetwork(data: LoggedUser): Flow<LoggedUser> {
+                return flowOf(data)
+            }
+        }.asFlow()
     }
 
-    override fun getIsLoggedIn(): Boolean = sharedPrefDataSource.getIsLoggedIn()
-
-    override fun setGUID(gUID: String): Flow<Boolean> = flow {
-        emit(sharedPrefDataSource.setGUID(gUID))
+    override fun getNotes(): Flow<PagingData<Notes>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = 2,
+                enablePlaceholders = false,
+                initialLoadSize = 10
+            ),
+            pagingSourceFactory = {
+                localDataSource.getNotes()
+            }
+        ).flow
     }
 
-    override fun getGuid(): String? = sharedPrefDataSource.getGUID()
+    override fun insertNotes(notes: Notes): Flow<Resource<Boolean>> = flow {
+        try {
+            localDataSource.insertNotes(
+                DataMapper.mapNotesDomainToEntity(notes)
+            )
+            emit(Resource.Success(true))
+        } catch (e: SQLiteConstraintException) {
+            emit(Resource.Error(context.getString(R.string.insert_error)))
+        } catch (e: Exception) {
+            emit(Resource.Error(context.getString(R.string.unknown_error)))
+        }
+    }.flowOn(Dispatchers.IO)
 }

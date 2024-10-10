@@ -12,29 +12,5 @@ import javax.inject.Inject
 class MainActivtyViewModel @Inject constructor(
     private val notesAppRepositoryUseCase: NotesAppRepositoryUseCase
 ): ViewModel() {
-    private val _isLoggedInRes = MutableLiveData<Boolean>()
-    val isLoggedInRes = _isLoggedInRes
 
-    private val _gUIDRes = MutableLiveData<Boolean>()
-    val gUIDRes = _gUIDRes
-
-    fun getIsLoggedIn(): Boolean = notesAppRepositoryUseCase.getIsLoggedIn()
-
-    fun setIsLoggedIn(isLoggedIn: Boolean) {
-        viewModelScope.launch {
-            notesAppRepositoryUseCase.setIsLoggedIn(isLoggedIn).collect {
-                _isLoggedInRes.value = it
-            }
-        }
-    }
-
-    fun getGUID(): String? = notesAppRepositoryUseCase.getGuid()
-
-    fun setGUID(gUID: String) {
-        viewModelScope.launch {
-            notesAppRepositoryUseCase.setGUID(gUID).collect {
-                _gUIDRes.value = it
-            }
-        }
-    }
 }

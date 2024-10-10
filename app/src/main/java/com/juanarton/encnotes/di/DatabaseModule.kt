@@ -5,7 +5,7 @@ import androidx.room.Room
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.juanarton.encnotes.core.data.source.local.room.NotesAppDatabase
-import com.juanarton.encnotes.core.data.source.local.room.dao.AppStateDAO
+import com.juanarton.encnotes.core.data.source.local.room.dao.NotesDAO
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -63,5 +63,5 @@ class DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideAppStateDao(database: NotesAppDatabase): AppStateDAO = database.appStateDao()
+    fun provideAppStateDao(database: NotesAppDatabase): NotesDAO = database.notesDAO()
 }

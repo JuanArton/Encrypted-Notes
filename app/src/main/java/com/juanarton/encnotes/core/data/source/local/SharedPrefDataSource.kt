@@ -31,20 +31,10 @@ class SharedPrefDataSource @Inject constructor(
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
     )
 
-    fun setIsLoggedIn(isLoggedIn: Boolean) =
-        sharedPreferences.edit().putBoolean(IS_LOGGED_IN, isLoggedIn).commit()
-
-    fun getIsLoggedIn() = sharedPreferences.getBoolean(IS_LOGGED_IN, false)
-
     fun setIsGuest(isGuest: Boolean) =
         sharedPreferences.edit().putBoolean(IS_GUEST, isGuest).commit()
 
     fun getIsGuest() = sharedPreferences.getBoolean(IS_GUEST, false)
-
-    fun setGUID(gUID: String) =
-        sharedPreferences.edit().putString(G_UID, gUID).commit()
-
-    fun getGUID() = sharedPreferences.getString(G_UID, null)
 
     fun setRefreshKey(refreshKey: String) =
         sharedPreferences.edit().putString(REFRESH_KEY, refreshKey).commit()
