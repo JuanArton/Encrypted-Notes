@@ -8,4 +8,6 @@
     <string name="login_success">Login success</string>
     <string name="insert_error">Insert aborted due to conflict</string>
     <string name="unknown_error">Unknown error</string>
+    <string name="notes_title">Notes Title</string>
+    <string name="notes_content">Notes Content</string>
 </resources>

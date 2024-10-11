@@ -41,13 +41,13 @@ class DatabaseModule {
         val dbKey = sharedPreferences.getString(KEY_NAME, null)
 
         val passphrase = if (dbKey.isNullOrEmpty()) {
-            SQLiteDatabase.getBytes(generateRandomString().toCharArray())
+            generateRandomString().toByteArray()
         } else {
-            SQLiteDatabase.getBytes(dbKey.toCharArray())
+            dbKey.toByteArray()
         }
 
         val factory = SupportFactory(passphrase)
-
+c
         return Room.databaseBuilder(
             context,
             NotesAppDatabase::class.java, "notesapp.db"

@@ -5,7 +5,7 @@ import androidx.paging.PagingState
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.source.local.room.dao.NotesDAO
 import com.juanarton.encnotes.core.data.source.local.room.entity.NotesEntity
-import com.juanarton.encnotes.core.data.utils.DataMapper
+import com.juanarton.encnotes.core.utils.DataMapper
 import javax.inject.Inject
 import javax.inject.Singleton
 

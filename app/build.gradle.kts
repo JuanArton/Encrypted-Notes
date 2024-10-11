@@ -100,7 +100,7 @@ dependencies {
 
     implementation(libs.androidx.paging.runtime)
 
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.bcprov.jdk15on)
-    implementation(libs.bcpkix.jdk15on)
+    implementation(libs.tink.android)
+
+    implementation(libs.nanoid)
 }

@@ -31,6 +31,11 @@ class SharedPrefDataSource @Inject constructor(
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
     )
 
+    fun setIsLoggedIn(isLoggedIn: Boolean) =
+        sharedPreferences.edit().putBoolean(IS_LOGGED_IN, isLoggedIn).commit()
+
+    fun getIsLoggedIn() = sharedPreferences.getBoolean(IS_LOGGED_IN, false)
+
     fun setIsGuest(isGuest: Boolean) =
         sharedPreferences.edit().putBoolean(IS_GUEST, isGuest).commit()
 

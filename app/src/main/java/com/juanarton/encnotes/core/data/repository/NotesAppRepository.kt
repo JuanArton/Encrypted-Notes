@@ -14,15 +14,17 @@ import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.domain.repository.INotesAppRepository
 import com.juanarton.encnotes.core.data.source.local.LocalDataSource
 import com.juanarton.encnotes.core.data.source.local.SharedPrefDataSource
+import com.juanarton.encnotes.core.data.source.local.room.entity.NotesEntity
 import com.juanarton.encnotes.core.data.source.remote.FirebaseDataSource
 import com.juanarton.encnotes.core.data.source.remote.NetworkBoundRes
 import com.juanarton.encnotes.core.data.source.remote.Resource
-import com.juanarton.encnotes.core.data.utils.DataMapper
+import io.viascom.nanoid.NanoId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
+import java.util.Date
 import javax.inject.Inject
 
 class NotesAppRepository @Inject constructor(
@@ -31,6 +33,12 @@ class NotesAppRepository @Inject constructor(
     private val firebaseDataSource: FirebaseDataSource,
     private val context: Context
 ): INotesAppRepository {
+    override fun setIsLoggedIn(isLoggedIn: Boolean) = flow {
+        emit(sharedPrefDataSource.setIsLoggedIn(isLoggedIn))
+    }
+
+    override fun getIsLoggedIn(): Boolean = sharedPrefDataSource.getIsLoggedIn()
+
     override fun signInWithGoogle(
         option: GetSignInWithGoogleOption,
         activity: Activity
@@ -59,10 +67,20 @@ class NotesAppRepository @Inject constructor(
         ).flow
     }
 
-    override fun insertNotes(notes: Notes): Flow<Resource<Boolean>> = flow {
+    override fun insertNotes(
+        ownerId: String,
+        title: String,
+        content: String
+    ): Flow<Resource<Boolean>> = flow {
         try {
             localDataSource.insertNotes(
-                DataMapper.mapNotesDomainToEntity(notes)
+                NotesEntity(
+                    NanoId.generate(16),
+                    ownerId,
+                    title,
+                    content,
+                    Date().time
+                )
             )
             emit(Resource.Success(true))
         } catch (e: SQLiteConstraintException) {

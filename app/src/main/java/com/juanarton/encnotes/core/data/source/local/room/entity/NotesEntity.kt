@@ -3,7 +3,6 @@ package com.juanarton.encnotes.core.data.source.local.room.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.util.Date
 
 @Entity(tableName = "notes")
 data class NotesEntity (
@@ -21,5 +20,5 @@ data class NotesEntity (
     val notesContent: String,
 
     @ColumnInfo(name = "last_modified")
-    val lastModified: Date,
+    val lastModified: Long,
 )

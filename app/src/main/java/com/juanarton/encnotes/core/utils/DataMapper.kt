@@ -1,4 +1,4 @@
-package com.juanarton.encnotes.core.data.utils
+package com.juanarton.encnotes.core.utils
 
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.source.local.room.entity.NotesEntity
