@@ -1,4 +1,4 @@
-package com.juanarton.encnotes.ui.main
+package com.juanarton.encnotes.ui.activity.main
 
 import android.content.Intent
 import android.os.Bundle
@@ -17,24 +17,23 @@ import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.adapter.NotesAdapter
 import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.databinding.ActivityMainBinding
-import com.juanarton.encnotes.ui.login.LoginActivity
+import com.juanarton.encnotes.ui.activity.login.LoginActivity
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
-    private val mainActivtyViewModel: MainActivtyViewModel by viewModels()
+    private val mainViewModel: MainViewModel by viewModels()
     private var _binding: ActivityMainBinding? = null
     private val binding get() = _binding
 
     private lateinit var auth: FirebaseAuth
 
-    external fun keyWork(): String
-
     companion object {
         init {
             System.loadLibrary("native-lib")
         }
+        external fun baseUrl(): String
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,7 +42,7 @@ class MainActivity : AppCompatActivity() {
         auth = Firebase.auth
 
         val currentUser = auth.currentUser
-        if (currentUser != null) {
+        if (currentUser != null && mainViewModel.getIsLoggedIn()) {
             initView()
         } else {
             startActivity(Intent(this, LoginActivity::class.java))
@@ -77,13 +76,13 @@ class MainActivity : AppCompatActivity() {
 
             Log.d("testDesc", Cryptography.decrypt(y, Cryptography.deserializeKeySet(x))) //decypted text
 
-            auth.uid?.let { mainActivtyViewModel.insertNote(it, "test", "anjay") }
+            auth.uid?.let { mainViewModel.insertNote(it, "test", "anjay") }
 
-            mainActivtyViewModel.insertNote.observe(this@MainActivity) {
+            mainViewModel.insertNote.observe(this@MainActivity) {
 
             }
 
-            mainActivtyViewModel.getNotes().observe(this@MainActivity) {
+            mainViewModel.getNotes().observe(this@MainActivity) {
                 rvAdapter.submitData(lifecycle, it)
                 /*rvAdapter.addLoadStateListener { loadState ->
                     if (loadState.source.append.endOfPaginationReached) {

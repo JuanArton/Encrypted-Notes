@@ -1,4 +1,4 @@
-package com.juanarton.encnotes.ui.main
+package com.juanarton.encnotes.ui.activity.main
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -11,16 +11,17 @@ import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.domain.usecase.NotesAppRepositoryUseCase
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MainActivtyViewModel @Inject constructor(
+class MainViewModel @Inject constructor(
     private val notesAppRepositoryUseCase: NotesAppRepositoryUseCase
 ): ViewModel() {
     private var _insertNote: MutableLiveData<Resource<Boolean>> = MutableLiveData()
     var insertNote: LiveData<Resource<Boolean>> = _insertNote
+
+    fun getIsLoggedIn(): Boolean = notesAppRepositoryUseCase.getIsLoggedIn()
 
     fun getNotes(): LiveData<PagingData<Notes>> {
         return notesAppRepositoryUseCase.getNotes().asLiveData().cachedIn(viewModelScope)

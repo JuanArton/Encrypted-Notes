@@ -1,4 +1,4 @@
-package com.juanarton.encnotes.ui.splash
+package com.juanarton.encnotes.ui.activity.splash
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -13,8 +13,8 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.juanarton.encnotes.R
-import com.juanarton.encnotes.ui.login.LoginActivity
-import com.juanarton.encnotes.ui.main.MainActivity
+import com.juanarton.encnotes.ui.activity.login.LoginActivity
+import com.juanarton.encnotes.ui.activity.main.MainActivity
 
 //This activity should not be exist. However, this is required because SPLASHSCREEN API IS CONFLICTING WITH DYNAMIC COLOR
 @SuppressLint("CustomSplashScreen")

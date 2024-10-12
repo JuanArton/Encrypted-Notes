@@ -47,7 +47,7 @@ class DatabaseModule {
         }
 
         val factory = SupportFactory(passphrase)
-c
+
         return Room.databaseBuilder(
             context,
             NotesAppDatabase::class.java, "notesapp.db"

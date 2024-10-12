@@ -1,4 +1,4 @@
-package com.juanarton.encnotes.ui.login
+package com.juanarton.encnotes.ui.activity.login
 
 import android.content.Intent
 import android.os.Bundle
@@ -13,7 +13,8 @@ import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.databinding.ActivityLoginBinding
 import com.juanarton.encnotes.ui.LoadingDialog
-import com.juanarton.encnotes.ui.main.MainActivity
+import com.juanarton.encnotes.ui.activity.main.MainActivity
+import com.juanarton.encnotes.ui.activity.pin.PinActivity
 import dagger.hilt.android.AndroidEntryPoint
 import java.security.MessageDigest
 import java.util.UUID
@@ -46,16 +47,19 @@ class LoginActivity : AppCompatActivity() {
         }
         loadingDialog = LoadingDialog(this)
 
-        loginViewModel.loggedUser.observe(this) {
-            when(it){
+        loginViewModel.loggedUser.observe(this) { loggedUser ->
+            when(loggedUser){
                 is Resource.Success -> {
-                    it.data?.let {
+                    loggedUser.data?.let {
                         Toast.makeText(
                             this,
                             getString(R.string.login_success),
                             Toast.LENGTH_LONG
                         ).show()
-                        startActivity(Intent(this, MainActivity::class.java))
+                        val intent = Intent(this, PinActivity::class.java)
+                        intent.putExtra("uid", it.uid)
+                        intent.putExtra("username", it.displayName)
+                        startActivity(intent)
                         finish()
                     }
                     loadingDialog.dismiss()
@@ -67,7 +71,7 @@ class LoginActivity : AppCompatActivity() {
                     loadingDialog.dismiss()
                     Toast.makeText(
                         this,
-                        it.message,
+                        loggedUser.message,
                         Toast.LENGTH_LONG
                     ).show()
                 }

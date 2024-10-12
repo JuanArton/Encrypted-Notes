@@ -14,7 +14,6 @@ class SharedPrefDataSource @Inject constructor(
         const val FILE_NAME = "AppState"
         const val IS_LOGGED_IN = "isLoggedIn"
         const val IS_GUEST = "isGuest"
-        const val G_UID = "gUID"
         const val REFRESH_KEY = "refreshKey"
         const val ACCESS_KEY = "accessKey"
     }

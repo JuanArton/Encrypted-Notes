@@ -3,8 +3,10 @@ package com.juanarton.encnotes.ui
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
+import android.view.WindowManager
 import com.juanarton.encnotes.R
 
 class LoadingDialog(context: Context) {
@@ -17,7 +19,19 @@ class LoadingDialog(context: Context) {
         builder.setView(view)
 
         dialog = builder.create()
-        dialog?.setCancelable(false)
+        dialog?.setCancelable(true)
+
+        val widhtHeight = 120
+        val dimension = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            widhtHeight.toFloat(),
+            context.resources.displayMetrics
+        ).toInt()
+
+        dialog?.window?.setLayout(
+            dimension,
+            dimension
+        )
     }
 
     fun show() {

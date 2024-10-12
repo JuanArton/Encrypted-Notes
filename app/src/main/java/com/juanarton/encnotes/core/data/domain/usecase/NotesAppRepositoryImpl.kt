@@ -4,6 +4,7 @@ import android.app.Activity
 import androidx.paging.PagingData
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.juanarton.encnotes.core.data.domain.LoggedUser
+import com.juanarton.encnotes.core.data.domain.model.Login
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.domain.repository.INotesAppRepository
 import com.juanarton.encnotes.core.data.source.remote.Resource
@@ -33,4 +34,20 @@ class NotesAppRepositoryImpl @Inject constructor(
         content: String
     ): Flow<Resource<Boolean>> =
         iNotesAppRepository.insertNotes(ownerId, title, content)
+
+    override fun registerUser(id: String, pin: String, username: String): Flow<Resource<String>> =
+        iNotesAppRepository.registerUser(id, pin, username)
+
+    override fun loginUser(id: String, pin: String): Flow<Resource<Login>> =
+        iNotesAppRepository.loginUser(id, pin)
+
+    override fun setAccessKey(accessKey: String): Flow<Boolean> =
+        iNotesAppRepository.setAccessKey(accessKey)
+
+    override fun getAccessKey(): String? = iNotesAppRepository.getAccessKey()
+
+    override fun setRefreshKey(refreshKey: String): Flow<Boolean> =
+        iNotesAppRepository.setRefreshKey(refreshKey)
+
+    override fun getRefreshKey(): String? = iNotesAppRepository.getRefreshKey()
 }

@@ -1,4 +1,4 @@
-package com.juanarton.encnotes.ui.login
+package com.juanarton.encnotes.ui.activity.login
 
 import android.app.Activity
 import androidx.lifecycle.MutableLiveData

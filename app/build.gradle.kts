@@ -103,4 +103,6 @@ dependencies {
     implementation(libs.tink.android)
 
     implementation(libs.nanoid)
+
+    implementation("com.github.mukeshsolanki.android-otpview-pinview:otpview:3.1.0")
 }
