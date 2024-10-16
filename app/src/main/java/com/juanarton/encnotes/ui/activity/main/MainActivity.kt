@@ -2,14 +2,16 @@ package com.juanarton.encnotes.ui.activity.main
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
+import android.view.Window
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityOptionsCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
@@ -18,6 +20,7 @@ import com.juanarton.encnotes.core.adapter.NotesAdapter
 import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.databinding.ActivityMainBinding
 import com.juanarton.encnotes.ui.activity.login.LoginActivity
+import com.juanarton.encnotes.ui.activity.note.NoteActivity
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -37,6 +40,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
+        setExitSharedElementCallback(MaterialContainerTransformSharedElementCallback())
+        window.sharedElementsUseOverlay = false
+
         super.onCreate(savedInstanceState)
 
         auth = Firebase.auth
@@ -60,23 +67,13 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
         Cryptography.initTink()
 
         binding?.apply {
             rvNotes.layoutManager = StaggeredGridLayoutManager(2, LinearLayoutManager.VERTICAL)
             val rvAdapter = NotesAdapter(this@MainActivity)
             rvNotes.adapter = rvAdapter
-
-            val x = Cryptography.serializeKeySet(Cryptography.generateKeySet()) //keyset in string
-            Log.d("keyset", x)
-
-            val y = Cryptography.encrypt("anjay", Cryptography.deserializeKeySet(x)) //encrypted text
-            Log.d("testEnc", y)
-
-
-            Log.d("testDesc", Cryptography.decrypt(y, Cryptography.deserializeKeySet(x))) //decypted text
-
-            auth.uid?.let { mainViewModel.insertNote(it, "test", "anjay") }
 
             mainViewModel.insertNote.observe(this@MainActivity) {
 
@@ -91,6 +88,18 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }*/
+            }
+
+            fabAddNote.setOnClickListener {
+                val intent = Intent(this@MainActivity, NoteActivity::class.java)
+                Intent.FLAG_ACTIVITY_NO_ANIMATION
+                val options =
+                    ActivityOptionsCompat.makeSceneTransitionAnimation(
+                        this@MainActivity,
+                        fabAddNote,
+                        "shared_element_end_root",
+                    )
+                startActivity(intent, options.toBundle())
             }
         }
     }

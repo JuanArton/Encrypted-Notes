@@ -15,6 +15,9 @@ import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.databinding.ActivityPinBinding
 import com.juanarton.encnotes.ui.LoadingDialog
 import com.juanarton.encnotes.ui.activity.main.MainActivity
+import com.juanarton.encnotes.ui.fragment.copykey.CopyKeyFragment
+import com.juanarton.encnotes.ui.fragment.insertkey.InsertKeyFragment
+import com.juanarton.encnotes.ui.utils.FragmentBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -47,7 +50,16 @@ class PinActivity : AppCompatActivity() {
                 when(result){
                     is Resource.Success -> {
                         if (::pin.isInitialized && !result.data.isNullOrEmpty()) {
-                            pinViewModel.loginUser(uid, pin)
+                            loadingDialog.dismiss()
+                            val fragment = CopyKeyFragment()
+
+                            val bundle = Bundle()
+                            bundle.putString("uid", uid)
+                            bundle.putString("pin", pin)
+
+                            fragment.arguments = bundle
+
+                            FragmentBuilder.build(this, fragment, android.R.id.content)
                         } else {
                             Toast.makeText(
                                 this,
@@ -61,9 +73,17 @@ class PinActivity : AppCompatActivity() {
                         loadingDialog.show()
                     }
                     is Resource.Error -> {
-                        Log.d("test", result.message!!)
+                        loadingDialog.dismiss()
                         if (result.message == "User already exist") {
-                            pinViewModel.loginUser(uid, pin)
+                            val fragment = InsertKeyFragment()
+
+                            val bundle = Bundle()
+                            bundle.putString("uid", uid)
+                            bundle.putString("pin", pin)
+
+                            fragment.arguments = bundle
+
+                            FragmentBuilder.build(this, fragment, android.R.id.content)
                         } else {
                             Toast.makeText(
                                 this,
@@ -72,43 +92,6 @@ class PinActivity : AppCompatActivity() {
                             ).show()
                             loadingDialog.dismiss()
                         }
-                    }
-                }
-            }
-
-            pinViewModel.loginUser.observe(this) { result ->
-                when(result){
-                    is Resource.Success -> {
-                        result.data?.let { login ->
-                            lifecycleScope.launch {
-                                val setAccKey = pinViewModel.setAccessKey(login.accessToken)
-                                val setRefKey = pinViewModel.setRefreshKey(login.refreshToken)
-                                val setLoggedIn = pinViewModel.setIsLoggedIn(true)
-
-                                if (setAccKey && setRefKey && setLoggedIn) {
-                                    startActivity(Intent(this@PinActivity, MainActivity::class.java))
-                                } else {
-                                    Toast.makeText(
-                                        this@PinActivity,
-                                        getString(R.string.login_failed),
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    loadingDialog.dismiss()
-                                }
-                            }
-                            loadingDialog.dismiss()
-                        }
-                    }
-                    is Resource.Loading -> {
-                        Log.d("Pin Activity", "Loading")
-                    }
-                    is Resource.Error -> {
-                        Toast.makeText(
-                            this,
-                            result.message,
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        loadingDialog.dismiss()
                     }
                 }
             }

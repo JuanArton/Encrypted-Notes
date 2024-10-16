@@ -3,6 +3,7 @@ package com.juanarton.encnotes.core.data.repository
 import android.app.Activity
 import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
+import android.util.Log
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
@@ -22,6 +23,7 @@ import com.juanarton.encnotes.core.data.source.remote.FirebaseDataSource
 import com.juanarton.encnotes.core.data.source.remote.NetworkBoundRes
 import com.juanarton.encnotes.core.data.source.remote.RemoteDataSource
 import com.juanarton.encnotes.core.data.source.remote.Resource
+import com.juanarton.encnotes.core.utils.Cryptography
 import io.viascom.nanoid.NanoId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -78,16 +80,22 @@ class NotesAppRepository @Inject constructor(
         content: String
     ): Flow<Resource<Boolean>> = flow {
         try {
-            localDataSource.insertNotes(
-                NotesEntity(
-                    NanoId.generate(16),
-                    ownerId,
-                    title,
-                    content,
-                    Date().time
+            val key = sharedPrefDataSource.getCipherKey()
+            if (!key.isNullOrEmpty()) {
+                val deserializedKey = Cryptography.deserializeKeySet(key)
+                localDataSource.insertNotes(
+                    NotesEntity(
+                        NanoId.generate(16),
+                        ownerId,
+                        Cryptography.encrypt(title, deserializedKey),
+                        Cryptography.encrypt(content, deserializedKey),
+                        Date().time
+                    )
                 )
-            )
-            emit(Resource.Success(true))
+                emit(Resource.Success(true))
+            } else {
+                emit(Resource.Error(context.getString(R.string.unable_retrieve_key)))
+            }
         } catch (e: SQLiteConstraintException) {
             emit(Resource.Error(context.getString(R.string.insert_error)))
         } catch (e: Exception) {
@@ -130,4 +138,10 @@ class NotesAppRepository @Inject constructor(
     }
 
     override fun getRefreshKey(): String? = sharedPrefDataSource.getRefreshKey()
+
+    override fun setCipherKey(cipherKey: String): Flow<Boolean> = flow {
+        emit(sharedPrefDataSource.setCipherKey(cipherKey))
+    }
+
+    override fun getCipherKey(): String? = sharedPrefDataSource.getCipherKey()
 }

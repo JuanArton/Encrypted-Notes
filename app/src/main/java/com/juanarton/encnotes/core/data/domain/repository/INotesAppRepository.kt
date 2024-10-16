@@ -36,4 +36,8 @@ interface INotesAppRepository {
     fun setRefreshKey(refreshKey: String): Flow<Boolean>
 
     fun getRefreshKey(): String?
+
+    fun setCipherKey(cipherKey: String): Flow<Boolean>
+
+    fun getCipherKey(): String?
 }

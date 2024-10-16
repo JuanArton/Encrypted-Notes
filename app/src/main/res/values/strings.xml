@@ -15,4 +15,17 @@
     <string name="register_failed">Register failed</string>
     <string name="pin_empty">Pin empty</string>
     <string name="user_already_exist">User already exist!</string>
+    <string name="add_new_note">Add new note</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="important">Important!</string>
+    <string name="save_key_message">Store this encryption key in a place you believe is secure, and make sure no one else knows it. This key will be used to encrypt and decrypt your notes. If you lose this key, no one will be able to recover your notes.</string>
+    <string name="copy_encryption_key">Copy encryption key</string>
+    <string name="done">Done</string>
+    <string name="key_copied">Encryption key copied!</string>
+    <string name="insert_cipher_key">Insert cipher key</string>
+    <string name="insert_key_message">The key is generated the first time you use the application. You should have already saved it somewhere you consider safe. The key looks like this:</string>
+    <string name="cipher_key_sample">CM/dkuUPEmQKWAowdHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuQWVzR2Nt S2V5EiIaICcnFcxEMEo/c8zpa61k+xyOGNnt6gLiCzLZW9k+B0neGAEQARjP3ZLlDyAB</string>
+    <string name="please_insert_cipher_key">Please insert cipher key first</string>
+    <string name="unable_retrieve_key">Unable to retrieve key</string>
 </resources>

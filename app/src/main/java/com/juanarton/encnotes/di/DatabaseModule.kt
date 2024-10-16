@@ -1,6 +1,7 @@
 package com.juanarton.encnotes.di
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Room
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
@@ -41,7 +42,9 @@ class DatabaseModule {
         val dbKey = sharedPreferences.getString(KEY_NAME, null)
 
         val passphrase = if (dbKey.isNullOrEmpty()) {
-            generateRandomString().toByteArray()
+            val newKey = generateRandomString()
+            sharedPreferences.edit().putString(KEY_NAME, newKey).apply()
+            newKey.toByteArray()
         } else {
             dbKey.toByteArray()
         }

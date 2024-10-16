@@ -16,6 +16,7 @@ class SharedPrefDataSource @Inject constructor(
         const val IS_GUEST = "isGuest"
         const val REFRESH_KEY = "refreshKey"
         const val ACCESS_KEY = "accessKey"
+        const val CIPHER_KEY = "cipherKey"
     }
 
     private val masterKey = MasterKey.Builder(context)
@@ -49,4 +50,9 @@ class SharedPrefDataSource @Inject constructor(
         sharedPreferences.edit().putString(ACCESS_KEY, accessKey).commit()
 
     fun getAccessKey() = sharedPreferences.getString(ACCESS_KEY, null)
+
+    fun setCipherKey(cipherKey: String) =
+        sharedPreferences.edit().putString(CIPHER_KEY, cipherKey).commit()
+
+    fun getCipherKey() = sharedPreferences.getString(CIPHER_KEY, null)
 }

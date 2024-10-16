@@ -1,13 +1,17 @@
 package com.juanarton.encnotes.core.data.source.remote
 
 import android.content.Context
+import android.util.Log
+import com.google.gson.Gson
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.api.API
 import com.juanarton.encnotes.core.data.api.APIResponse
 import com.juanarton.encnotes.core.data.api.user.LoginData
+import com.juanarton.encnotes.core.data.api.user.LoginResponse
 import com.juanarton.encnotes.core.data.api.user.PostLogin
 import com.juanarton.encnotes.core.data.api.user.PostRegister
 import com.juanarton.encnotes.core.data.api.user.RegisterData
+import com.juanarton.encnotes.core.data.api.user.RegisterResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -22,13 +26,14 @@ class RemoteDataSource @Inject constructor(
     fun registerUser(id: String, pin: String, username: String): Flow<APIResponse<RegisterData>> =
         flow {
             try {
-                val result = API.services.register(
-                    PostRegister(id, pin, username)
-                )
-                if (result.status == "success") {
-                    emit(APIResponse.Success(result.registerData))
+                val response = API.services.register(PostRegister(id, pin, username))
+
+                if (response.body() != null) {
+                    val registerResponse = Gson().fromJson(response.body()!!.string(), RegisterResponse::class.java)
+                    emit(APIResponse.Success(registerResponse.registerData))
                 } else {
-                    emit(APIResponse.Error(result.message))
+                    val registerResponse = Gson().fromJson(response.errorBody()!!.string(), RegisterResponse::class.java)
+                    emit(APIResponse.Error(registerResponse.message))
                 }
             } catch (e: Exception) {
                 emit(APIResponse.Error(
@@ -40,16 +45,18 @@ class RemoteDataSource @Inject constructor(
             }
         }.flowOn(Dispatchers.IO)
 
+
     fun loginUser(id: String, pin: String): Flow<APIResponse<LoginData>> =
         flow {
             try {
-                val result = API.services.login(
-                    PostLogin(id, pin)
-                )
-                if (result.status == "success") {
-                    emit(APIResponse.Success(result.loginData))
+                val response = API.services.login(PostLogin(id, pin))
+
+                if (response.body() != null) {
+                    val loginResponse = Gson().fromJson(response.body()!!.string(), LoginResponse::class.java)
+                    emit(APIResponse.Success(loginResponse.loginData))
                 } else {
-                    emit(APIResponse.Error(result.message))
+                    val loginResponse = Gson().fromJson(response.errorBody()!!.string(), LoginResponse::class.java)
+                    emit(APIResponse.Error(loginResponse.message))
                 }
             } catch (e: Exception) {
                 emit(APIResponse.Error(

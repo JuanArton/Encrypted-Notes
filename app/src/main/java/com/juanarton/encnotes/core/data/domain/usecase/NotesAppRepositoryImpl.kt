@@ -50,4 +50,10 @@ class NotesAppRepositoryImpl @Inject constructor(
         iNotesAppRepository.setRefreshKey(refreshKey)
 
     override fun getRefreshKey(): String? = iNotesAppRepository.getRefreshKey()
+
+    override fun setCipherKey(cipherKey: String): Flow<Boolean> =
+        iNotesAppRepository.setCipherKey(cipherKey)
+
+    override fun getCipherKey(): String? =
+        iNotesAppRepository.getCipherKey()
 }
