@@ -15,7 +15,24 @@ class LocalDataSource @Inject constructor(
     private val notesDAO: NotesDAO,
     private val sharedPrefDataSource: SharedPrefDataSource
 ) {
-    fun getNotes(): PagingSource<Int, Notes> {
+    fun getNotes(): List<NotesEntity> {
+        val notes = notesDAO.getNotes()
+        val key = sharedPrefDataSource.getCipherKey()
+        val deserializedKey = Cryptography.deserializeKeySet(key!!)
+
+        return notes.map {
+            NotesEntity(
+                it.id,
+                it.ownerId,
+                it.notesTitle?.let { it1 -> Cryptography.decrypt(it1, deserializedKey) },
+                Cryptography.decrypt(it.notesContent, deserializedKey),
+                it.isDelete,
+                it.lastModified
+            )
+        }
+    }
+
+    /*fun getNotes(): PagingSource<Int, Notes> {
         return object : PagingSource<Int, Notes>() {
             override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Notes> {
                 val page = params.key ?: 0
@@ -55,7 +72,7 @@ class LocalDataSource @Inject constructor(
                 }
             }
         }
-    }
+    }*/
 
     fun insertNotes(notes: NotesEntity) {
         notesDAO.insertNotes(notes)

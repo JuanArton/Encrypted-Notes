@@ -25,15 +25,20 @@ class NotesAppRepositoryImpl @Inject constructor(
     ): Flow<Resource<LoggedUser>> =
         iNotesAppRepository.signInWithGoogle(option, activity)
 
-    override fun getNotes(): Flow<PagingData<Notes>> =
+    override fun logInByEmail(email: String, password: String): Flow<Resource<LoggedUser>> =
+        iNotesAppRepository.logInByEmail(email, password)
+
+    override fun signInByEmail(email: String, password: String): Flow<Resource<LoggedUser>> =
+        iNotesAppRepository.signInByEmail(email, password)
+
+    /*override fun getNotes(): Flow<PagingData<Notes>> =
+        iNotesAppRepository.getNotes()*/
+
+    override fun getNotes(): Flow<List<Notes>> =
         iNotesAppRepository.getNotes()
 
-    override fun insertNotes(
-        ownerId: String,
-        title: String,
-        content: String
-    ): Flow<Resource<Boolean>> =
-        iNotesAppRepository.insertNotes(ownerId, title, content)
+    override fun insertNotes(notes: Notes): Flow<Resource<Boolean>> =
+        iNotesAppRepository.insertNotes(notes)
 
     override fun registerUser(id: String, pin: String, username: String): Flow<Resource<String>> =
         iNotesAppRepository.registerUser(id, pin, username)

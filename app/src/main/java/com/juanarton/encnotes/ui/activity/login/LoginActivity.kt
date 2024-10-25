@@ -2,6 +2,7 @@ package com.juanarton.encnotes.ui.activity.login
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -10,10 +11,10 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.juanarton.encnotes.R
+import com.juanarton.encnotes.core.data.domain.LoggedUser
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.databinding.ActivityLoginBinding
 import com.juanarton.encnotes.ui.LoadingDialog
-import com.juanarton.encnotes.ui.activity.main.MainActivity
 import com.juanarton.encnotes.ui.activity.pin.PinActivity
 import dagger.hilt.android.AndroidEntryPoint
 import java.security.MessageDigest
@@ -47,20 +48,22 @@ class LoginActivity : AppCompatActivity() {
         }
         loadingDialog = LoadingDialog(this)
 
-        loginViewModel.loggedUser.observe(this) { loggedUser ->
+        loginViewModel.signInByGoogle.observe(this) { loggedUser ->
+            handleLoginResult(loggedUser)
+        }
+
+        loginViewModel.loginByEmail.observe(this) { loggedUser ->
+            handleLoginResult(loggedUser)
+        }
+
+        loginViewModel.signInByEmail.observe(this) { loggedUser ->
             when(loggedUser){
                 is Resource.Success -> {
                     loggedUser.data?.let {
-                        Toast.makeText(
-                            this,
-                            getString(R.string.login_success),
-                            Toast.LENGTH_LONG
-                        ).show()
-                        val intent = Intent(this, PinActivity::class.java)
-                        intent.putExtra("uid", it.uid)
-                        intent.putExtra("username", it.displayName)
-                        startActivity(intent)
-                        finish()
+                        binding?.apply {
+                            tvRegisterMessage.visibility = View.VISIBLE
+                            tvRegisterMessage.text = getString(R.string.register_success)
+                        }
                     }
                     loadingDialog.dismiss()
                 }
@@ -87,6 +90,45 @@ class LoginActivity : AppCompatActivity() {
                     .build()
 
                 loginViewModel.singWithGoogleAcc(signInWithGoogleOption, this@LoginActivity)
+            }
+
+            btSignIn.setOnClickListener {
+                loginViewModel.signInByEmail(etEmail.text.toString(), etPassword.text.toString())
+            }
+
+            btLogin.setOnClickListener {
+                loginViewModel.loginByEmail(etEmail.text.toString(), etPassword.text.toString())
+            }
+        }
+    }
+
+    private fun handleLoginResult(loggedUser: Resource<LoggedUser>) {
+        when(loggedUser){
+            is Resource.Success -> {
+                loggedUser.data?.let {
+                    Toast.makeText(
+                        this,
+                        getString(R.string.login_success),
+                        Toast.LENGTH_LONG
+                    ).show()
+                    val intent = Intent(this, PinActivity::class.java)
+                    intent.putExtra("uid", it.uid)
+                    intent.putExtra("username", it.displayName)
+                    startActivity(intent)
+                    finish()
+                }
+                loadingDialog.dismiss()
+            }
+            is Resource.Loading -> {
+                loadingDialog.show()
+            }
+            is Resource.Error -> {
+                loadingDialog.dismiss()
+                Toast.makeText(
+                    this,
+                    loggedUser.message,
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }

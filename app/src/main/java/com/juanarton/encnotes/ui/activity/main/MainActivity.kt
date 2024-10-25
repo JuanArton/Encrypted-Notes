@@ -1,9 +1,13 @@
 package com.juanarton.encnotes.ui.activity.main
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.Window
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
@@ -17,6 +21,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.adapter.NotesAdapter
+import com.juanarton.encnotes.core.adapter.NotesPagingAdapter
+import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.databinding.ActivityMainBinding
 import com.juanarton.encnotes.ui.activity.login.LoginActivity
@@ -29,6 +35,8 @@ class MainActivity : AppCompatActivity() {
     private val mainViewModel: MainViewModel by viewModels()
     private var _binding: ActivityMainBinding? = null
     private val binding get() = _binding
+    private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
+    private lateinit var rvAdapter: NotesAdapter
 
     private lateinit var auth: FirebaseAuth
 
@@ -70,24 +78,18 @@ class MainActivity : AppCompatActivity() {
 
         Cryptography.initTink()
 
+        mainViewModel.getNotes()
+
         binding?.apply {
-            rvNotes.layoutManager = StaggeredGridLayoutManager(2, LinearLayoutManager.VERTICAL)
-            val rvAdapter = NotesAdapter(this@MainActivity)
-            rvNotes.adapter = rvAdapter
-
-            mainViewModel.insertNote.observe(this@MainActivity) {
-
+            val listener: (Notes) -> Unit = {
             }
 
-            mainViewModel.getNotes().observe(this@MainActivity) {
-                rvAdapter.submitData(lifecycle, it)
-                /*rvAdapter.addLoadStateListener { loadState ->
-                    if (loadState.source.append.endOfPaginationReached) {
-                        if (rvAdapter.itemCount > 0) {
-                            binding?.tvNoData?.visibility = View.GONE
-                        }
-                    }
-                }*/
+            rvNotes.layoutManager = StaggeredGridLayoutManager(2, LinearLayoutManager.VERTICAL)
+            rvAdapter = NotesAdapter(listener, arrayListOf())
+            rvNotes.adapter = rvAdapter
+
+            mainViewModel.getNotes.observe(this@MainActivity) {
+                rvAdapter.setData(it)
             }
 
             fabAddNote.setOnClickListener {
@@ -99,7 +101,25 @@ class MainActivity : AppCompatActivity() {
                         fabAddNote,
                         "shared_element_end_root",
                     )
-                startActivity(intent, options.toBundle())
+                activityResultLauncher.launch(intent, options)
+            }
+
+            activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (Build.VERSION.SDK_INT >= 33) {
+                    if (result.resultCode == RESULT_OK) {
+                        val notes = result.data?.getParcelableExtra("notesData", Notes::class.java)
+                        notes?.let {
+                            rvAdapter.prependItem(it)
+                        }
+                    }
+                } else {
+                    if (result.resultCode == RESULT_OK) {
+                        val notes = result.data?.getParcelableExtra<Notes>("notesData")
+                        notes?.let {
+                            rvAdapter.prependItem(it)
+                        }
+                    }
+                }
             }
         }
     }

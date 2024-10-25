@@ -1,6 +1,5 @@
 package com.juanarton.encnotes.ui.activity.pin
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -9,17 +8,15 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.lifecycleScope
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.databinding.ActivityPinBinding
 import com.juanarton.encnotes.ui.LoadingDialog
-import com.juanarton.encnotes.ui.activity.main.MainActivity
 import com.juanarton.encnotes.ui.fragment.copykey.CopyKeyFragment
 import com.juanarton.encnotes.ui.fragment.insertkey.InsertKeyFragment
 import com.juanarton.encnotes.ui.utils.FragmentBuilder
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
+import io.viascom.nanoid.NanoId
 
 @AndroidEntryPoint
 class PinActivity : AppCompatActivity() {
@@ -43,9 +40,12 @@ class PinActivity : AppCompatActivity() {
         loadingDialog = LoadingDialog(this)
 
         val uid = intent.getStringExtra("uid")
-        val username = intent.getStringExtra("username")
+        val username = intent.getStringExtra("username")?: buildString {
+            append("User")
+            append(NanoId.generate(7))
+        }
 
-        if (!uid.isNullOrEmpty() && !username.isNullOrEmpty()) {
+        if (!uid.isNullOrEmpty() && username.isNotEmpty()) {
             pinViewModel.registerUser.observe(this) { result ->
                 when(result){
                     is Resource.Success -> {
@@ -98,6 +98,10 @@ class PinActivity : AppCompatActivity() {
 
             binding?.otpView?.setOtpCompletionListener {
                 pin = it
+                pinViewModel.registerUser(uid, pin, username)
+            }
+
+            binding?.btSubmit?.setOnClickListener {
                 pinViewModel.registerUser(uid, pin, username)
             }
         }

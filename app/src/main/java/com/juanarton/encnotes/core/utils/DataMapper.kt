@@ -11,6 +11,7 @@ object DataMapper {
                 it.ownerId,
                 it.notesTitle,
                 it.notesContent,
+                it.isDelete,
                 it.lastModified
             )
         }
@@ -22,6 +23,7 @@ object DataMapper {
             notes.ownerId,
             notes.notesTitle,
             notes.notesContent,
+            notes.isDelete,
             notes.lastModified
         )
     }

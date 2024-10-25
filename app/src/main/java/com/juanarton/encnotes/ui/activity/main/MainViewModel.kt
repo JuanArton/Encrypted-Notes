@@ -18,19 +18,15 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val notesAppRepositoryUseCase: NotesAppRepositoryUseCase
 ): ViewModel() {
-    private var _insertNote: MutableLiveData<Resource<Boolean>> = MutableLiveData()
-    var insertNote: LiveData<Resource<Boolean>> = _insertNote
+    private var _getNotes: MutableLiveData<List<Notes>> = MutableLiveData()
+    var getNotes: LiveData<List<Notes>> = _getNotes
 
     fun getIsLoggedIn(): Boolean = notesAppRepositoryUseCase.getIsLoggedIn()
 
-    fun getNotes(): LiveData<PagingData<Notes>> {
-        return notesAppRepositoryUseCase.getNotes().asLiveData().cachedIn(viewModelScope)
-    }
-
-    fun insertNote(ownerId: String, title: String, content: String) {
+    fun getNotes() {
         viewModelScope.launch {
-            notesAppRepositoryUseCase.insertNotes(ownerId, title, content).collect {
-                _insertNote.value = it
+            notesAppRepositoryUseCase.getNotes().collect {
+                _getNotes.value = it
             }
         }
     }

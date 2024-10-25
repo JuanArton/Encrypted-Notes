@@ -19,6 +19,9 @@ data class NotesEntity (
     @ColumnInfo(name = "notes_content")
     val notesContent: String,
 
+    @ColumnInfo(name = "is_delete")
+    val isDelete: Boolean,
+
     @ColumnInfo(name = "last_modified")
     val lastModified: Long,
 )

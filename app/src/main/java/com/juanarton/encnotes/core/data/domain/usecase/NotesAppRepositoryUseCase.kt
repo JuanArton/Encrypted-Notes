@@ -3,7 +3,6 @@ package com.juanarton.encnotes.core.data.domain.usecase
 import android.app.Activity
 import androidx.paging.PagingData
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
-import com.juanarton.encnotes.core.data.api.APIResponse
 import com.juanarton.encnotes.core.data.domain.LoggedUser
 import com.juanarton.encnotes.core.data.domain.model.Login
 import com.juanarton.encnotes.core.data.domain.model.Notes
@@ -17,13 +16,15 @@ interface NotesAppRepositoryUseCase {
 
     fun signInWithGoogle(option: GetSignInWithGoogleOption, activity: Activity): Flow<Resource<LoggedUser>>
 
-    fun getNotes(): Flow<PagingData<Notes>>
+    fun logInByEmail(email: String, password: String): Flow<Resource<LoggedUser>>
 
-    fun insertNotes(
-        ownerId: String,
-        title: String,
-        content: String
-    ): Flow<Resource<Boolean>>
+    fun signInByEmail(email: String, password: String): Flow<Resource<LoggedUser>>
+
+    //fun getNotes(): Flow<PagingData<Notes>>
+
+    fun getNotes(): Flow<List<Notes>>
+
+    fun insertNotes(notes: Notes): Flow<Resource<Boolean>>
 
     fun registerUser(id: String, pin: String, username: String): Flow<Resource<String>>
 

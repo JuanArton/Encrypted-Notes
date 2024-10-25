@@ -1,4 +1,4 @@
-package com.juanarton.encnotes.core.data.api.user
+package com.juanarton.encnotes.core.data.api.authentications.login
 
 import com.google.gson.annotations.SerializedName
 

@@ -9,5 +9,6 @@ data class Notes(
     val ownerId: String,
     val notesTitle: String?,
     val notesContent: String,
+    val isDelete: Boolean,
     val lastModified: Long,
 ): Parcelable

@@ -25,5 +25,4 @@ class PinViewModel @Inject constructor(
             }
         }
     }
-
 }

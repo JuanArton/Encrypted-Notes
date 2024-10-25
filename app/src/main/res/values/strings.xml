@@ -16,7 +16,6 @@
     <string name="pin_empty">Pin empty</string>
     <string name="user_already_exist">User already exist!</string>
     <string name="add_new_note">Add new note</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="important">Important!</string>
     <string name="save_key_message">Store this encryption key in a place you believe is secure, and make sure no one else knows it. This key will be used to encrypt and decrypt your notes. If you lose this key, no one will be able to recover your notes.</string>
@@ -28,4 +27,21 @@
     <string name="cipher_key_sample">CM/dkuUPEmQKWAowdHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuQWVzR2Nt S2V5EiIaICcnFcxEMEo/c8zpa61k+xyOGNnt6gLiCzLZW9k+B0neGAEQARjP3ZLlDyAB</string>
     <string name="please_insert_cipher_key">Please insert cipher key first</string>
     <string name="unable_retrieve_key">Unable to retrieve key</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="login">Login</string>
+    <string name="login_with">Login with :</string>
+    <string name="sign_in">Sign In</string>
+    <string name="register_success">Please check your email to verify, and come back here to press login :)</string>
+    <string name="account_already_exist">Register failed. Account already exist?</string>
+    <string name="failed_to_send_verification_email">Failed to send verification email</string>
+    <string name="user_creation_failed">User creation failed</string>
+    <string name="please_verify_email">Please verify your email first!</string>
+    <string name="submit">Submit</string>
+    <string name="title">Title</string>
+    <string name="note">Note</string>
+    <string name="empty_uid">Empty uid</string>
+    <string name="unable_add_note">Unable to add note</string>
+    <string name="update_key_failed">Update key failed</string>
+    <string name="get_notes_failed">Get notes failed</string>
 </resources>

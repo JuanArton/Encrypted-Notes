@@ -3,15 +3,11 @@ package com.juanarton.encnotes.core.data.repository
 import android.app.Activity
 import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
-import android.util.Log
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.api.APIResponse
-import com.juanarton.encnotes.core.data.api.user.LoginData
-import com.juanarton.encnotes.core.data.api.user.RegisterData
+import com.juanarton.encnotes.core.data.api.authentications.login.LoginData
+import com.juanarton.encnotes.core.data.api.user.register.RegisterData
 import com.juanarton.encnotes.core.data.domain.LoggedUser
 import com.juanarton.encnotes.core.data.domain.model.Login
 import com.juanarton.encnotes.core.data.domain.model.Notes
@@ -24,13 +20,12 @@ import com.juanarton.encnotes.core.data.source.remote.NetworkBoundRes
 import com.juanarton.encnotes.core.data.source.remote.RemoteDataSource
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.Cryptography
-import io.viascom.nanoid.NanoId
+import com.juanarton.encnotes.core.utils.DataMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
-import java.util.Date
 import javax.inject.Inject
 
 class NotesAppRepository @Inject constructor(
@@ -61,7 +56,35 @@ class NotesAppRepository @Inject constructor(
         }.asFlow()
     }
 
-    override fun getNotes(): Flow<PagingData<Notes>> {
+    override fun logInByEmail(email: String, password: String): Flow<Resource<LoggedUser>> {
+        return object : NetworkBoundRes<LoggedUser, LoggedUser>() {
+            override suspend fun createCall(): Flow<APIResponse<LoggedUser>> {
+                return firebaseDataSource.loginByEmail(email, password)
+            }
+
+            override fun loadFromNetwork(data: LoggedUser): Flow<LoggedUser> {
+                return flowOf(data)
+            }
+        }.asFlow()
+    }
+
+    override fun signInByEmail(email: String, password: String): Flow<Resource<LoggedUser>> {
+        return object : NetworkBoundRes<LoggedUser, LoggedUser>() {
+            override suspend fun createCall(): Flow<APIResponse<LoggedUser>> {
+                return firebaseDataSource.signInByEmail(email, password)
+            }
+
+            override fun loadFromNetwork(data: LoggedUser): Flow<LoggedUser> {
+                return flowOf(data)
+            }
+        }.asFlow()
+    }
+
+    override fun getNotes(): Flow<List<Notes>> = flow {
+        emit(DataMapper.mapNotesEntityToDomain(localDataSource.getNotes()))
+    }.flowOn(Dispatchers.IO)
+
+    /*override fun getNotes(): Flow<PagingData<Notes>> {
         return Pager(
             config = PagingConfig(
                 pageSize = 2,
@@ -72,24 +95,21 @@ class NotesAppRepository @Inject constructor(
                 localDataSource.getNotes()
             }
         ).flow
-    }
+    }*/
 
-    override fun insertNotes(
-        ownerId: String,
-        title: String,
-        content: String
-    ): Flow<Resource<Boolean>> = flow {
+    override fun insertNotes(notes: Notes): Flow<Resource<Boolean>> = flow {
         try {
             val key = sharedPrefDataSource.getCipherKey()
             if (!key.isNullOrEmpty()) {
                 val deserializedKey = Cryptography.deserializeKeySet(key)
                 localDataSource.insertNotes(
                     NotesEntity(
-                        NanoId.generate(16),
-                        ownerId,
-                        Cryptography.encrypt(title, deserializedKey),
-                        Cryptography.encrypt(content, deserializedKey),
-                        Date().time
+                        notes.id,
+                        notes.ownerId,
+                        notes.notesTitle?.let { Cryptography.encrypt(it, deserializedKey) },
+                        Cryptography.encrypt(notes.notesContent, deserializedKey),
+                        notes.isDelete,
+                        notes.lastModified
                     )
                 )
                 emit(Resource.Success(true))

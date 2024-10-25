@@ -16,13 +16,35 @@ import javax.inject.Inject
 class LoginViewModel @Inject constructor(
     private val notesAppRepositoryUseCase: NotesAppRepositoryUseCase
 ): ViewModel() {
-    private val _loggedUser = MutableLiveData<Resource<LoggedUser>>()
-    val loggedUser = _loggedUser
+    private val _signInByGoogle = MutableLiveData<Resource<LoggedUser>>()
+    val signInByGoogle = _signInByGoogle
+
+    private val _signInByEmail = MutableLiveData<Resource<LoggedUser>>()
+    val signInByEmail = _signInByEmail
+
+    private val _loginByEmail = MutableLiveData<Resource<LoggedUser>>()
+    val loginByEmail = _loginByEmail
 
     fun singWithGoogleAcc(option: GetSignInWithGoogleOption, activity: Activity) {
         viewModelScope.launch {
             notesAppRepositoryUseCase.signInWithGoogle(option, activity).collect {
-                _loggedUser.value = it
+                _signInByGoogle.value = it
+            }
+        }
+    }
+
+    fun signInByEmail(email: String, password: String) {
+        viewModelScope.launch {
+            notesAppRepositoryUseCase.signInByEmail(email, password).collect {
+                _signInByEmail.value = it
+            }
+        }
+    }
+
+    fun loginByEmail(email: String, password: String) {
+        viewModelScope.launch {
+            notesAppRepositoryUseCase.logInByEmail(email, password).collect {
+                _loginByEmail.value = it
             }
         }
     }
