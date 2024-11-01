@@ -13,7 +13,7 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.api.APIResponse
-import com.juanarton.encnotes.core.data.domain.LoggedUser
+import com.juanarton.encnotes.core.data.domain.model.LoggedUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

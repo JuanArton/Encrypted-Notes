@@ -5,6 +5,7 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Window
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,10 +24,12 @@ import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.adapter.NotesAdapter
 import com.juanarton.encnotes.core.adapter.NotesPagingAdapter
 import com.juanarton.encnotes.core.data.domain.model.Notes
+import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.databinding.ActivityMainBinding
 import com.juanarton.encnotes.ui.activity.login.LoginActivity
 import com.juanarton.encnotes.ui.activity.note.NoteActivity
+import com.juanarton.encnotes.ui.utils.DataSync
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -37,6 +40,7 @@ class MainActivity : AppCompatActivity() {
     private val binding get() = _binding
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var rvAdapter: NotesAdapter
+    private var localNotes: List<Notes> = mutableListOf()
 
     private lateinit var auth: FirebaseAuth
 
@@ -79,6 +83,7 @@ class MainActivity : AppCompatActivity() {
         Cryptography.initTink()
 
         mainViewModel.getNotes()
+        mainViewModel.getNotesRemote()
 
         binding?.apply {
             val listener: (Notes) -> Unit = {
@@ -88,8 +93,37 @@ class MainActivity : AppCompatActivity() {
             rvAdapter = NotesAdapter(listener, arrayListOf())
             rvNotes.adapter = rvAdapter
 
-            mainViewModel.getNotes.observe(this@MainActivity) {
-                rvAdapter.setData(it)
+            mainViewModel.getNotes.observe(this@MainActivity) { noteList ->
+                val notDeleted = noteList.filter {
+                    !it.isDelete
+                }
+                rvAdapter.setData(notDeleted)
+                localNotes = noteList
+            }
+
+            mainViewModel.getNotesRemote.observe(this@MainActivity) {
+                when(it){
+                    is Resource.Success -> {
+                        it.data?.let { notes ->
+                            val sync = DataSync.syncNotes(localNotes, notes)
+                            mainViewModel.syncToLocal(sync)
+                        }
+                    }
+                    is Resource.Loading -> {
+                        Log.d("Main Activity", "Loading")
+                    }
+                    is Resource.Error -> {
+                        Toast.makeText(
+                            this@MainActivity,
+                            buildString {
+                                append(getString(R.string.failed_to_sync_notes))
+                                append(it.message)
+                            },
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        it.message?.let { it1 -> Log.d("okht", it1) }
+                    }
+                }
             }
 
             fabAddNote.setOnClickListener {

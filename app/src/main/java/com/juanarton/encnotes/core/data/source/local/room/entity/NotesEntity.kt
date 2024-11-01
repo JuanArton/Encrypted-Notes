@@ -10,14 +10,11 @@ data class NotesEntity (
     @ColumnInfo(name = "id")
     val id: String,
 
-    @ColumnInfo(name = "owner_id")
-    val ownerId: String,
-
     @ColumnInfo(name = "notes_title")
     val notesTitle: String?,
 
     @ColumnInfo(name = "notes_content")
-    val notesContent: String,
+    val notesContent: String?,
 
     @ColumnInfo(name = "is_delete")
     val isDelete: Boolean,

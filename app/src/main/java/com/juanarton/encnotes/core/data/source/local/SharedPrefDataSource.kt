@@ -47,7 +47,12 @@ class SharedPrefDataSource @Inject constructor(
     fun getRefreshKey() = sharedPreferences.getString(REFRESH_KEY, null)
 
     fun setAccessKey(accessKey: String) =
-        sharedPreferences.edit().putString(ACCESS_KEY, accessKey).commit()
+        sharedPreferences.edit().putString(
+            ACCESS_KEY, buildString{
+                append("Bearer ")
+                append(accessKey)
+            }
+        ).commit()
 
     fun getAccessKey() = sharedPreferences.getString(ACCESS_KEY, null)
 

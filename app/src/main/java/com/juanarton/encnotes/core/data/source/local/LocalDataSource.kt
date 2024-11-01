@@ -1,5 +1,6 @@
 package com.juanarton.encnotes.core.data.source.local
 
+import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.juanarton.encnotes.core.data.domain.model.Notes
@@ -20,14 +21,25 @@ class LocalDataSource @Inject constructor(
         val key = sharedPrefDataSource.getCipherKey()
         val deserializedKey = Cryptography.deserializeKeySet(key!!)
 
-        return notes.map {
+        return notes.map { note ->
+            val title = if (!note.notesTitle.isNullOrEmpty()) {
+                Cryptography.decrypt(note.notesTitle, deserializedKey)
+            } else {
+                ""
+            }
+
+            val content = if (!note.notesContent.isNullOrEmpty()) {
+                Cryptography.decrypt(note.notesContent, deserializedKey)
+            } else {
+                ""
+            }
+
             NotesEntity(
-                it.id,
-                it.ownerId,
-                it.notesTitle?.let { it1 -> Cryptography.decrypt(it1, deserializedKey) },
-                Cryptography.decrypt(it.notesContent, deserializedKey),
-                it.isDelete,
-                it.lastModified
+                note.id,
+                title,
+                content,
+                note.isDelete,
+                note.lastModified
             )
         }
     }
@@ -76,5 +88,13 @@ class LocalDataSource @Inject constructor(
 
     fun insertNotes(notes: NotesEntity) {
         notesDAO.insertNotes(notes)
+    }
+
+    fun deleteNotes(notesEntity: NotesEntity) {
+        notesDAO.deleteNotes(notesEntity)
+    }
+
+    fun updateNotes(notesEntity: NotesEntity) {
+        notesDAO.updateNotes(notesEntity)
     }
 }

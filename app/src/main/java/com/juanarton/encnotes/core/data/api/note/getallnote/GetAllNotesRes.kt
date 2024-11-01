@@ -7,10 +7,15 @@ data class GetAllNotesRes(
     val status: String?,
 
     @SerializedName("data")
-    val noteList: List<NoteData>?,
+    val dataNoteRes: DataNoteRes,
 
     @SerializedName("message")
     val message: String = "No message provided",
+)
+
+data class DataNoteRes(
+    @SerializedName("notes")
+    val noteList: List<NoteData>?,
 )
 
 data class NoteData(

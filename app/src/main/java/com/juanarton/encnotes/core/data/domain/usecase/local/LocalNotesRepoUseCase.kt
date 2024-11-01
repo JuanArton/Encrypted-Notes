@@ -1,34 +1,23 @@
-package com.juanarton.encnotes.core.data.domain.usecase
+package com.juanarton.encnotes.core.data.domain.usecase.local
 
 import android.app.Activity
-import androidx.paging.PagingData
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
-import com.juanarton.encnotes.core.data.domain.LoggedUser
+import com.juanarton.encnotes.core.data.domain.model.LoggedUser
 import com.juanarton.encnotes.core.data.domain.model.Login
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import kotlinx.coroutines.flow.Flow
 
-interface NotesAppRepositoryUseCase {
+interface LocalNotesRepoUseCase {
     fun setIsLoggedIn(isLoggedIn: Boolean): Flow<Boolean>
 
     fun getIsLoggedIn(): Boolean
-
-    fun signInWithGoogle(option: GetSignInWithGoogleOption, activity: Activity): Flow<Resource<LoggedUser>>
-
-    fun logInByEmail(email: String, password: String): Flow<Resource<LoggedUser>>
-
-    fun signInByEmail(email: String, password: String): Flow<Resource<LoggedUser>>
 
     //fun getNotes(): Flow<PagingData<Notes>>
 
     fun getNotes(): Flow<List<Notes>>
 
     fun insertNotes(notes: Notes): Flow<Resource<Boolean>>
-
-    fun registerUser(id: String, pin: String, username: String): Flow<Resource<String>>
-
-    fun loginUser(id: String, pin: String): Flow<Resource<Login>>
 
     fun setAccessKey(accessKey: String): Flow<Boolean>
 
@@ -41,4 +30,6 @@ interface NotesAppRepositoryUseCase {
     fun setCipherKey(cipherKey: String): Flow<Boolean>
 
     fun getCipherKey(): String?
+
+    fun deleteNotes(notes: Notes): Flow<Resource<Boolean>>
 }

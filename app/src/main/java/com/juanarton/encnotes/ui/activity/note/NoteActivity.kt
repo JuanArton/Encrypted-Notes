@@ -1,5 +1,6 @@
 package com.juanarton.encnotes.ui.activity.note
 
+import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -25,6 +26,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.domain.model.Notes
+import com.juanarton.encnotes.core.data.source.local.room.entity.NotesEntity
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.databinding.ActivityNoteBinding
@@ -63,6 +65,30 @@ class NoteActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this) {
             handleBackpress()
         }
+
+        noteViewModel.addNoteRemote.observe(this) {
+            when(it){
+                is Resource.Success -> {
+                    Toast.makeText(
+                        this@NoteActivity,
+                        getString(R.string.notes_saved_in_cloud),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    finish()
+                }
+                is Resource.Loading -> {
+                    Log.d("Note Activity1", "Loading")
+                }
+                is Resource.Error -> {
+                    Toast.makeText(
+                        this@NoteActivity,
+                        it.message,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    finish()
+                }
+            }
+        }
     }
 
     private fun buildContainerTransform(): MaterialContainerTransform {
@@ -89,52 +115,65 @@ class NoteActivity : AppCompatActivity() {
     private fun handleBackpress() {
         lifecycleScope.launch {
             binding?.apply {
-                val ownerId = auth.uid
-                val title = etTitle.text.toString()
-                val content = etContent.text.toString()
+                val key = noteViewModel.getCipherKey()
 
-                if (ownerId != null && content.isNotBlank()) {
-                    val notes = Notes(
-                        NanoId.generate(16),
-                        ownerId,
-                        title,
-                        content,
-                        false,
-                        Date().time
-                    )
+                if (!key.isNullOrEmpty()) {
+                    val deserializedKey = Cryptography.deserializeKeySet(key)
 
-                    val result = noteViewModel.insertNote(
-                        notes
-                    )
-                    when(result){
-                        is Resource.Success -> {
-                            val resultIntent = Intent().apply {
-                                putExtra("notesData", notes)
+                    val ownerId = auth.uid
+                    val title = etTitle.text.toString()
+                    val content = etContent.text.toString()
+                    val id = NanoId.generate(16)
+                    val time = Date().time
+
+                    if (ownerId != null && content.isNotBlank()) {
+                        val notes = Notes(
+                            id,
+                            Cryptography.encrypt(title, deserializedKey),
+                            Cryptography.encrypt(content, deserializedKey),
+                            false,
+                            time
+                        )
+
+                        when(val result = noteViewModel.insertNote(notes)){
+                            is Resource.Success -> {}
+                            is Resource.Loading -> {
+                                Log.d("Note Activity", "Loading")
                             }
-                            setResult(RESULT_OK, resultIntent)
-                            this@NoteActivity.finish()
+                            is Resource.Error -> {
+                                Toast.makeText(
+                                    this@NoteActivity,
+                                    result.message,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         }
-                        is Resource.Loading -> {
-                            Log.d("Note Activity", "Loading")
-                        }
-                        is Resource.Error -> {
-                            Toast.makeText(
-                                this@NoteActivity,
-                                result.message,
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    }
-                }
 
-                if (ownerId == null){
+                        noteViewModel.insertNoteRemote(notes)
+                        val resultIntent = Intent().apply {
+                            putExtra(
+                                "notesData",
+                                Notes(id, title, content, false, time)
+                            )
+                        }
+                        setResult(Activity.RESULT_OK, resultIntent)
+                    }
+
+                    if (ownerId == null){
+                        Toast.makeText(
+                            this@NoteActivity,
+                            buildString {
+                                append(getString(R.string.unable_add_note))
+                                append(" : ")
+                                append(getString(R.string.empty_uid))
+                            },
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } else {
                     Toast.makeText(
                         this@NoteActivity,
-                        buildString {
-                            append(getString(R.string.unable_add_note))
-                            append(" : ")
-                            append(getString(R.string.empty_uid))
-                        },
+                        getString(R.string.unable_retrieve_key),
                         Toast.LENGTH_SHORT
                     ).show()
                 }

@@ -11,7 +11,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.juanarton.encnotes.R
-import com.juanarton.encnotes.core.data.domain.LoggedUser
+import com.juanarton.encnotes.core.data.domain.model.LoggedUser
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.databinding.ActivityLoginBinding
 import com.juanarton.encnotes.ui.LoadingDialog
