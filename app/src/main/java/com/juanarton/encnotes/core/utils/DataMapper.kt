@@ -38,4 +38,14 @@ object DataMapper {
             )
         }
     }
+
+    fun mapNoteEntityToDomain(notesEntity: NotesEntity): Notes = run {
+        Notes(
+            notesEntity.id,
+            notesEntity.notesTitle,
+            notesEntity.notesContent,
+            notesEntity.isDelete,
+            notesEntity.lastModified
+        )
+    }
 }

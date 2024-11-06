@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.juanarton.encnotes.core.data.domain.model.Login
 import com.juanarton.encnotes.core.data.domain.usecase.local.LocalNotesRepoUseCase
+import com.juanarton.encnotes.core.data.domain.usecase.remote.RemoteNotesRepoUseCase
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
@@ -13,14 +14,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SharedViewModel @Inject constructor(
-    private val localNotesRepoUseCase: LocalNotesRepoUseCase
-): ViewModel(){
+    private val localNotesRepoUseCase: LocalNotesRepoUseCase,
+    private val remoteNotesRepoUseCase: RemoteNotesRepoUseCase
+): ViewModel() {
     private val _loginUser = MutableLiveData<Resource<Login>>()
     val loginUser = _loginUser
 
     fun loginUser(id: String, pin: String) {
         viewModelScope.launch {
-            localNotesRepoUseCase.loginUser(id, pin).collect {
+            remoteNotesRepoUseCase.loginUser(id, pin).collect {
                 _loginUser.value = it
             }
         }

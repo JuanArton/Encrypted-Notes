@@ -21,4 +21,10 @@ interface NotesDAO {
 
     @Update
     fun updateNotes(notesEntity: NotesEntity)
+
+    @Query("SELECT * FROM notes WHERE id = :id")
+    fun getNotesById(id: String): NotesEntity
+
+    @Query("DELETE FROM notes WHERE id = :id")
+    fun permanentDelete(id: String)
 }

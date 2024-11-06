@@ -2,6 +2,8 @@ package com.juanarton.encnotes.di
 
 import com.juanarton.encnotes.core.data.domain.usecase.local.LocalNotesRepoImpl
 import com.juanarton.encnotes.core.data.domain.usecase.local.LocalNotesRepoUseCase
+import com.juanarton.encnotes.core.data.domain.usecase.remote.RemoteNotesRepoImpl
+import com.juanarton.encnotes.core.data.domain.usecase.remote.RemoteNotesRepoUseCase
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -15,7 +17,13 @@ abstract class AppModule
 {
     @Binds
     @ViewModelScoped
-    abstract fun provideNoteAppRepositoryUseCase(
-        notesAppRepositoryImpl: LocalNotesRepoImpl
+    abstract fun provideLocalNoteRepositoryUseCase(
+        localNotesRepoImpl: LocalNotesRepoImpl
     ): LocalNotesRepoUseCase
+
+    @Binds
+    @ViewModelScoped
+    abstract fun provideRemoteNoteRepositoryUseCase(
+        remoteNotesRepoImpl: RemoteNotesRepoImpl
+    ): RemoteNotesRepoUseCase
 }

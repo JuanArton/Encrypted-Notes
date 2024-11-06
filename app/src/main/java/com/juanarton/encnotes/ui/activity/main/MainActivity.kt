@@ -16,13 +16,13 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.adapter.NotesAdapter
-import com.juanarton.encnotes.core.adapter.NotesPagingAdapter
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.Cryptography
@@ -40,7 +40,8 @@ class MainActivity : AppCompatActivity() {
     private val binding get() = _binding
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var rvAdapter: NotesAdapter
-    private var localNotes: List<Notes> = mutableListOf()
+    private var localNotes: ArrayList<Notes> = arrayListOf()
+    private var firstRun = true
 
     private lateinit var auth: FirebaseAuth
 
@@ -83,10 +84,19 @@ class MainActivity : AppCompatActivity() {
         Cryptography.initTink()
 
         mainViewModel.getNotes()
-        mainViewModel.getNotesRemote()
 
         binding?.apply {
-            val listener: (Notes) -> Unit = {
+            val listener: (Notes, MaterialCardView) -> Unit = { notes, materialCardView ->
+                val intent = Intent(this@MainActivity, NoteActivity::class.java)
+                intent.putExtra("noteData", notes)
+                Intent.FLAG_ACTIVITY_NO_ANIMATION
+                val options =
+                    ActivityOptionsCompat.makeSceneTransitionAnimation(
+                        this@MainActivity,
+                        materialCardView,
+                        "shared_element_end_root",
+                    )
+                activityResultLauncher.launch(intent, options)
             }
 
             rvNotes.layoutManager = StaggeredGridLayoutManager(2, LinearLayoutManager.VERTICAL)
@@ -94,25 +104,29 @@ class MainActivity : AppCompatActivity() {
             rvNotes.adapter = rvAdapter
 
             mainViewModel.getNotes.observe(this@MainActivity) { noteList ->
+                if (firstRun) mainViewModel.getNotesRemote()
                 val notDeleted = noteList.filter {
                     !it.isDelete
                 }
                 rvAdapter.setData(notDeleted)
-                localNotes = noteList
+                localNotes = noteList as ArrayList<Notes>
             }
 
             mainViewModel.getNotesRemote.observe(this@MainActivity) {
                 when(it){
                     is Resource.Success -> {
                         it.data?.let { notes ->
+                            firstRun = false
                             val sync = DataSync.syncNotes(localNotes, notes)
                             mainViewModel.syncToLocal(sync)
+                            mainViewModel.syncToRemote(sync)
                         }
                     }
                     is Resource.Loading -> {
                         Log.d("Main Activity", "Loading")
                     }
                     is Resource.Error -> {
+                        firstRun = false
                         Toast.makeText(
                             this@MainActivity,
                             buildString {
@@ -121,7 +135,6 @@ class MainActivity : AppCompatActivity() {
                             },
                             Toast.LENGTH_SHORT
                         ).show()
-                        it.message?.let { it1 -> Log.d("okht", it1) }
                     }
                 }
             }
@@ -139,18 +152,36 @@ class MainActivity : AppCompatActivity() {
             }
 
             activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (Build.VERSION.SDK_INT >= 33) {
-                    if (result.resultCode == RESULT_OK) {
-                        val notes = result.data?.getParcelableExtra("notesData", Notes::class.java)
-                        notes?.let {
-                            rvAdapter.prependItem(it)
-                        }
+                if (result.resultCode == RESULT_OK) {
+                    val action = result.data?.getStringExtra("action")
+                    val encryptedNote = if (Build.VERSION.SDK_INT >= 33) {
+                        result.data?.getParcelableExtra("notesEncrypted", Notes::class.java)
+                    } else {
+                        result.data?.getParcelableExtra("notesEncrypted")
                     }
-                } else {
-                    if (result.resultCode == RESULT_OK) {
-                        val notes = result.data?.getParcelableExtra<Notes>("notesData")
-                        notes?.let {
-                            rvAdapter.prependItem(it)
+
+                    val note = if (Build.VERSION.SDK_INT >= 33) {
+                        result.data?.getParcelableExtra("notesData", Notes::class.java)
+                    } else {
+                        result.data?.getParcelableExtra("notesData")
+                    }
+                    action?.let { act ->
+                        note?.let {
+                            when (act) {
+                                "add" -> {
+                                    rvAdapter.prependItem(it)
+                                    binding?.rvNotes?.smoothScrollToPosition(0)
+                                    localNotes.add(0, note)
+                                    encryptedNote?.let { enc -> mainViewModel.insertNoteRemote(enc)}
+                                }
+                                "update" -> {
+                                    val index = localNotes.indexOfFirst { local -> local.id == note.id }
+                                    localNotes[index] = note
+                                    rvAdapter.updateItem(index, note)
+                                    encryptedNote?.let {enc -> mainViewModel.updateNoteRemote(enc)}
+                                }
+                                else -> {}
+                            }
                         }
                     }
                 }

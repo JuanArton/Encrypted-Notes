@@ -28,4 +28,10 @@ interface ILocalNotesRepository {
     fun getCipherKey(): String?
 
     fun deleteNotes(notes: Notes): Flow<Resource<Boolean>>
+
+    fun getNotesById(id: String): Flow<Notes>
+
+    fun updateNotes(notes: Notes): Flow<Resource<Boolean>>
+
+    fun permanentDeleteNotes(id: String)
 }

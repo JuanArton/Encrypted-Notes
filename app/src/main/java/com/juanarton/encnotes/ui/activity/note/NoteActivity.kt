@@ -6,19 +6,22 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.util.TypedValue
 import android.view.Window
 import android.widget.Toast
-import android.window.OnBackInvokedDispatcher
 import androidx.activity.addCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.lifecycleScope
 import com.google.android.material.transition.platform.MaterialContainerTransform
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import com.google.firebase.Firebase
@@ -26,13 +29,16 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.domain.model.Notes
-import com.juanarton.encnotes.core.data.source.local.room.entity.NotesEntity
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.databinding.ActivityNoteBinding
 import dagger.hilt.android.AndroidEntryPoint
 import io.viascom.nanoid.NanoId
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.lang.ref.WeakReference
 import java.util.Date
 
 @AndroidEntryPoint
@@ -42,11 +48,21 @@ class NoteActivity : AppCompatActivity() {
     private val binding get() = _binding
     private val noteViewModel: NoteViewModel by viewModels()
     private lateinit var auth: FirebaseAuth
+    private var id = NanoId.generate(16)
+    private lateinit var notes: Notes
+    private var time = Date().time
+    private var isBackpresed = false
+    private var act = "add"
+    private var initTitle = ""
+    private var initContent = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
         enableEdgeToEdge()
         _binding = ActivityNoteBinding.inflate(layoutInflater)
+
+        val handler = Handler(Looper.getMainLooper())
+        var runnable: Runnable? = null
 
         binding?.main?.transitionName = "shared_element_end_root"
         setEnterSharedElementCallback(MaterialContainerTransformSharedElementCallback())
@@ -62,10 +78,150 @@ class NoteActivity : AppCompatActivity() {
         }
         auth = Firebase.auth
 
-        onBackPressedDispatcher.addCallback(this) {
-            handleBackpress()
+        initNoteData()
+
+        onBackPressedDispatcher.addCallback(this) { handleBackPress() }
+
+        observeNoteState()
+
+        binding?.apply {
+            val textWatcher = object : TextWatcher {
+                override fun afterTextChanged(s: Editable?) {
+                    runnable?.let { handler.removeCallbacks(it) }
+                    runnable = Runnable {
+                        handleSaveNote(
+                            etTitle.text.toString(),
+                            etContent.text.toString()
+                        )
+                    }
+                    runnable?.let { handler.postDelayed(it, 500) }
+                }
+
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            }
+
+            etContent.addTextChangedListener(textWatcher)
+            etTitle.addTextChangedListener(textWatcher)
+        }
+    }
+
+    private fun initNoteData() {
+        val notesTmp = if (Build.VERSION.SDK_INT >= 33) {
+            intent.getParcelableExtra("noteData", Notes::class.java)
+        } else {
+            intent.getParcelableExtra("noteData")
         }
 
+        notesTmp?.let {
+            notes = it
+            act = "update"
+            binding?.apply {
+                etTitle.setText(notes.notesTitle)
+                etContent.setText(notes.notesContent)
+            }
+            id = it.id
+            initContent = it.notesContent.toString()
+            initTitle = it.notesTitle.toString()
+        }
+    }
+
+    private fun handleBackPress() {
+        binding?.apply {
+            val title = etTitle.text.toString()
+            val content = etContent.text.toString()
+
+            if (act == "add") {
+                if (title.isBlank() && content.isBlank()) {
+                    noteViewModel.permanentDelete(id)
+                    ActivityCompat.finishAfterTransition(this@NoteActivity)
+                }
+                else if (title.isNotBlank() || content.isNotBlank()) {
+                    setResult(etTitle.text.toString(), etContent.text.toString())
+                }
+                else { ActivityCompat.finishAfterTransition(this@NoteActivity) }
+            }
+            else if (act == "update") {
+                if (title != initTitle || content != initContent) {
+                    setResult(etTitle.text.toString(), etContent.text.toString())
+                }
+                else { ActivityCompat.finishAfterTransition(this@NoteActivity) }
+            }
+        }
+        isBackpresed = true
+    }
+
+    private fun setResult (title: String, content: String) {
+        if (title != initTitle || content != initContent) {
+            val resultIntent = Intent().apply {
+                putExtra(
+                    "notesData",
+                    Notes(
+                        id,
+                        title,
+                        content,
+                        false,
+                        time
+                    )
+                )
+                putExtra("notesEncrypted", notes)
+                putExtra("action", act)
+            }
+            setResult(Activity.RESULT_OK, resultIntent)
+            ActivityCompat.finishAfterTransition(this@NoteActivity)
+        } else { ActivityCompat.finishAfterTransition(this@NoteActivity) }
+    }
+
+    private fun handleSaveNote(title: String, content: String) {
+        time = Date().time
+        val key = noteViewModel.getCipherKey()
+        val ownerId = auth.uid
+
+        if (!key.isNullOrEmpty()) {
+            val deserializedKey = Cryptography.deserializeKeySet(key)
+            if (ownerId != null) {
+                if (::notes.isInitialized) {
+                    id = notes.id
+                    notes = Notes(
+                        notes.id,
+                        Cryptography.encrypt(title, deserializedKey),
+                        Cryptography.encrypt(content, deserializedKey),
+                        false,
+                        time
+                    )
+                    noteViewModel.updateNoteLocal(notes)
+                } else {
+                    notes = Notes(
+                        id,
+                        Cryptography.encrypt(title, deserializedKey),
+                        Cryptography.encrypt(content, deserializedKey),
+                        false,
+                        time
+                    )
+                    noteViewModel.insertNote(notes)
+                }
+            } else {
+                Toast.makeText(
+                    this@NoteActivity,
+                    buildString {
+                        append(getString(R.string.unable_add_note))
+                        append(" : ")
+                        append(getString(R.string.empty_uid))
+                    },
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        } else {
+            Toast.makeText(
+                this@NoteActivity,
+                getString(R.string.unable_retrieve_key),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    private fun observeNoteState() {
         noteViewModel.addNoteRemote.observe(this) {
             when(it){
                 is Resource.Success -> {
@@ -87,6 +243,21 @@ class NoteActivity : AppCompatActivity() {
                     ).show()
                     finish()
                 }
+            }
+        }
+
+        noteViewModel.updateNoteLocal.observe(this) { observeNoteResource(it) }
+        noteViewModel.addNoteLocal.observe(this) { observeNoteResource(it) }
+    }
+
+    private fun observeNoteResource(resource: Resource<*>) {
+        when (resource) {
+            is Resource.Success -> {}
+            is Resource.Loading -> {
+                Log.d("Note Activity", "Loading")
+            }
+            is Resource.Error -> {
+                Toast.makeText(this@NoteActivity, resource.message, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -112,72 +283,20 @@ class NoteActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleBackpress() {
-        lifecycleScope.launch {
-            binding?.apply {
-                val key = noteViewModel.getCipherKey()
+    /*@OptIn(DelicateCoroutinesApi::class)
+    override fun onDestroy() {
+        super.onDestroy()
 
-                if (!key.isNullOrEmpty()) {
-                    val deserializedKey = Cryptography.deserializeKeySet(key)
-
-                    val ownerId = auth.uid
-                    val title = etTitle.text.toString()
-                    val content = etContent.text.toString()
-                    val id = NanoId.generate(16)
-                    val time = Date().time
-
-                    if (ownerId != null && content.isNotBlank()) {
-                        val notes = Notes(
-                            id,
-                            Cryptography.encrypt(title, deserializedKey),
-                            Cryptography.encrypt(content, deserializedKey),
-                            false,
-                            time
-                        )
-
-                        when(val result = noteViewModel.insertNote(notes)){
-                            is Resource.Success -> {}
-                            is Resource.Loading -> {
-                                Log.d("Note Activity", "Loading")
-                            }
-                            is Resource.Error -> {
-                                Toast.makeText(
-                                    this@NoteActivity,
-                                    result.message,
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
-
-                        noteViewModel.insertNoteRemote(notes)
-                        val resultIntent = Intent().apply {
-                            putExtra(
-                                "notesData",
-                                Notes(id, title, content, false, time)
-                            )
-                        }
-                        setResult(Activity.RESULT_OK, resultIntent)
+        if (::notes.isInitialized) {
+            val weakViewModel = WeakReference(noteViewModel)
+            GlobalScope.launch(Dispatchers.IO) {
+                weakViewModel.get()?.let { viewModel ->
+                    when (act) {
+                        "add" -> viewModel.insertNoteRemote(notes)
+                        "update" -> viewModel.updateNoteRemote(notes)
                     }
-
-                    if (ownerId == null){
-                        Toast.makeText(
-                            this@NoteActivity,
-                            buildString {
-                                append(getString(R.string.unable_add_note))
-                                append(" : ")
-                                append(getString(R.string.empty_uid))
-                            },
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                } else {
-                    Toast.makeText(
-                        this@NoteActivity,
-                        getString(R.string.unable_retrieve_key),
-                        Toast.LENGTH_SHORT
-                    ).show()
                 }
             }
         }
-    }
+    }*/
 }

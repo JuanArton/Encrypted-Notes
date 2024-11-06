@@ -97,4 +97,12 @@ class LocalDataSource @Inject constructor(
     fun updateNotes(notesEntity: NotesEntity) {
         notesDAO.updateNotes(notesEntity)
     }
+
+    fun getNotesById(id: String): NotesEntity {
+        return notesDAO.getNotesById(id)
+    }
+
+    fun permanentDelete(id: String) {
+        notesDAO.permanentDelete(id)
+    }
 }

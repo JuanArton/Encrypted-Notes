@@ -1,5 +1,6 @@
 package com.juanarton.encnotes.ui.activity.main
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -24,6 +25,12 @@ class MainViewModel @Inject constructor(
     private var _getNotesRemote: MutableLiveData<Resource<List<Notes>>> = MutableLiveData()
     var getNotesRemote: LiveData<Resource<List<Notes>>> = _getNotesRemote
 
+    private var _addNoteRemote: MutableLiveData<Resource<String>> = MutableLiveData()
+    var addNoteRemote: MutableLiveData<Resource<String>> = _addNoteRemote
+
+    private var _updateNoteRemote: MutableLiveData<Resource<String>> = MutableLiveData()
+    var updateNoteRemote: MutableLiveData<Resource<String>> = _updateNoteRemote
+
     fun getIsLoggedIn(): Boolean = localNotesRepoUseCase.getIsLoggedIn()
 
     fun getNotes() {
@@ -42,6 +49,22 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun insertNoteRemote(notes: Notes) {
+        viewModelScope.launch {
+            remoteNotesRepoUseCase.insertNoteRemote(notes).collect {
+                _addNoteRemote.value = it
+            }
+        }
+    }
+
+    fun updateNoteRemote(notes: Notes) {
+        viewModelScope.launch {
+            remoteNotesRepoUseCase.updateNoteRemote(notes).collect {
+                _updateNoteRemote.value = it
+            }
+        }
+    }
+
     fun syncToLocal(syncResult: SyncResult) {
         viewModelScope.launch {
             syncResult.toDeleteInLocal.forEach { notes ->
@@ -52,6 +75,27 @@ class MainViewModel @Inject constructor(
                 if (!notes.isDelete) {
                     localNotesRepoUseCase.insertNotes(notes).collect{}
                 }
+            }
+
+            syncResult.toUpdateToLocal.forEach { notes ->
+                localNotesRepoUseCase.updateNotes(notes).collect{}
+            }
+            getNotes()
+        }
+    }
+
+    fun syncToRemote(syncResult: SyncResult) {
+        viewModelScope.launch {
+            syncResult.toDeleteInServer.forEach { notes ->
+                remoteNotesRepoUseCase.deleteNoteRemote(notes.id).collect{}
+            }
+
+            syncResult.toAddToServer.forEach { notes ->
+                remoteNotesRepoUseCase.insertNoteRemote(notes).collect{}
+            }
+
+            syncResult.toUpdateToServer.forEach { notes ->
+                remoteNotesRepoUseCase.updateNoteRemote(notes).collect{}
             }
             getNotes()
         }

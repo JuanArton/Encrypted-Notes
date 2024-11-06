@@ -10,10 +10,12 @@ import com.juanarton.encnotes.core.data.source.local.SharedPrefDataSource
 import com.juanarton.encnotes.core.data.source.local.room.entity.NotesEntity
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.DataMapper
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class LocalNotesRepository @Inject constructor(
@@ -47,13 +49,7 @@ class LocalNotesRepository @Inject constructor(
     override fun insertNotes(notes: Notes): Flow<Resource<Boolean>> = flow {
         try {
             localDataSource.insertNotes(
-                NotesEntity(
-                    notes.id,
-                    notes.notesTitle,
-                    notes.notesContent,
-                    notes.isDelete,
-                    notes.lastModified
-                )
+                DataMapper.mapNotesDomainToEntity(notes)
             )
             emit(Resource.Success(true))
         } catch (e: SQLiteConstraintException) {
@@ -99,4 +95,27 @@ class LocalNotesRepository @Inject constructor(
             emit(Resource.Error(context.getString(R.string.unknown_error)))
         }
     }.flowOn(Dispatchers.IO)
+
+    override fun getNotesById(id: String): Flow<Notes> = flow {
+        emit(DataMapper.mapNoteEntityToDomain(localDataSource.getNotesById(id)))
+    }.flowOn(Dispatchers.IO)
+
+    override fun updateNotes(notes: Notes): Flow<Resource<Boolean>> = flow {
+        try {
+            localDataSource.updateNotes(
+                DataMapper.mapNotesDomainToEntity(notes)
+            )
+            emit(Resource.Success(true))
+        } catch (e: SQLiteConstraintException) {
+            emit(Resource.Error(context.getString(R.string.update_error)))
+        } catch (e: Exception) {
+            emit(Resource.Error(context.getString(R.string.unknown_error)))
+        }
+    }.flowOn(Dispatchers.IO)
+
+    override fun permanentDeleteNotes(id: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            localDataSource.permanentDelete(id)
+        }
+    }
 }

@@ -17,20 +17,40 @@ class NoteViewModel @Inject constructor(
     private val localNotesRepoUseCase: LocalNotesRepoUseCase,
     private val remoteNotesRepoUseCase: RemoteNotesRepoUseCase
 ): ViewModel() {
+    private var _addNoteLocal: MutableLiveData<Resource<Boolean>> = MutableLiveData()
+    var addNoteLocal: MutableLiveData<Resource<Boolean>> = _addNoteLocal
+
     private var _addNoteRemote: MutableLiveData<Resource<String>> = MutableLiveData()
     var addNoteRemote: MutableLiveData<Resource<String>> = _addNoteRemote
 
+    private var _updateNoteLocal: MutableLiveData<Resource<Boolean>> = MutableLiveData()
+    var updateNoteLocal: MutableLiveData<Resource<Boolean>> = _updateNoteLocal
+
     fun getCipherKey() = localNotesRepoUseCase.getCipherKey()
 
-    suspend fun insertNote(notes: Notes): Resource<Boolean> {
-        return localNotesRepoUseCase.insertNotes(notes).first()
-    }
-
-    fun insertNoteRemote(notes: Notes) {
+     fun insertNote(notes: Notes) {
         viewModelScope.launch {
-            remoteNotesRepoUseCase.insertNoteRemote(notes).collect {
-                _addNoteRemote.value = it
+            localNotesRepoUseCase.insertNotes(notes).collect() {
+                _addNoteLocal.value = it
             }
         }
     }
+
+    suspend fun insertNoteRemote(notes: Notes) {
+        remoteNotesRepoUseCase.insertNoteRemote(notes).first()
+    }
+
+    suspend fun updateNoteRemote(notes: Notes) {
+        remoteNotesRepoUseCase.updateNoteRemote(notes).first()
+    }
+
+    fun updateNoteLocal(notes: Notes) {
+        viewModelScope.launch {
+            localNotesRepoUseCase.updateNotes(notes).collect() {
+                _updateNoteLocal.value = it
+            }
+        }
+    }
+
+    fun permanentDelete(id: String) = localNotesRepoUseCase.permanentDeleteNotes(id)
 }

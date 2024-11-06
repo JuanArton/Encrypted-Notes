@@ -1,18 +1,17 @@
 package com.juanarton.encnotes.core.adapter
 
-import android.content.Context
-import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.card.MaterialCardView
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.databinding.NoteItemViewBinding
 
 
 class NotesAdapter (
-    private val onClick: (Notes) -> Unit,
+    private val onClick: (Notes, MaterialCardView) -> Unit,
     private val noteList: ArrayList<Notes>
 ) : RecyclerView.Adapter<NotesAdapter.ViewHolder>(){
 
@@ -27,6 +26,11 @@ class NotesAdapter (
     fun prependItem(item: Notes) {
         noteList.add(0, item)
         notifyItemInserted(0)
+    }
+
+    fun updateItem(index: Int, notes: Notes) {
+        noteList[index] = notes
+        notifyItemChanged(index)
     }
 
     override fun onCreateViewHolder(
@@ -45,16 +49,27 @@ class NotesAdapter (
         private val binding = NoteItemViewBinding.bind(itemView)
         fun bind(notes: Notes) {
             binding.apply {
-                val title = notes.notesTitle
+                val title = notes.notesTitle?.trim()
+                val content = notes.notesContent?.trim()
                 if (title.isNullOrEmpty()) {
                     tvNotesTitle.visibility = View.GONE
-                    tvNotesContent.layoutParams = (binding.tvNotesContent.layoutParams as ViewGroup.MarginLayoutParams).apply {
-                        topMargin = 0
-                    }
+                    (tvNotesContent.layoutParams as ViewGroup.MarginLayoutParams).topMargin = 0
                 } else {
+                    tvNotesTitle.visibility = View.VISIBLE
                     tvNotesTitle.text = title
+                    (tvNotesContent.layoutParams as ViewGroup.MarginLayoutParams).topMargin = 10
                 }
-                tvNotesContent.text = notes.notesContent
+
+                if (content.isNullOrEmpty()) {
+                    tvNotesContent.visibility = View.GONE
+                } else {
+                    tvNotesContent.visibility = View.VISIBLE
+                    tvNotesContent.text = content
+                }
+
+                itemView.setOnClickListener {
+                    onClick(notes, noteItem)
+                }
             }
         }
     }

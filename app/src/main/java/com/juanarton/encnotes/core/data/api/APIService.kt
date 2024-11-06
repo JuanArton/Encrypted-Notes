@@ -15,6 +15,7 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface APIService {
     @POST("users")
@@ -43,16 +44,16 @@ interface APIService {
         @Header("Authorization") accessToken: String,
     ): Response<ResponseBody>
 
-    @PUT("note?id={id}")
+    @PUT("note")
     suspend fun updateNote(
-        @Path("id") id: String,
+        @Query("id") id: String,
         @Body putNote: PutNote,
-        @Header("Authorization") accessToken: String,
+        @Header("Authorization") accessToken: String
     ): Response<ResponseBody>
 
-    @DELETE("note?id={id}")
+    @DELETE("note")
     suspend fun deleteNote(
-        @Path("id") id: String,
+        @Query("id") id: String,
         @Header("Authorization") accessToken: String,
     ): Response<ResponseBody>
 }

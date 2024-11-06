@@ -1,6 +1,7 @@
 package com.juanarton.encnotes.core.data.source.remote
 
 import android.content.Context
+import android.util.Log
 import com.google.gson.Gson
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.api.API
@@ -227,7 +228,8 @@ class RemoteDataSource @Inject constructor(
 
     private suspend fun makeDeleteNoteRequest(id: String): Response<ResponseBody> {
         val accessKey = sharedPrefDataSource.getAccessKey()!!
-        return API.services.deleteNote(id, accessKey)
+        val x = API.services.deleteNote(id, accessKey)
+        return x
     }
 
     private suspend fun refreshAccessKey() {

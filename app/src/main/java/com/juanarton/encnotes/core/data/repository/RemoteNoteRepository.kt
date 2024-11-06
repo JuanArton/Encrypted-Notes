@@ -16,6 +16,7 @@ import com.juanarton.encnotes.core.data.source.remote.NetworkBoundRes
 import com.juanarton.encnotes.core.data.source.remote.RemoteDataSource
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.DataMapper
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
@@ -106,6 +107,7 @@ class RemoteNoteRepository @Inject constructor(
             }
 
             override suspend fun createCall(): Flow<APIResponse<List<NoteData>>> {
+                delay(500)
                 return remoteDataSource.getAllNote()
             }
         }.asFlow()
