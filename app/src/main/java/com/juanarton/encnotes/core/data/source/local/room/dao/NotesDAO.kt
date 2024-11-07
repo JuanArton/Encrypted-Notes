@@ -10,7 +10,7 @@ import com.juanarton.encnotes.core.data.source.local.room.entity.NotesEntity
 
 @Dao
 interface NotesDAO {
-    @Query("SELECT * FROM notes ORDER BY last_modified DESC")
+    @Query("SELECT * FROM notes")
     fun getNotes(): List<NotesEntity>
 
     @Insert(onConflict = OnConflictStrategy.ABORT, entity = NotesEntity::class)

@@ -19,10 +19,12 @@
         <activity
             android:name=".ui.activity.note.NoteActivity"
             android:exported="false"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.EncryptedNotes" />
         <activity
             android:name=".ui.activity.pin.PinActivity"
             android:exported="false"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.EncryptedNotes" />
         <activity
             android:name=".ui.activity.splash.SplashActivity"
@@ -36,6 +38,7 @@
         <activity
             android:name=".ui.activity.login.LoginActivity"
             android:exported="false"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.EncryptedNotes" />
         <activity
             android:name=".ui.activity.main.MainActivity"

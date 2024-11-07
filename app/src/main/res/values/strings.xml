@@ -50,4 +50,5 @@
     <string name="delete_notes_failed">Delete notes failed</string>
     <string name="notes_saved_in_cloud">Notes saved in cloud :)</string>
     <string name="failed_to_sync_notes">Failed to sync notes : </string>
+    <string name="delete">Delete</string>
 </resources>

@@ -5,10 +5,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.crypto.tink.KeysetHandle
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.domain.usecase.local.LocalNotesRepoUseCase
 import com.juanarton.encnotes.core.data.domain.usecase.remote.RemoteNotesRepoUseCase
 import com.juanarton.encnotes.core.data.source.remote.Resource
+import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.ui.utils.SyncResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -31,7 +33,15 @@ class MainViewModel @Inject constructor(
     private var _updateNoteRemote: MutableLiveData<Resource<String>> = MutableLiveData()
     var updateNoteRemote: MutableLiveData<Resource<String>> = _updateNoteRemote
 
+    private var _deleteNote: MutableLiveData<Resource<Boolean>> = MutableLiveData()
+    var deleteNote: MutableLiveData<Resource<Boolean>> = _deleteNote
+
+    private var _deleteNoteRemote: MutableLiveData<Resource<String>> = MutableLiveData()
+    var deleteNoteRemote: MutableLiveData<Resource<String>> = _deleteNoteRemote
+
     fun getIsLoggedIn(): Boolean = localNotesRepoUseCase.getIsLoggedIn()
+
+    fun getCipherKey() = localNotesRepoUseCase.getCipherKey()
 
     fun getNotes() {
         viewModelScope.launch {
@@ -65,6 +75,26 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun deleteNote(noteList: List<Notes>) {
+        viewModelScope.launch {
+            noteList.forEach { note ->
+                localNotesRepoUseCase.deleteNotes(note).collect {
+                    _deleteNote.value = it
+                }
+            }
+        }
+    }
+
+    fun deleteNoteRemote(noteList: List<Notes>) {
+        viewModelScope.launch {
+            noteList.forEach { note ->
+                remoteNotesRepoUseCase.deleteNoteRemote(note.id).collect {
+                    _deleteNoteRemote.value = it
+                }
+            }
+        }
+    }
+
     fun syncToLocal(syncResult: SyncResult) {
         viewModelScope.launch {
             syncResult.toDeleteInLocal.forEach { notes ->
@@ -90,14 +120,29 @@ class MainViewModel @Inject constructor(
                 remoteNotesRepoUseCase.deleteNoteRemote(notes.id).collect{}
             }
 
-            syncResult.toAddToServer.forEach { notes ->
-                remoteNotesRepoUseCase.insertNoteRemote(notes).collect{}
-            }
+            val key = getCipherKey()
+            if (!key.isNullOrEmpty()) {
+                val deserializedKey = Cryptography.deserializeKeySet(key)
 
-            syncResult.toUpdateToServer.forEach { notes ->
-                remoteNotesRepoUseCase.updateNoteRemote(notes).collect{}
+                syncResult.toAddToServer.forEach { notes ->
+                    remoteNotesRepoUseCase.insertNoteRemote(encrypt(deserializedKey, notes)).collect{}
+                }
+
+                syncResult.toUpdateToServer.forEach { notes ->
+                    remoteNotesRepoUseCase.updateNoteRemote(encrypt(deserializedKey, notes)).collect{}
+                }
             }
             getNotes()
         }
+    }
+
+    private fun encrypt(key: KeysetHandle, notes: Notes): Notes {
+        return Notes(
+            notes.id,
+            Cryptography.encrypt(notes.notesTitle ?: "", key),
+            Cryptography.encrypt(notes.notesContent ?: "", key),
+            notes.isDelete,
+            notes.lastModified
+        )
     }
 }

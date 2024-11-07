@@ -7,6 +7,8 @@
     <color name="brightSurface">#fbf9f6</color>
     <color name="accent" >#0044dd</color>
     <color name="transparentBlack">#30000000</color>
+    <color name="outlineColor">#e1d3cb</color>
+    <color name="textColor">#000000</color>
 
     <color name="yellow">#ffc857</color>
     <color name="blue">#79beee</color>

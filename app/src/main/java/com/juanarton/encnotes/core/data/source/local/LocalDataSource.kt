@@ -23,6 +23,7 @@ class LocalDataSource @Inject constructor(
 
         return notes.map { note ->
             val title = if (!note.notesTitle.isNullOrEmpty()) {
+                Log.d("test", note.notesTitle)
                 Cryptography.decrypt(note.notesTitle, deserializedKey)
             } else {
                 ""

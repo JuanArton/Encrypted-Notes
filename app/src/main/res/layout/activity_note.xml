@@ -1,39 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     android:transitionName="shared_element_end_root"
-    android:padding="20dp"
+    android:fillViewport="true"
+    android:scrollbars="none"
     tools:context=".ui.activity.note.NoteActivity">
 
-    <EditText
-        android:id="@+id/etTitle"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:autofillHints="false"
-        android:background="@null"
-        android:hint="@string/title"
-        android:inputType="text"
-        android:textSize="16sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_marginTop="30dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="20dp"
+        android:fitsSystemWindows="true"
+        android:orientation="vertical">
+        <EditText
+            android:id="@+id/etTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:autofillHints="false"
+            android:background="@null"
+            android:hint="@string/title"
+            android:inputType="textCapSentences|textMultiLine"
+            android:nestedScrollingEnabled="true"
+            android:fontFamily="@font/custom_font"
+            android:textSize="24sp"/>
 
-    <EditText
-        android:id="@+id/etContent"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:background="@null"
-        android:hint="@string/note"
-        android:textSize="14sp"
-        android:gravity="top"
-        android:layout_marginTop="10dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/etTitle"
-        tools:layout_editor_absoluteX="20dp" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <EditText
+            android:id="@+id/etContent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:autofillHints="false"
+            android:background="@null"
+            android:hint="@string/note"
+            android:inputType="textCapSentences|textMultiLine"
+            android:textSize="16sp"
+            android:gravity="top"
+            android:layout_marginTop="20dp"
+            android:fontFamily="@font/custom_font"
+            android:nestedScrollingEnabled="true"/>
+    </LinearLayout>
+</ScrollView>

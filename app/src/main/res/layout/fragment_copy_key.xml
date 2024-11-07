@@ -30,7 +30,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/important"
                 android:textStyle="bold"
-                android:textSize="18sp"
+                android:textSize="24sp"
                 android:textColor="@color/red" />
 
             <TextView
@@ -45,6 +45,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
+                app:strokeColor="@color/outlineColor"
                 android:backgroundTint="?attr/cardBackgroundColor">
 
                 <androidx.constraintlayout.widget.ConstraintLayout

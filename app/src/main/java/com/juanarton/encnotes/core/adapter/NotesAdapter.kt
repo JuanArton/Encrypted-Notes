@@ -3,6 +3,9 @@ package com.juanarton.encnotes.core.adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.selection.ItemDetailsLookup
+import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
 import com.juanarton.encnotes.R
@@ -12,8 +15,13 @@ import com.juanarton.encnotes.databinding.NoteItemViewBinding
 
 class NotesAdapter (
     private val onClick: (Notes, MaterialCardView) -> Unit,
-    private val noteList: ArrayList<Notes>
 ) : RecyclerView.Adapter<NotesAdapter.ViewHolder>(){
+    var noteList: ArrayList<Notes> = arrayListOf()
+    var tracker: SelectionTracker<String>? = null
+
+    init {
+        setHasStableIds(true)
+    }
 
     fun setData(items: List<Notes>?) {
         noteList.apply {
@@ -33,6 +41,11 @@ class NotesAdapter (
         notifyItemChanged(index)
     }
 
+    fun deleteItem(index: Int) {
+        noteList.removeAt(index)
+        notifyItemRemoved(index)
+    }
+
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
@@ -41,13 +54,21 @@ class NotesAdapter (
         return ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: NotesAdapter.ViewHolder, position: Int) = holder.bind(noteList[position])
+    override fun onBindViewHolder(holder: NotesAdapter.ViewHolder, position: Int) {
+        val note = noteList[position]
+        //holder.bind(note, false)
+        tracker?.let { holder.bind(note, it.isSelected(noteList[position].id)) }
+    }
 
     override fun getItemCount(): Int = noteList.size
 
+    override fun getItemId(position: Int): Long {
+        return noteList[position].id.hashCode().toLong()
+    }
+
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val binding = NoteItemViewBinding.bind(itemView)
-        fun bind(notes: Notes) {
+        fun bind(notes: Notes, isActive: Boolean) {
             binding.apply {
                 val title = notes.notesTitle?.trim()
                 val content = notes.notesContent?.trim()
@@ -57,7 +78,6 @@ class NotesAdapter (
                 } else {
                     tvNotesTitle.visibility = View.VISIBLE
                     tvNotesTitle.text = title
-                    (tvNotesContent.layoutParams as ViewGroup.MarginLayoutParams).topMargin = 10
                 }
 
                 if (content.isNullOrEmpty()) {
@@ -67,10 +87,31 @@ class NotesAdapter (
                     tvNotesContent.text = content
                 }
 
+                if (isActive) {
+                    binding.root.setBackgroundColor(
+                        ContextCompat.getColor(
+                            binding.root.context,
+                            R.color.transparentBlack
+                        )
+                    )
+                } else {
+                    binding.root.setBackgroundColor(
+                        ContextCompat.getColor(
+                            binding.root.context,
+                            R.color.brightSurface
+                        ))
+                }
+
                 itemView.setOnClickListener {
                     onClick(notes, noteItem)
                 }
             }
         }
+
+        fun getItemDetails(): ItemDetailsLookup.ItemDetails<String> =
+            object : ItemDetailsLookup.ItemDetails<String>() {
+                override fun getPosition(): Int = bindingAdapterPosition
+                override fun getSelectionKey(): String = noteList[bindingAdapterPosition].id
+            }
     }
 }

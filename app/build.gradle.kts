@@ -104,5 +104,8 @@ dependencies {
 
     implementation(libs.nanoid)
 
-    implementation("com.github.mukeshsolanki.android-otpview-pinview:otpview:3.1.0")
+    implementation(libs.otpview)
+
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.recyclerview.selection)
 }

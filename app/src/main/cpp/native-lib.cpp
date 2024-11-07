@@ -6,7 +6,7 @@ JNIEXPORT jstring JNICALL
     Java_com_juanarton_encnotes_ui_activity_main_MainActivity_00024Companion_baseUrl(
             JNIEnv *env, jobject thiz
     ) {
-        const char *baseUrl = "http://10.0.2.2:5500/";
+        const char *baseUrl = "http://192.168.0.100:5500/";
         return env->NewStringUTF(baseUrl);
     }
 

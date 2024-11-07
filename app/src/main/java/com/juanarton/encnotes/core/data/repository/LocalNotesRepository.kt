@@ -30,7 +30,7 @@ class LocalNotesRepository @Inject constructor(
     override fun getIsLoggedIn(): Boolean = sharedPrefDataSource.getIsLoggedIn()
 
     override fun getNotes(): Flow<List<Notes>> = flow {
-        emit(DataMapper.mapNotesEntityToDomain(localDataSource.getNotes()))
+        emit(DataMapper.mapNotesEntityToDomain(localDataSource.getNotes().asReversed()))
     }.flowOn(Dispatchers.IO)
 
     /*override fun getNotes(): Flow<PagingData<Notes>> {
