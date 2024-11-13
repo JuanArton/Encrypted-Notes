@@ -13,6 +13,7 @@
 
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowTranslucentStatus">true</item>
+
     </style>
 
     <style name="Theme.EncryptedNotes" parent="Base.Theme.EncryptedNotes" />

@@ -1,5 +1,7 @@
 package com.juanarton.encnotes.core.utils
 
+import android.content.ContentResolver
+import android.net.Uri
 import com.google.android.gms.common.util.Base64Utils
 import com.google.crypto.tink.Aead
 import com.google.crypto.tink.BinaryKeysetReader
@@ -55,16 +57,20 @@ class Cryptography {
             return CleartextKeysetHandle.read(BinaryKeysetReader.withBytes(deserializedKeySet))
         }
 
-        /*
-        fun deserializeKeySet(keySet: String): KeysetHandle {
-            return try {
-                val deserializedKeySet = Base64Utils.decode(keySet)
+        fun encrypt(data: ByteArray, keysetHandle: KeysetHandle): ByteArray {
+            val aead = keysetHandle.getPrimitive(Aead::class.java)
+            return aead.encrypt(data, null)
+        }
 
-                CleartextKeysetHandle.read(BinaryKeysetReader.withBytes(deserializedKeySet))
-            } catch (e: IOException) {
-                throw GeneralSecurityException("DeSerialize keySet failed", e)
+        fun decrypt(data: ByteArray, keysetHandle: KeysetHandle): ByteArray {
+            val aead = keysetHandle.getPrimitive(Aead::class.java)
+            return aead.decrypt(data, null)
+        }
+
+        fun uriToByteArray(uri: Uri, contentResolver: ContentResolver): ByteArray {
+            contentResolver.openInputStream(uri).use { inputStream ->
+                return inputStream?.readBytes() ?: throw IllegalArgumentException("Unable to open URI: $uri")
             }
         }
-         */
     }
 }

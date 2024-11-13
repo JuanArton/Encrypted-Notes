@@ -2,6 +2,7 @@ package com.juanarton.encnotes.core.data.domain.usecase.remote
 
 import android.app.Activity
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.LoggedUser
 import com.juanarton.encnotes.core.data.domain.model.Login
 import com.juanarton.encnotes.core.data.domain.model.Notes
@@ -26,4 +27,10 @@ interface RemoteNotesRepoUseCase {
     fun updateNoteRemote(notes: Notes): Flow<Resource<String>>
 
     fun deleteNoteRemote(id: String): Flow<Resource<String>>
+
+    fun uploadImageAtt(image: ByteArray, notes: Notes): Flow<Resource<Attachment>>
+
+    fun getAttachmentRemote(id: String): Flow<Resource<List<Attachment>>>
+
+    fun getAllAttRemote(): Flow<Resource<List<Attachment>>>
 }

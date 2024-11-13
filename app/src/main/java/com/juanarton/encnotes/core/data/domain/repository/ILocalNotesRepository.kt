@@ -1,5 +1,6 @@
 package com.juanarton.encnotes.core.data.domain.repository
 
+import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import kotlinx.coroutines.flow.Flow
@@ -34,4 +35,14 @@ interface ILocalNotesRepository {
     fun updateNotes(notes: Notes): Flow<Resource<Boolean>>
 
     fun permanentDeleteNotes(id: String)
+
+    fun getAttachments(): Flow<List<Attachment>>
+
+    fun getAttachmentByNoteId(id: String): Flow<List<Attachment>>
+
+    fun insertAttachment(attachment: Attachment): Flow<Resource<Boolean>>
+
+    fun deleteAttachment(attachment: Attachment): Flow<Resource<Boolean>>
+
+    fun permanentDeleteAtt(id: String)
 }

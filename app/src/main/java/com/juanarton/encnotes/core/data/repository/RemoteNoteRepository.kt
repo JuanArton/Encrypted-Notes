@@ -3,27 +3,31 @@ package com.juanarton.encnotes.core.data.repository
 import android.app.Activity
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.juanarton.encnotes.core.data.api.APIResponse
+import com.juanarton.encnotes.core.data.api.attachments.getattachment.AttachmentData
 import com.juanarton.encnotes.core.data.api.authentications.login.LoginData
 import com.juanarton.encnotes.core.data.api.note.addnote.PostNoteData
 import com.juanarton.encnotes.core.data.api.note.getallnote.NoteData
+import com.juanarton.encnotes.core.data.api.note.postAttachment.PostAttachmentData
 import com.juanarton.encnotes.core.data.api.user.register.RegisterData
+import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.LoggedUser
 import com.juanarton.encnotes.core.data.domain.model.Login
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.domain.repository.IRemoteNoteRepository
+import com.juanarton.encnotes.core.data.source.remote.AttachmentRemoteDataSource
 import com.juanarton.encnotes.core.data.source.remote.FirebaseDataSource
 import com.juanarton.encnotes.core.data.source.remote.NetworkBoundRes
-import com.juanarton.encnotes.core.data.source.remote.RemoteDataSource
+import com.juanarton.encnotes.core.data.source.remote.NoteRemoteDataSource
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.DataMapper
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
 
 class RemoteNoteRepository @Inject constructor(
-    private val remoteDataSource: RemoteDataSource,
+    private val noteRemoteDataSource: NoteRemoteDataSource,
     private val firebaseDataSource: FirebaseDataSource,
+    private val attachmentRemoteDataSource: AttachmentRemoteDataSource
 ): IRemoteNoteRepository {
     override fun signInWithGoogle(
         option: GetSignInWithGoogleOption,
@@ -71,7 +75,7 @@ class RemoteNoteRepository @Inject constructor(
             }
 
             override suspend fun createCall(): Flow<APIResponse<RegisterData>> {
-                return remoteDataSource.registerUser(id, pin, username)
+                return noteRemoteDataSource.registerUser(id, pin, username)
             }
         }.asFlow()
     }
@@ -83,7 +87,7 @@ class RemoteNoteRepository @Inject constructor(
             }
 
             override suspend fun createCall(): Flow<APIResponse<LoginData>> {
-                return remoteDataSource.loginUser(id, pin)
+                return noteRemoteDataSource.loginUser(id, pin)
             }
         }.asFlow()
     }
@@ -95,7 +99,7 @@ class RemoteNoteRepository @Inject constructor(
             }
 
             override suspend fun createCall(): Flow<APIResponse<PostNoteData>> {
-                return remoteDataSource.insertNote(notes)
+                return noteRemoteDataSource.insertNote(notes)
             }
         }.asFlow()
     }
@@ -107,8 +111,7 @@ class RemoteNoteRepository @Inject constructor(
             }
 
             override suspend fun createCall(): Flow<APIResponse<List<NoteData>>> {
-                delay(500)
-                return remoteDataSource.getAllNote()
+                return noteRemoteDataSource.getAllNote()
             }
         }.asFlow()
     }
@@ -120,7 +123,7 @@ class RemoteNoteRepository @Inject constructor(
             }
 
             override suspend fun createCall(): Flow<APIResponse<String>> {
-                return remoteDataSource.updateNote(notes)
+                return noteRemoteDataSource.updateNote(notes)
             }
         }.asFlow()
     }
@@ -132,7 +135,43 @@ class RemoteNoteRepository @Inject constructor(
             }
 
             override suspend fun createCall(): Flow<APIResponse<String>> {
-                return remoteDataSource.deleteNote(id)
+                return noteRemoteDataSource.deleteNote(id)
+            }
+        }.asFlow()
+    }
+
+    override fun uploadImageAttRemote(image: ByteArray, notes: Notes): Flow<Resource<Attachment>> {
+        return object : NetworkBoundRes<Attachment, PostAttachmentData>() {
+            override fun loadFromNetwork(data: PostAttachmentData): Flow<Attachment> {
+                return flowOf(Attachment(data.id, null, data.url, null, null))
+            }
+
+            override suspend fun createCall(): Flow<APIResponse<PostAttachmentData>> {
+                return attachmentRemoteDataSource.uploadImageAtt(image, notes)
+            }
+        }.asFlow()
+    }
+
+    override fun getAttachmentRemote(id: String): Flow<Resource<List<Attachment>>> {
+        return object : NetworkBoundRes<List<Attachment>, List<AttachmentData>>() {
+            override fun loadFromNetwork(data: List<AttachmentData>): Flow<List<Attachment>> {
+                return flowOf(DataMapper.mapAttachmentsRemoteToDomain(data))
+            }
+
+            override suspend fun createCall(): Flow<APIResponse<List<AttachmentData>>> {
+                return attachmentRemoteDataSource.getAttById(id)
+            }
+        }.asFlow()
+    }
+
+    override fun getAllAttRemote(): Flow<Resource<List<Attachment>>> {
+        return object : NetworkBoundRes<List<Attachment>, List<AttachmentData>>() {
+            override fun loadFromNetwork(data: List<AttachmentData>): Flow<List<Attachment>> {
+                return flowOf(DataMapper.mapAttachmentsRemoteToDomain(data))
+            }
+
+            override suspend fun createCall(): Flow<APIResponse<List<AttachmentData>>> {
+                return attachmentRemoteDataSource.getAllAtt()
             }
         }.asFlow()
     }

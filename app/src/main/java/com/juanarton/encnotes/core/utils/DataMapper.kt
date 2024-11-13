@@ -1,7 +1,10 @@
 package com.juanarton.encnotes.core.utils
 
+import com.juanarton.encnotes.core.data.api.attachments.getattachment.AttachmentData
 import com.juanarton.encnotes.core.data.api.note.getallnote.NoteData
+import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.Notes
+import com.juanarton.encnotes.core.data.source.local.room.entity.AttachmentEntity
 import com.juanarton.encnotes.core.data.source.local.room.entity.NotesEntity
 
 object DataMapper {
@@ -46,6 +49,40 @@ object DataMapper {
             notesEntity.notesContent,
             notesEntity.isDelete,
             notesEntity.lastModified
+        )
+    }
+
+    fun mapAttachmentsRemoteToDomain(attachment: List<AttachmentData>): List<Attachment> = run {
+        attachment.map {
+            Attachment(
+                it.id,
+                it.notesId,
+                it.url,
+                it.isDelete,
+                it.lastModified
+            )
+        }
+    }
+
+    fun mapAttachmentsEntityToDomain(attachment: List<AttachmentEntity>): List<Attachment> = run {
+        attachment.map {
+            Attachment(
+                it.id,
+                it.noteId,
+                it.url ?: "",
+                it.isDelete,
+                it.lastModified
+            )
+        }
+    }
+
+    fun mapAttachmentDomainToEntity(attachment: Attachment): AttachmentEntity = run {
+        AttachmentEntity(
+            attachment.id,
+            attachment.noteId,
+            attachment.url,
+            attachment.isDelete ?: false,
+            attachment.lastModified ?: 0L
         )
     }
 }

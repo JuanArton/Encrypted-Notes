@@ -3,7 +3,7 @@ package com.juanarton.encnotes.ui.utils
 import com.juanarton.encnotes.core.data.domain.model.Notes
 
 object DataSync {
-    fun syncNotes(localNotes: List<Notes>, remoteNotes: List<Notes>): SyncResult {
+    fun syncNotes(localNotes: List<Notes>, remoteNotes: List<Notes>): SyncNotes {
         val localMap = localNotes.associateBy { it.id }
         val remoteMap = remoteNotes.associateBy { it.id }
 
@@ -35,7 +35,7 @@ object DataSync {
             remote.isDelete && localMap[remote.id]?.isDelete == false
         }.toMutableList()
 
-        return SyncResult(
+        return SyncNotes(
             toUpdateToServer = toUpdateToServer,
             toUpdateToLocal = toUpdateToLocal,
             toAddToServer = toAddToServer,
@@ -46,7 +46,7 @@ object DataSync {
     }
 }
 
-data class SyncResult(
+data class SyncNotes(
     val toUpdateToServer: MutableList<Notes>,
     val toUpdateToLocal: MutableList<Notes>,
     val toAddToServer: MutableList<Notes>,

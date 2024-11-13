@@ -1,18 +1,17 @@
 package com.juanarton.encnotes.di
 
 import android.content.Context
-import android.util.Log
 import androidx.room.Room
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.juanarton.encnotes.core.data.source.local.room.NotesAppDatabase
+import com.juanarton.encnotes.core.data.source.local.room.dao.AttachmentsDAO
 import com.juanarton.encnotes.core.data.source.local.room.dao.NotesDAO
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import net.sqlcipher.database.SQLiteDatabase
 import net.sqlcipher.database.SupportFactory
 import javax.inject.Singleton
 
@@ -66,5 +65,9 @@ class DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideAppStateDao(database: NotesAppDatabase): NotesDAO = database.notesDAO()
+    fun provideNotesDao(database: NotesAppDatabase): NotesDAO = database.notesDAO()
+
+    @Provides
+    @Singleton
+    fun provideAttachmentsDao(database: NotesAppDatabase): AttachmentsDAO = database.attachmentDAO()
 }

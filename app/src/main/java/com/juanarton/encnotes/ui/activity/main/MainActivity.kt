@@ -148,9 +148,8 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
                 val notDeleted = noteList.filter {
                     !it.isDelete
                 }
-                rvAdapter.setData(notDeleted)
-                localNotes = noteList as ArrayList<Notes>
-                notDeletedNotes = notDeleted as ArrayList<Notes>
+                mainViewModel._notDeleted.value = notDeleted
+                mainViewModel.decrypt()
             }
 
             mainViewModel.getNotesRemote.observe(this@MainActivity) {
@@ -178,6 +177,12 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
                         ).show()
                     }
                 }
+            }
+
+            mainViewModel.notDeleted.observe(this@MainActivity) { notes ->
+                rvAdapter.setData(notes)
+                localNotes = notes as ArrayList<Notes>
+                notDeletedNotes = notes
             }
 
             fabAddNote.setOnClickListener {

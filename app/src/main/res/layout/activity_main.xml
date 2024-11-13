@@ -26,6 +26,7 @@
         android:src="@drawable/baseline_add_24"
         android:transitionName="shared_element_container"
         android:backgroundTint="?attr/cardBackgroundColor"
+        app:tint="?attr/colorPrimary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

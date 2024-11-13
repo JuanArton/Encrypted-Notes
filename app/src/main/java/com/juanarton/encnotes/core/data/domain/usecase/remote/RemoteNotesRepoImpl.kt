@@ -2,6 +2,7 @@ package com.juanarton.encnotes.core.data.domain.usecase.remote
 
 import android.app.Activity
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.LoggedUser
 import com.juanarton.encnotes.core.data.domain.model.Login
 import com.juanarton.encnotes.core.data.domain.model.Notes
@@ -42,4 +43,13 @@ class RemoteNotesRepoImpl @Inject constructor(
 
     override fun deleteNoteRemote(id: String): Flow<Resource<String>> =
         iRemoteNoteRepository.deleteNoteRemote(id)
+
+    override fun uploadImageAtt(image: ByteArray, notes: Notes): Flow<Resource<Attachment>> =
+        iRemoteNoteRepository.uploadImageAttRemote(image, notes)
+
+    override fun getAttachmentRemote(id: String): Flow<Resource<List<Attachment>>> =
+        iRemoteNoteRepository.getAttachmentRemote(id)
+
+    override fun getAllAttRemote(): Flow<Resource<List<Attachment>>> =
+        iRemoteNoteRepository.getAllAttRemote()
 }

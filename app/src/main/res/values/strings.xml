@@ -9,6 +9,7 @@
     <string name="insert_error">Insert aborted due to conflict</string>
     <string name="update_error">Update aborted due to conflict</string>
     <string name="delete_error">Unable to delete note</string>
+    <string name="delete_att_error">Unable to delete note</string>
     <string name="unknown_error">Unknown error</string>
     <string name="notes_title">Notes Title</string>
     <string name="notes_content">Notes Content</string>
@@ -44,6 +45,8 @@
     <string name="note">Note</string>
     <string name="empty_uid">Empty uid</string>
     <string name="unable_add_note">Unable to add note</string>
+    <string name="unable_add_attachment">Unable to add attachment</string>
+    <string name="unable_get_attachment">Unable to get attachment</string>
     <string name="update_key_failed">Update key failed</string>
     <string name="get_notes_failed">Get notes failed</string>
     <string name="update_notes_failed">Update notes failed</string>

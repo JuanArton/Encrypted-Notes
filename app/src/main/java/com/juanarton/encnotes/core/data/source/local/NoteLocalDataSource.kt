@@ -1,48 +1,17 @@
 package com.juanarton.encnotes.core.data.source.local
 
-import android.util.Log
-import androidx.paging.PagingSource
-import androidx.paging.PagingState
-import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.source.local.room.dao.NotesDAO
 import com.juanarton.encnotes.core.data.source.local.room.entity.NotesEntity
 import com.juanarton.encnotes.core.utils.Cryptography
-import com.juanarton.encnotes.core.utils.DataMapper
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class LocalDataSource @Inject constructor(
+class NoteLocalDataSource @Inject constructor(
     private val notesDAO: NotesDAO,
-    private val sharedPrefDataSource: SharedPrefDataSource
 ) {
     fun getNotes(): List<NotesEntity> {
-        val notes = notesDAO.getNotes()
-        val key = sharedPrefDataSource.getCipherKey()
-        val deserializedKey = Cryptography.deserializeKeySet(key!!)
-
-        return notes.map { note ->
-            val title = if (!note.notesTitle.isNullOrEmpty()) {
-                Log.d("test", note.notesTitle)
-                Cryptography.decrypt(note.notesTitle, deserializedKey)
-            } else {
-                ""
-            }
-
-            val content = if (!note.notesContent.isNullOrEmpty()) {
-                Cryptography.decrypt(note.notesContent, deserializedKey)
-            } else {
-                ""
-            }
-
-            NotesEntity(
-                note.id,
-                title,
-                content,
-                note.isDelete,
-                note.lastModified
-            )
-        }
+        return notesDAO.getNotes()
     }
 
     /*fun getNotes(): PagingSource<Int, Notes> {

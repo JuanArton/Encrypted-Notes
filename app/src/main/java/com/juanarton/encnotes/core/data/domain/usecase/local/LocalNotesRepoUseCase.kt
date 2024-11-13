@@ -2,6 +2,7 @@ package com.juanarton.encnotes.core.data.domain.usecase.local
 
 import android.app.Activity
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.LoggedUser
 import com.juanarton.encnotes.core.data.domain.model.Login
 import com.juanarton.encnotes.core.data.domain.model.Notes
@@ -38,4 +39,14 @@ interface LocalNotesRepoUseCase {
     fun updateNotes(notes: Notes): Flow<Resource<Boolean>>
 
     fun permanentDeleteNotes(id: String)
+
+    fun getAttachments(): Flow<List<Attachment>>
+
+    fun getAttachmentByNoteId(id: String): Flow<List<Attachment>>
+
+    fun insertAttachment(attachment: Attachment): Flow<Resource<Boolean>>
+
+    fun deleteAttachment(attachment: Attachment): Flow<Resource<Boolean>>
+
+    fun permanentDeleteAtt(id: String)
 }

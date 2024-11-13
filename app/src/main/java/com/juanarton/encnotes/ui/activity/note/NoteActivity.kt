@@ -2,8 +2,10 @@ package com.juanarton.encnotes.ui.activity.note
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -13,15 +15,23 @@ import android.text.TextWatcher
 import android.util.Log
 import android.util.TypedValue
 import android.view.Window
+import android.view.WindowManager
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.BitmapDrawableTransformation
+import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.transition.platform.MaterialContainerTransform
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import com.google.firebase.Firebase
@@ -38,6 +48,11 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.ResponseBody
+import java.io.ByteArrayOutputStream
 import java.lang.ref.WeakReference
 import java.util.Date
 
@@ -55,6 +70,7 @@ class NoteActivity : AppCompatActivity() {
     private var act = "add"
     private var initTitle = ""
     private var initContent = ""
+    private lateinit var selectImageLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
@@ -73,9 +89,16 @@ class NoteActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
             insets
         }
+
+        val typedValue = TypedValue()
+        this.theme.resolveAttribute(com.google.android.material.R.attr.colorSurfaceContainerLow, typedValue, true)
+
+        val window: Window = this.window
+        window.navigationBarColor = typedValue.data
+
         auth = Firebase.auth
 
         initNoteData()
@@ -104,6 +127,21 @@ class NoteActivity : AppCompatActivity() {
 
             etContent.addTextChangedListener(textWatcher)
             etTitle.addTextChangedListener(textWatcher)
+
+            ibAdd.setOnClickListener {
+                selectImage()
+            }
+        }
+
+        selectImageLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val imageUri: Uri? = result.data?.data
+                imageUri?.let {
+                    noteViewModel.addImgAddRemote(it, notes, contentResolver)
+                }
+            }
         }
     }
 
@@ -124,6 +162,7 @@ class NoteActivity : AppCompatActivity() {
             id = it.id
             initContent = it.notesContent.toString()
             initTitle = it.notesTitle.toString()
+            noteViewModel.getAttRemote(it.id)
         }
     }
 
@@ -246,8 +285,80 @@ class NoteActivity : AppCompatActivity() {
             }
         }
 
+        noteViewModel.getAttRemote.observe(this) {
+            when(it){
+                is Resource.Success -> {
+                    Log.d("test", it.data.toString())
+                    it.data?.let { att ->
+                        val url = "http://192.168.0.100:5500" + att[0].url
+                        Glide.with(this).load(url).into(binding!!.ivAtt)
+                        lifecycleScope.launch {
+                            loadEncryptedImageWithProgress(url, binding!!.ivAtt) { progress ->
+                                Log.d("test", progress.toString())
+                            }
+                        }
+                    }
+                }
+                is Resource.Loading -> {
+                    Log.d("Note Activity1", "Loading")
+                }
+                is Resource.Error -> {
+                    it.message?.let { it1 -> Log.d("status", it1) }
+                    Toast.makeText(
+                        this@NoteActivity,
+                        it.message,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+
         noteViewModel.updateNoteLocal.observe(this) { observeNoteResource(it) }
         noteViewModel.addNoteLocal.observe(this) { observeNoteResource(it) }
+    }
+
+    suspend fun loadEncryptedImageWithProgress(
+        url: String,
+        imageView: ImageView,
+        onProgress: (Int) -> Unit
+    ) {
+        val encryptedImage = downloadImageWithProgress(url, onProgress)
+
+        val key = noteViewModel.getCipherKey()
+        val deserializedKey = Cryptography.deserializeKeySet(key!!)
+        val decryptedImageBytes = Cryptography.decrypt(encryptedImage, deserializedKey)
+
+        val bitmap = BitmapFactory.decodeByteArray(decryptedImageBytes, 0, decryptedImageBytes.size)
+
+        Glide.with(imageView.context)
+            .load(bitmap)
+            .into(imageView)
+    }
+
+    private suspend fun downloadImageWithProgress(url: String, onProgress: (Int) -> Unit): ByteArray {
+        return withContext(Dispatchers.IO) {
+            val client = OkHttpClient()
+            val request = Request.Builder().url(url).build()
+            val response = client.newCall(request).execute().body
+
+            val totalBytes = response.contentLength()
+            val inputStream = response.byteStream()
+
+            val buffer = ByteArray(8192)
+            var bytesRead: Int
+            var totalBytesRead = 0L
+            val outputStream = ByteArrayOutputStream()
+
+            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                totalBytesRead += bytesRead
+                outputStream.write(buffer, 0, bytesRead)
+
+                val progress = ((totalBytesRead * 100) / totalBytes).toInt()
+                onProgress(progress)
+            }
+
+            outputStream.toByteArray()
+        }
     }
 
     private fun observeNoteResource(resource: Resource<*>) {
@@ -283,20 +394,10 @@ class NoteActivity : AppCompatActivity() {
         }
     }
 
-    /*@OptIn(DelicateCoroutinesApi::class)
-    override fun onDestroy() {
-        super.onDestroy()
-
-        if (::notes.isInitialized) {
-            val weakViewModel = WeakReference(noteViewModel)
-            GlobalScope.launch(Dispatchers.IO) {
-                weakViewModel.get()?.let { viewModel ->
-                    when (act) {
-                        "add" -> viewModel.insertNoteRemote(notes)
-                        "update" -> viewModel.updateNoteRemote(notes)
-                    }
-                }
-            }
+    private fun selectImage() {
+        val intent = Intent(Intent.ACTION_PICK).apply {
+            type = "image/*"
         }
-    }*/
+        selectImageLauncher.launch(intent)
+    }
 }

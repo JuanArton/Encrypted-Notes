@@ -1,5 +1,6 @@
 package com.juanarton.encnotes.core.data.domain.usecase.local
 
+import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.domain.repository.ILocalNotesRepository
 import com.juanarton.encnotes.core.data.source.remote.Resource
@@ -49,5 +50,20 @@ class LocalNotesRepoImpl @Inject constructor(
         iLocalNotesRepository.updateNotes(notes)
 
     override fun permanentDeleteNotes(id: String) =
+        iLocalNotesRepository.permanentDeleteNotes(id)
+
+    override fun getAttachments(): Flow<List<Attachment>> =
+        iLocalNotesRepository.getAttachments()
+
+    override fun getAttachmentByNoteId(id: String): Flow<List<Attachment>> =
+        iLocalNotesRepository.getAttachmentByNoteId(id)
+
+    override fun insertAttachment(attachment: Attachment): Flow<Resource<Boolean>> =
+        iLocalNotesRepository.insertAttachment(attachment)
+
+    override fun deleteAttachment(attachment: Attachment): Flow<Resource<Boolean>> =
+        iLocalNotesRepository.deleteAttachment(attachment)
+
+    override fun permanentDeleteAtt(id: String) =
         iLocalNotesRepository.permanentDeleteNotes(id)
 }

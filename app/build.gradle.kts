@@ -69,6 +69,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.livedata.ktx)
 
     implementation(libs.glide)
+    ksp(libs.glide.ksp)
 
     implementation(libs.androidx.paging.runtime.ktx)
 
@@ -108,4 +109,6 @@ dependencies {
 
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.recyclerview.selection)
+
+    //implementation(libs.biometric)
 }

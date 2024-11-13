@@ -1,7 +1,6 @@
 package com.juanarton.encnotes.core.data.source.remote
 
 import android.content.Context
-import android.util.Log
 import com.google.gson.Gson
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.api.API
@@ -16,6 +15,8 @@ import com.juanarton.encnotes.core.data.api.note.addnote.PostNoteResponse
 import com.juanarton.encnotes.core.data.api.note.deleteNote.DeleteNoteResponse
 import com.juanarton.encnotes.core.data.api.note.getallnote.GetAllNotesRes
 import com.juanarton.encnotes.core.data.api.note.getallnote.NoteData
+import com.juanarton.encnotes.core.data.api.note.postAttachment.PostAttachmentData
+import com.juanarton.encnotes.core.data.api.note.postAttachment.PostAttachmentResponse
 import com.juanarton.encnotes.core.data.api.note.updateNote.PutNote
 import com.juanarton.encnotes.core.data.api.note.updateNote.PutNoteResponse
 import com.juanarton.encnotes.core.data.api.user.register.PostRegister
@@ -23,17 +24,22 @@ import com.juanarton.encnotes.core.data.api.user.register.RegisterData
 import com.juanarton.encnotes.core.data.api.user.register.RegisterResponse
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.source.local.SharedPrefDataSource
+import io.viascom.nanoid.NanoId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
+import org.json.JSONObject
 import retrofit2.Response
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class RemoteDataSource @Inject constructor(
+class NoteRemoteDataSource @Inject constructor(
     private val context: Context,
     private val sharedPrefDataSource: SharedPrefDataSource
 ){
@@ -228,8 +234,7 @@ class RemoteDataSource @Inject constructor(
 
     private suspend fun makeDeleteNoteRequest(id: String): Response<ResponseBody> {
         val accessKey = sharedPrefDataSource.getAccessKey()!!
-        val x = API.services.deleteNote(id, accessKey)
-        return x
+        return API.services.deleteNote(id, accessKey)
     }
 
     private suspend fun refreshAccessKey() {
