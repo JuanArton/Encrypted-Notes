@@ -33,4 +33,6 @@ interface RemoteNotesRepoUseCase {
     fun getAttachmentRemote(id: String): Flow<Resource<List<Attachment>>>
 
     fun getAllAttRemote(): Flow<Resource<List<Attachment>>>
+
+    fun downloadAttachment(url: String, force: Boolean): Flow<Resource<Int>>
 }

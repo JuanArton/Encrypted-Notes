@@ -2,12 +2,14 @@ package com.juanarton.encnotes.core.data.domain.repository
 
 import android.app.Activity
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.juanarton.encnotes.core.data.api.APIResponse
 import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.LoggedUser
 import com.juanarton.encnotes.core.data.domain.model.Login
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 interface IRemoteNoteRepository {
     fun signInWithGoogle(option: GetSignInWithGoogleOption, activity: Activity): Flow<Resource<LoggedUser>>
@@ -33,4 +35,6 @@ interface IRemoteNoteRepository {
     fun getAttachmentRemote(id: String): Flow<Resource<List<Attachment>>>
 
     fun getAllAttRemote(): Flow<Resource<List<Attachment>>>
+
+    fun downloadAttachment(url: String, force: Boolean): Flow<Resource<Int>>
 }

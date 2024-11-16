@@ -1,14 +1,17 @@
 package com.juanarton.encnotes.ui.activity.main
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.domain.usecase.local.LocalNotesRepoUseCase
 import com.juanarton.encnotes.core.data.domain.usecase.remote.RemoteNotesRepoUseCase
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.Cryptography
+import com.juanarton.encnotes.ui.utils.SyncAttachment
 import com.juanarton.encnotes.ui.utils.SyncNotes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -42,10 +45,19 @@ class MainViewModel @Inject constructor(
     var _notDeleted: MutableLiveData<List<Notes>> = MutableLiveData()
     var notDeleted: LiveData<List<Notes>> = _notDeleted
 
-    private fun getCipherKey() = localNotesRepoUseCase.getCipherKey()
+    private var _getAttachments: MutableLiveData<List<Attachment>> = MutableLiveData()
+    var getAttachment: LiveData<List<Attachment>> = _getAttachments
+
+    private var _getAttachmentsRemote: MutableLiveData<Resource<List<Attachment>>> = MutableLiveData()
+    var getAttachmentRemote: LiveData<Resource<List<Attachment>>> = _getAttachmentsRemote
+
+    var _notDeletedAtt: MutableLiveData<List<Attachment>> = MutableLiveData()
+
+    fun getCipherKey() = localNotesRepoUseCase.getCipherKey()
 
     fun getNotes() {
         viewModelScope.launch {
+            getAttachment()
             localNotesRepoUseCase.getNotes().collect {
                 _getNotes.value = it
             }
@@ -54,6 +66,7 @@ class MainViewModel @Inject constructor(
 
     fun getNotesRemote() {
         viewModelScope.launch {
+            getAttachmentRemote()
             remoteNotesRepoUseCase.getAllNoteRemote().collect {
                 _getNotesRemote.value = it
             }
@@ -96,6 +109,22 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    private suspend fun getAttachment() {
+        localNotesRepoUseCase.getAttachments().collect {
+            _getAttachments.value = it
+        }
+    }
+
+    private fun getAttachmentRemote() {
+        viewModelScope.launch {
+            remoteNotesRepoUseCase.getAllAttRemote().collect {
+                _getAttachmentsRemote.value = it
+            }
+        }
+    }
+
+    suspend fun downloadAttachment(url: String, force: Boolean) = remoteNotesRepoUseCase.downloadAttachment(url, force)
+
     fun syncToLocal(syncNotes: SyncNotes) {
         viewModelScope.launch {
             syncNotes.toDeleteInLocal.forEach { notes ->
@@ -111,6 +140,7 @@ class MainViewModel @Inject constructor(
             syncNotes.toUpdateToLocal.forEach { notes ->
                 localNotesRepoUseCase.updateNotes(notes).collect{}
             }
+
             getNotes()
         }
     }
@@ -130,6 +160,22 @@ class MainViewModel @Inject constructor(
             }
 
             getNotes()
+        }
+    }
+
+    fun syncAttToLocal(syncAttachment: SyncAttachment) {
+        viewModelScope.launch {
+            syncAttachment.toDeleteInLocal.forEach { attachment ->
+                localNotesRepoUseCase.deleteAttachment(attachment).collect{}
+            }
+
+            syncAttachment.toAddToLocal.forEach { attachment ->
+                if (!attachment.isDelete!!) {
+                    localNotesRepoUseCase.insertAttachment(attachment).collect{}
+                }
+            }
+
+            getAttachment()
         }
     }
 

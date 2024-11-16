@@ -1,36 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/noteItem"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:backgroundTint="?android:windowBackground"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    app:contentPadding="16dp"
-    app:cardElevation="0dp"
-    app:cardCornerRadius="10dp"
-    app:strokeColor="@color/outlineColor"
-    app:strokeWidth="1dp">
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@null"
-        android:orientation="vertical">
-        <TextView
-            android:id="@+id/tvNotesTitle"
-            android:layout_width="wrap_content"
+    android:backgroundTint="?android:windowBackground">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/noteItem"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:backgroundTint="?android:windowBackground"
+        app:cardPreventCornerOverlap="true"
+        app:cardElevation="0dp"
+        app:cardCornerRadius="10dp"
+        app:strokeColor="@color/outlineColor"
+        app:strokeWidth="1dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:fontFamily="@font/custom_font"
-            android:hint="@string/notes_title"/>
-        <TextView
-            android:id="@+id/tvNotesContent"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:textSize="15sp"
-            android:fontFamily="@font/custom_font"
-            android:maxLines="10"
-            android:hint="@string/notes_content"/>
-    </LinearLayout>
-</com.google.android.material.card.MaterialCardView>
+            android:background="@null"
+            android:orientation="vertical">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvImgAttachment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/tvNotesTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/custom_font"
+                    android:hint="@string/notes_title"/>
+
+                <TextView
+                    android:id="@+id/tvNotesContent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:textSize="15sp"
+                    android:fontFamily="@font/custom_font"
+                    android:maxLines="10"
+                    android:hint="@string/notes_content"/>
+
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

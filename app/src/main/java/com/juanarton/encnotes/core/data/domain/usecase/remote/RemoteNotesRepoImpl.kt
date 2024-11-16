@@ -52,4 +52,7 @@ class RemoteNotesRepoImpl @Inject constructor(
 
     override fun getAllAttRemote(): Flow<Resource<List<Attachment>>> =
         iRemoteNoteRepository.getAllAttRemote()
+
+    override fun downloadAttachment(url: String, force: Boolean): Flow<Resource<Int>> =
+        iRemoteNoteRepository.downloadAttachment(url, force)
 }

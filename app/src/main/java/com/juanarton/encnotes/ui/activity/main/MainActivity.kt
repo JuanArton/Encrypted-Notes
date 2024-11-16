@@ -32,15 +32,18 @@ import com.juanarton.encnotes.core.adapter.GridSpacingItemDecoration
 import com.juanarton.encnotes.core.adapter.ItemsDetailsLookup
 import com.juanarton.encnotes.core.adapter.ItemsKeyProvider
 import com.juanarton.encnotes.core.adapter.NotesAdapter
+import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.databinding.ActivityMainBinding
 import com.juanarton.encnotes.ui.activity.login.LoginActivity
 import com.juanarton.encnotes.ui.activity.note.NoteActivity
-import com.juanarton.encnotes.ui.utils.DataSync
+import com.juanarton.encnotes.ui.utils.AttachmentSync
+import com.juanarton.encnotes.ui.utils.NoteSync
 import com.juanarton.encnotes.ui.utils.Utils
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), ActionMode.Callback {
@@ -52,6 +55,10 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
     private lateinit var rvAdapter: NotesAdapter
     private var localNotes: ArrayList<Notes> = arrayListOf()
     private var notDeletedNotes: ArrayList<Notes> = arrayListOf()
+
+    private var localAttachment: ArrayList<Attachment> = arrayListOf()
+    private var notDeleteAttachment: ArrayList<Attachment> = arrayListOf()
+
     private var firstRun = true
     private lateinit var tracker: SelectionTracker<String>
     private var actionMode: ActionMode? = null
@@ -113,7 +120,7 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
 
             rvNotes.layoutManager = StaggeredGridLayoutManager(2, LinearLayoutManager.VERTICAL)
             rvNotes.addItemDecoration(GridSpacingItemDecoration(Utils.dpToPx(7, this@MainActivity)))
-            rvAdapter = NotesAdapter(listener)
+            rvAdapter = NotesAdapter(listener, mainViewModel)
             rvNotes.adapter = rvAdapter
 
             tracker = SelectionTracker.Builder(
@@ -148,8 +155,17 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
                 val notDeleted = noteList.filter {
                     !it.isDelete
                 }
+                localNotes = noteList as ArrayList<Notes>
                 mainViewModel._notDeleted.value = notDeleted
                 mainViewModel.decrypt()
+            }
+
+            mainViewModel.getAttachment.observe(this@MainActivity) { attachments ->
+                val notDeleted = attachments.filter { !it.isDelete!! }
+                notDeleteAttachment = notDeleted as ArrayList<Attachment>
+                Log.d("test3", notDeleteAttachment.toString())
+                localAttachment = attachments as ArrayList<Attachment>
+                mainViewModel._notDeletedAtt.value = notDeleted
             }
 
             mainViewModel.getNotesRemote.observe(this@MainActivity) {
@@ -157,7 +173,7 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
                     is Resource.Success -> {
                         it.data?.let { notes ->
                             firstRun = false
-                            val sync = DataSync.syncNotes(localNotes, notes)
+                            val sync = NoteSync.syncNotes(localNotes, notes)
                             mainViewModel.syncToLocal(sync)
                             mainViewModel.syncToRemote(sync)
                         }
@@ -167,22 +183,44 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
                     }
                     is Resource.Error -> {
                         firstRun = false
-                        Toast.makeText(
-                            this@MainActivity,
+                        Toast.makeText(this@MainActivity,
                             buildString {
                                 append(getString(R.string.failed_to_sync_notes))
                                 append(it.message)
-                            },
-                            Toast.LENGTH_SHORT
+                            }, Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+
+            mainViewModel.getAttachmentRemote.observe(this@MainActivity) {
+                when(it){
+                    is Resource.Success -> {
+                        it.data?.let { attachment ->
+                            val sync = AttachmentSync.syncAttachment(localAttachment, attachment)
+                            mainViewModel.syncAttToLocal(sync)
+                            //mainViewModel.syncToRemote(sync)
+                        }
+                    }
+                    is Resource.Loading -> {
+                        Log.d("Main Activity", "Loading")
+                    }
+                    is Resource.Error -> {
+                        firstRun = false
+                        Toast.makeText(this@MainActivity,
+                            buildString {
+                                append(getString(R.string.failed_to_sync_notes))
+                                append(it.message)
+                            }, Toast.LENGTH_SHORT
                         ).show()
                     }
                 }
             }
 
             mainViewModel.notDeleted.observe(this@MainActivity) { notes ->
-                rvAdapter.setData(notes)
-                localNotes = notes as ArrayList<Notes>
-                notDeletedNotes = notes
+                Log.d("test2", notDeleteAttachment.toString())
+                rvAdapter.setData(notes, notDeleteAttachment)
+                notDeletedNotes = notes as ArrayList<Notes>
             }
 
             fabAddNote.setOnClickListener {

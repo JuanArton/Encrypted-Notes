@@ -109,6 +109,8 @@ dependencies {
 
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.recyclerview.selection)
+    implementation("com.google.android.flexbox:flexbox:3.0.0")
+    implementation("com.fivehundredpx:greedo-layout:1.5.1")
 
     //implementation(libs.biometric)
 }

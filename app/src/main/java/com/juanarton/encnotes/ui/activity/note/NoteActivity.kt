@@ -290,13 +290,13 @@ class NoteActivity : AppCompatActivity() {
                 is Resource.Success -> {
                     Log.d("test", it.data.toString())
                     it.data?.let { att ->
-                        val url = "http://192.168.0.100:5500" + att[0].url
+                        /*val url = "http://192.168.0.100:5500" + att[0].url
                         Glide.with(this).load(url).into(binding!!.ivAtt)
                         lifecycleScope.launch {
                             loadEncryptedImageWithProgress(url, binding!!.ivAtt) { progress ->
                                 Log.d("test", progress.toString())
                             }
-                        }
+                        }*/
                     }
                 }
                 is Resource.Loading -> {

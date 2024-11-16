@@ -20,6 +20,8 @@ import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Streaming
+import retrofit2.http.Url
 
 interface APIService {
     @POST("users")
@@ -80,4 +82,8 @@ interface APIService {
     suspend fun getAllAtt(
         @Header("Authorization") accessToken: String,
     ): Response<ResponseBody>
+
+    @GET
+    @Streaming
+    suspend fun downloadAtt(@Url fileUrl: String): ResponseBody
 }

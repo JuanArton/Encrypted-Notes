@@ -175,4 +175,16 @@ class RemoteNoteRepository @Inject constructor(
             }
         }.asFlow()
     }
+
+    override fun downloadAttachment(url: String, force: Boolean): Flow<Resource<Int>> {
+        return object : NetworkBoundRes<Int, Int>() {
+            override fun loadFromNetwork(data: Int): Flow<Int> {
+                return flowOf(data)
+            }
+
+            override suspend fun createCall(): Flow<APIResponse<Int>> {
+                return attachmentRemoteDataSource.downloadAttachment(url, force)
+            }
+        }.asFlow()
+    }
 }

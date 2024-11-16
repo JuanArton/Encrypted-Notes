@@ -54,4 +54,6 @@
     <string name="notes_saved_in_cloud">Notes saved in cloud :)</string>
     <string name="failed_to_sync_notes">Failed to sync notes : </string>
     <string name="delete">Delete</string>
+    <string name="failed_to_download_attachment">Failed to load attachment</string>
+    <string name="attachment_image">Attachment image</string>
 </resources>

@@ -1,10 +1,12 @@
 package com.juanarton.encnotes.core.data.source.remote
 
 import android.content.Context
+import android.util.Log
 import com.google.gson.Gson
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.api.API
 import com.juanarton.encnotes.core.data.api.APIResponse
+import com.juanarton.encnotes.core.data.api.ProgressListener
 import com.juanarton.encnotes.core.data.api.attachments.getattachment.AttachmentData
 import com.juanarton.encnotes.core.data.api.attachments.getattachment.GetAttachmentResponse
 import com.juanarton.encnotes.core.data.api.authentications.updatekey.PutUpdateKey
@@ -23,6 +25,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
 import org.json.JSONObject
 import retrofit2.Response
+import java.io.File
+import java.io.FileOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -154,4 +158,51 @@ class AttachmentRemoteDataSource @Inject constructor(
         val newAccessKey = API.services.updateAccessKey(PutUpdateKey(refreshKey))
         sharedPrefDataSource.setAccessKey(newAccessKey.updateKeyData.accessToken)
     }
+
+    fun downloadAttachment(url: String, force: Boolean): Flow<APIResponse<Int>> = flow {
+        try {
+            val exist = API.downloadProcesses.any {
+                it.first == url
+            }
+
+            if (force && exist) {
+                val index = API.downloadProcesses.indexOfFirst { it.first == url }
+                API.downloadProcesses.removeAt(index)
+            }
+
+            if (exist) {
+                val index = API.downloadProcesses.indexOfFirst { it.first == url }
+                while (API.downloadProcesses[index].third) {
+                    emit(APIResponse.Success(API.downloadProcesses[index].second))
+                }
+            } else {
+                val index = API.downloadProcesses.size
+                API.downloadProcesses.add(Triple(url, 0, true))
+
+                val responseBody = API.services.downloadAtt(url)
+
+                API.progressListener = object : ProgressListener {
+                    override fun onProgress(bytesRead: Long, contentLength: Long, done: Boolean) {
+                        val downloaded = if (contentLength > 0) {
+                            ((bytesRead * 100) / contentLength).toInt()
+                        } else 0
+                        API.downloadProcesses[index] = Triple(url, downloaded, true)
+                    }
+                }
+
+                responseBody.byteStream().use { input ->
+                    val fileName = url.substringAfterLast("/")
+                    val file = File(context.filesDir, fileName)
+                    FileOutputStream(file).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+
+                API.downloadProcesses[index] = Triple(url, API.downloadProcesses[index].second, false)
+                emit(APIResponse.Success(API.downloadProcesses[index].second))
+            }
+        } catch (e: Exception) {
+            emit(APIResponse.Error("Download failed: ${e.message}"))
+        }
+    }.flowOn(Dispatchers.IO)
 }

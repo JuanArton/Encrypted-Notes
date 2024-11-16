@@ -2,7 +2,7 @@ package com.juanarton.encnotes.ui.utils
 
 import com.juanarton.encnotes.core.data.domain.model.Notes
 
-object DataSync {
+object NoteSync {
     fun syncNotes(localNotes: List<Notes>, remoteNotes: List<Notes>): SyncNotes {
         val localMap = localNotes.associateBy { it.id }
         val remoteMap = remoteNotes.associateBy { it.id }
