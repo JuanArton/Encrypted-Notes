@@ -1,12 +1,14 @@
 package com.juanarton.encnotes.core.utils
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Paint
 import android.graphics.RenderEffect
 import android.graphics.Shader
 import android.os.Build
 import android.widget.ImageView
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -14,9 +16,10 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
-import com.bumptech.glide.request.target.Target
+import com.juanarton.encnotes.core.data.domain.usecase.local.LocalNotesRepoUseCase
+import com.juanarton.encnotes.core.data.domain.usecase.remote.RemoteNotesRepoUseCase
 import com.juanarton.encnotes.databinding.AttachmentItemViewBinding
-import com.juanarton.encnotes.ui.activity.main.MainViewModel
+import com.ketch.Ketch
 import jp.wasabeef.glide.transformations.BlurTransformation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOn
@@ -24,12 +27,13 @@ import kotlinx.coroutines.launch
 import java.io.BufferedInputStream
 import java.io.File
 
-class ImageLoader() {
+class ImageLoader {
     fun loadImage(
         context: Context, url: String, binding: AttachmentItemViewBinding,
-        mainViewModel: MainViewModel, lifecycleOwner: LifecycleOwner
+        localNotesRepoUseCase: LocalNotesRepoUseCase, remoteNotesRepoUseCase: RemoteNotesRepoUseCase,
+        lifecycleOwner: LifecycleOwner, ketch: Ketch
     ) {
-        val key = mainViewModel.getCipherKey()
+        val key = localNotesRepoUseCase.getCipherKey()
         binding.apply {
             if (!key.isNullOrEmpty()) {
                 val deserializedKey = Cryptography.deserializeKeySet(key)
@@ -45,17 +49,17 @@ class ImageLoader() {
                     }
 
                     lifecycleOwner.lifecycleScope.launch {
-                        val id = mainViewModel.downloadAttachment(fullUrl)
+                        val id = remoteNotesRepoUseCase.downloadAttachment(fullUrl, ketch)
 
                         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            mainViewModel.ketch.observeDownloadById(id)
+                            ketch.observeDownloadById(id)
                                 .flowOn(Dispatchers.IO)
                                 .collect { downloadModel ->
                                     if (downloadModel.status.name == "SUCCESS") {
                                         val decryptedImage = Cryptography.decrypt(readImage(url, context), deserializedKey)
                                         showImage(context, ivAttachmentImg, decryptedImage, ivAttachmentImg.width)
                                         blurBackground(ivAttachmentImgBg, context, decryptedImage, ivAttachmentImgBg.width)
-                                        mainViewModel.ketch.clearDb(downloadModel.id, false)
+                                        ketch.clearDb(downloadModel.id, false)
                                     }
                                 }
                         }
@@ -78,25 +82,46 @@ class ImageLoader() {
     private fun blurBackground(
         imageView: ImageView, context: Context, byteArray: ByteArray, width: Int
     ) {
+        val widthHeight = calculateWidthHeight(byteArray, width)
+        val transparentImage = transparentImage(byteArray)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
             Glide.with(context)
-                .load(byteArray)
-                .transform(BlurTransformation(30))
+                .load(transparentImage)
+                .override(widthHeight.first, widthHeight.second)
+                .transform(BlurTransformation(30), CenterCrop())
                 .transition(DrawableTransitionOptions.withCrossFade())
                 .into(imageView)
         } else {
             Glide.with(context)
-                .load(byteArray)
+                .load(transparentImage)
+                .override(widthHeight.first, widthHeight.second)
                 .transition(DrawableTransitionOptions.withCrossFade())
+                .centerCrop()
                 .into(imageView)
 
             imageView.setRenderEffect(
                 RenderEffect.createBlurEffect(
-                    30.0F, 30.0F, Shader.TileMode.CLAMP
+                    60.0F, 60.0F, Shader.TileMode.CLAMP
                 )
             )
         }
     }
+
+    private fun transparentImage(byteArray: ByteArray): Bitmap {
+        val bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
+
+        val width = bitmap.width
+        val height = bitmap.height
+        val transparentBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+
+        val canvas = Canvas(transparentBitmap)
+        val paint = Paint()
+        paint.alpha = (0.3 * 255).toInt()
+        canvas.drawBitmap(bitmap, 0f, 0f, paint)
+
+        return transparentBitmap
+    }
+
 
     private fun readImage(url: String, context: Context): ByteArray {
         val file = File(context.filesDir, url)

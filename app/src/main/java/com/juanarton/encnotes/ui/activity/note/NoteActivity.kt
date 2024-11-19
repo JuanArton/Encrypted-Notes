@@ -11,6 +11,7 @@ import android.os.Handler
 import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
+import android.transition.Transition
 import android.util.Log
 import android.util.TypedValue
 import android.view.Window
@@ -23,19 +24,27 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.flexbox.JustifyContent
 import com.google.android.material.transition.platform.MaterialContainerTransform
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.juanarton.encnotes.R
+import com.juanarton.encnotes.core.adapter.AttachmentAdapter
+import com.juanarton.encnotes.core.adapter.GridSpacingItemDecoration
+import com.juanarton.encnotes.core.adapter.NotesAdapter
 import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.databinding.ActivityNoteBinding
+import com.juanarton.encnotes.ui.utils.Utils
+import com.ketch.Ketch
 import dagger.hilt.android.AndroidEntryPoint
 import io.viascom.nanoid.NanoId
 import java.util.Date
@@ -46,16 +55,16 @@ class NoteActivity : AppCompatActivity() {
     private var _binding: ActivityNoteBinding? = null
     private val binding get() = _binding
     private val noteViewModel: NoteViewModel by viewModels()
-    private lateinit var auth: FirebaseAuth
+    private var auth = Firebase.auth
     private var id = NanoId.generate(16)
     private lateinit var notes: Notes
     private var time = Date().time
-    private var isBackpresed = false
     private var act = "add"
     private var initTitle = ""
     private var initContent = ""
     private lateinit var selectImageLauncher: ActivityResultLauncher<Intent>
     private var newAttachment: ArrayList<Attachment> = arrayListOf()
+    private lateinit var rvAdapter: AttachmentAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
@@ -66,25 +75,25 @@ class NoteActivity : AppCompatActivity() {
         var runnable: Runnable? = null
 
         binding?.main?.transitionName = "shared_element_end_root"
+        val transform = buildContainerTransform()
+        transform.addListener(object : Transition.TransitionListener {
+            override fun onTransitionStart(transition: Transition?) {}
+            override fun onTransitionEnd(transition: Transition?) {
+                val typedValue = TypedValue()
+                this@NoteActivity.theme.resolveAttribute(com.google.android.material.R.attr.colorSurfaceContainerLow, typedValue, true)
+                val window: Window = this@NoteActivity.window
+                window.navigationBarColor = typedValue.data
+            }
+            override fun onTransitionCancel(transition: Transition?) {}
+            override fun onTransitionPause(transition: Transition?) {}
+            override fun onTransitionResume(transition: Transition?) {}
+        })
         setEnterSharedElementCallback(MaterialContainerTransformSharedElementCallback())
-        window.sharedElementEnterTransition = buildContainerTransform()
-        window.sharedElementReturnTransition = buildContainerTransform()
+        window.sharedElementEnterTransition = transform
+        window.sharedElementReturnTransition = transform
 
         setContentView(binding?.root)
         super.onCreate(savedInstanceState)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
-            insets
-        }
-
-        val typedValue = TypedValue()
-        this.theme.resolveAttribute(com.google.android.material.R.attr.colorSurfaceContainerLow, typedValue, true)
-
-        val window: Window = this.window
-        window.navigationBarColor = typedValue.data
-
-        auth = Firebase.auth
 
         initNoteData()
 
@@ -138,11 +147,11 @@ class NoteActivity : AppCompatActivity() {
             intent.getParcelableExtra("noteData")
         }
 
-        val attachments: ArrayList<Attachment>? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableArrayListExtra("attachments", Attachment::class.java)
+        val attachments: ArrayList<Attachment>? = if (Build.VERSION.SDK_INT >= 33) {
+            intent.getParcelableArrayListExtra("attachmentData", Attachment::class.java)
         } else {
             @Suppress("DEPRECATION")
-            intent.getParcelableArrayListExtra("attachments")
+            intent.getParcelableArrayListExtra("attachmentData")
         }
 
         notesTmp?.let {
@@ -158,6 +167,33 @@ class NoteActivity : AppCompatActivity() {
         }
 
         attachments?.let {
+            binding?.apply {
+                val span = if (attachments.size < 3 || attachments.size == 4) attachments.size else 3
+
+                if (attachments.size < 3) {
+                    rvImgAttachment.layoutManager = GridLayoutManager(this@NoteActivity, span)
+                } else if (attachments.size == 4) {
+                    rvImgAttachment.layoutManager = GridLayoutManager(this@NoteActivity, 2)
+                } else if (attachments.size == 3) {
+                    rvImgAttachment.layoutManager = FlexboxLayoutManager(this@NoteActivity).apply {
+                        flexDirection = FlexDirection.ROW
+                        maxLine = 2
+                    }
+                } else {
+                    rvImgAttachment.layoutManager = StaggeredGridLayoutManager(span, LinearLayoutManager.VERTICAL)
+                }
+
+                if (attachments.size > 1) {
+                    rvImgAttachment.addItemDecoration(GridSpacingItemDecoration(Utils.dpToPx(5, this@NoteActivity)))
+                }
+
+                rvAdapter = AttachmentAdapter(
+                    noteViewModel.localNotesRepoUseCase, noteViewModel.remoteNotesRepoUseCase,
+                    Ketch.builder().build(this@NoteActivity)
+                )
+                rvImgAttachment.adapter = rvAdapter
+                rvAdapter.setData(it)
+            }
         }
     }
 
@@ -183,7 +219,6 @@ class NoteActivity : AppCompatActivity() {
                 else { ActivityCompat.finishAfterTransition(this@NoteActivity) }
             }
         }
-        isBackpresed = true
     }
 
     private fun setResult (title: String, content: String) {
@@ -191,13 +226,7 @@ class NoteActivity : AppCompatActivity() {
             val resultIntent = Intent().apply {
                 putExtra(
                     "notesData",
-                    Notes(
-                        id,
-                        title,
-                        content,
-                        false,
-                        time
-                    )
+                    Notes(id, title, content, false, time)
                 )
                 putExtra("notesEncrypted", notes)
                 putExtra("newAtt", newAttachment)
@@ -289,16 +318,13 @@ class NoteActivity : AppCompatActivity() {
                     Toast.makeText(this@NoteActivity, it.message, Toast.LENGTH_SHORT).show()
                 }
             }
-
         }
     }
 
     private fun observeNoteResource(resource: Resource<*>) {
         when (resource) {
             is Resource.Success -> {}
-            is Resource.Loading -> {
-                Log.d("Note Activity", "Loading")
-            }
+            is Resource.Loading -> {}
             is Resource.Error -> {
                 Toast.makeText(this@NoteActivity, resource.message, Toast.LENGTH_SHORT).show()
             }
@@ -331,5 +357,10 @@ class NoteActivity : AppCompatActivity() {
             type = "image/*"
         }
         selectImageLauncher.launch(intent)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
     }
 }

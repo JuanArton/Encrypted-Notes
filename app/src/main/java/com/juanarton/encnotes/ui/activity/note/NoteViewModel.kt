@@ -25,17 +25,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NoteViewModel @Inject constructor(
-    private val localNotesRepoUseCase: LocalNotesRepoUseCase,
-    private val remoteNotesRepoUseCase: RemoteNotesRepoUseCase
+    val localNotesRepoUseCase: LocalNotesRepoUseCase,
+    val remoteNotesRepoUseCase: RemoteNotesRepoUseCase
 ): ViewModel() {
     private var _addNoteLocal: MutableLiveData<Resource<Boolean>> = MutableLiveData()
     var addNoteLocal: LiveData<Resource<Boolean>> = _addNoteLocal
 
     private var _updateNoteLocal: MutableLiveData<Resource<Boolean>> = MutableLiveData()
     var updateNoteLocal: LiveData<Resource<Boolean>> = _updateNoteLocal
-
-    private val _downloadProgress = MutableLiveData<Int>()
-    val downloadProgress: LiveData<Int> get() = _downloadProgress
 
     private val _addAtt: MutableLiveData<Pair<Boolean, String>> = MutableLiveData()
     val addAtt: LiveData<Pair<Boolean, String>> = _addAtt

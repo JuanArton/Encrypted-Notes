@@ -18,16 +18,11 @@ import androidx.appcompat.view.ActionMode
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.selection.SelectionPredicates
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import com.google.android.flexbox.FlexDirection
-import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import com.google.firebase.Firebase
@@ -50,10 +45,6 @@ import com.juanarton.encnotes.ui.utils.NoteSync
 import com.juanarton.encnotes.ui.utils.Utils
 import com.ketch.Ketch
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.launch
-import java.io.File
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), ActionMode.Callback {
@@ -73,6 +64,7 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
     private lateinit var tracker: SelectionTracker<String>
     private var actionMode: ActionMode? = null
     private lateinit var auth: FirebaseAuth
+    lateinit var ketch: Ketch
 
     companion object {
         init {
@@ -111,7 +103,7 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
         }
 
         Cryptography.initTink()
-        mainViewModel.ketch = Ketch.builder().build(this)
+        ketch = Ketch.builder().build(this)
 
         mainViewModel.getNotes()
 
@@ -135,7 +127,9 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
             val staggeredLayout = StaggeredGridLayoutManager(2, LinearLayoutManager.VERTICAL)
             rvNotes.layoutManager = staggeredLayout
             rvNotes.addItemDecoration(GridSpacingItemDecoration(Utils.dpToPx(7, this@MainActivity)))
-            rvAdapter = NotesAdapter(listener, mainViewModel)
+            rvAdapter = NotesAdapter(
+                listener, mainViewModel.localNotesRepoUseCase, mainViewModel.remoteNotesRepoUseCase, ketch
+            )
             rvNotes.adapter = rvAdapter
 
             tracker = SelectionTracker.Builder(
@@ -304,6 +298,7 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
                                     notDeletedNotes[index] = note
                                     attachment?.let {
                                         notDeleteAttachment.addAll(attachment)
+                                        mainViewModel.uploadAttachment(this@MainActivity, attachment)
                                     }
                                     rvAdapter.updateItem(index, note, notDeleteAttachment)
                                     encryptedNote?.let {enc -> mainViewModel.updateNoteRemote(enc)}
@@ -360,5 +355,10 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
 
         val spanCount = if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) 3 else 2
         binding?.rvNotes?.layoutManager = StaggeredGridLayoutManager(spanCount, LinearLayoutManager.VERTICAL)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
     }
 }

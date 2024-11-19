@@ -13,6 +13,7 @@
         android:contentDescription="@string/attachment_image"
         android:src="@drawable/baseline_block_24"
         android:scaleType="centerCrop"
+        android:foregroundGravity="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

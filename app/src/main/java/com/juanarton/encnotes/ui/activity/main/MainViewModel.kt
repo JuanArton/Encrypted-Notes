@@ -1,7 +1,6 @@
 package com.juanarton.encnotes.ui.activity.main
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -16,7 +15,6 @@ import com.juanarton.encnotes.ui.utils.SyncAttachment
 import com.juanarton.encnotes.ui.utils.SyncNotes
 import com.ketch.Ketch
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.BufferedInputStream
@@ -25,8 +23,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val localNotesRepoUseCase: LocalNotesRepoUseCase,
-    private val remoteNotesRepoUseCase: RemoteNotesRepoUseCase
+    val localNotesRepoUseCase: LocalNotesRepoUseCase,
+    val remoteNotesRepoUseCase: RemoteNotesRepoUseCase
 ): ViewModel() {
     private var _getNotes: MutableLiveData<List<Notes>> = MutableLiveData()
     var getNotes: LiveData<List<Notes>> = _getNotes
@@ -61,8 +59,6 @@ class MainViewModel @Inject constructor(
     var uploadAttachment: LiveData<Resource<Attachment>> = _uploadAttachment
 
     var _notDeletedAtt: MutableLiveData<List<Attachment>> = MutableLiveData()
-
-    lateinit var ketch: Ketch
 
     fun getCipherKey() = localNotesRepoUseCase.getCipherKey()
 
@@ -145,8 +141,6 @@ class MainViewModel @Inject constructor(
             }
         }
     }
-
-    suspend fun downloadAttachment(url: String) = remoteNotesRepoUseCase.downloadAttachment(url, ketch)
 
     fun syncToLocal(syncNotes: SyncNotes) {
         viewModelScope.launch {

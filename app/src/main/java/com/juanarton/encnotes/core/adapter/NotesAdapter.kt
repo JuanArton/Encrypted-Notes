@@ -16,14 +16,19 @@ import com.google.android.material.card.MaterialCardView
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.Notes
+import com.juanarton.encnotes.core.data.domain.usecase.local.LocalNotesRepoUseCase
+import com.juanarton.encnotes.core.data.domain.usecase.remote.RemoteNotesRepoUseCase
 import com.juanarton.encnotes.databinding.NoteItemViewBinding
 import com.juanarton.encnotes.ui.activity.main.MainViewModel
 import com.juanarton.encnotes.ui.utils.Utils
+import com.ketch.Ketch
 
 
 class NotesAdapter (
     private val onClick: (Notes, MaterialCardView, List<Attachment>) -> Unit,
-    private val mainViewModel: MainViewModel,
+    private val localNotesRepoUseCase: LocalNotesRepoUseCase,
+    private val remoteNotesRepoUseCase: RemoteNotesRepoUseCase,
+    private val ketch: Ketch
 ) : RecyclerView.Adapter<NotesAdapter.ViewHolder>(){
     var noteList: ArrayList<Notes> = arrayListOf()
     var attachmentList: ArrayList<Attachment> = arrayListOf()
@@ -106,12 +111,6 @@ class NotesAdapter (
                 }
 
                 val span = if (attachments.size in 1..2) attachments.size else 3
-                val gridLayout = GridLayoutManager(context, span)
-                gridLayout.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
-                    override fun getSpanSize(position: Int): Int {
-                        return if (attachments.size < 3) attachments.size else 3
-                    }
-                }
 
                 if (attachments.size < 3) {
                     rvImgAttachment.layoutManager = GridLayoutManager(context, span)
@@ -122,7 +121,7 @@ class NotesAdapter (
                 }
 
                 rvImgAttachment.addItemDecoration(GridSpacingItemDecoration(Utils.dpToPx(1, context)))
-                val rvAdapter = AttachmentAdapter(mainViewModel)
+                val rvAdapter = AttachmentAdapter(localNotesRepoUseCase, remoteNotesRepoUseCase, ketch)
                 rvImgAttachment.adapter = rvAdapter
 
                 rvAdapter.setData(attachments)
@@ -157,7 +156,7 @@ class NotesAdapter (
                         ))
                 }
 
-                itemView.setOnClickListener {
+                binding.clickMask.setOnClickListener {
                     onClick(notes, noteItem, attachments)
                 }
             }
