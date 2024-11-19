@@ -1,12 +1,15 @@
 package com.juanarton.encnotes.core.data.domain.usecase.remote
 
 import android.app.Activity
+import android.content.Context
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.juanarton.encnotes.core.data.api.APIResponse
 import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.LoggedUser
 import com.juanarton.encnotes.core.data.domain.model.Login
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.source.remote.Resource
+import com.ketch.Ketch
 import kotlinx.coroutines.flow.Flow
 
 interface RemoteNotesRepoUseCase {
@@ -28,11 +31,11 @@ interface RemoteNotesRepoUseCase {
 
     fun deleteNoteRemote(id: String): Flow<Resource<String>>
 
-    fun uploadImageAtt(image: ByteArray, notes: Notes): Flow<Resource<Attachment>>
+    fun uploadImageAtt(image: ByteArray, attachment: Attachment): Flow<Resource<Attachment>>
 
     fun getAttachmentRemote(id: String): Flow<Resource<List<Attachment>>>
 
     fun getAllAttRemote(): Flow<Resource<List<Attachment>>>
 
-    fun downloadAttachment(url: String, force: Boolean): Flow<Resource<Int>>
+    suspend fun downloadAttachment(url: String, ketch: Ketch): Int
 }

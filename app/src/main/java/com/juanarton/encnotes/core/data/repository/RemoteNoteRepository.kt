@@ -1,6 +1,7 @@
 package com.juanarton.encnotes.core.data.repository
 
 import android.app.Activity
+import android.content.Context
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.juanarton.encnotes.core.data.api.APIResponse
 import com.juanarton.encnotes.core.data.api.attachments.getattachment.AttachmentData
@@ -20,8 +21,12 @@ import com.juanarton.encnotes.core.data.source.remote.NetworkBoundRes
 import com.juanarton.encnotes.core.data.source.remote.NoteRemoteDataSource
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.DataMapper
+import com.ketch.Ketch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class RemoteNoteRepository @Inject constructor(
@@ -140,14 +145,14 @@ class RemoteNoteRepository @Inject constructor(
         }.asFlow()
     }
 
-    override fun uploadImageAttRemote(image: ByteArray, notes: Notes): Flow<Resource<Attachment>> {
+    override fun uploadImageAttRemote(image: ByteArray, attachment: Attachment): Flow<Resource<Attachment>> {
         return object : NetworkBoundRes<Attachment, PostAttachmentData>() {
             override fun loadFromNetwork(data: PostAttachmentData): Flow<Attachment> {
                 return flowOf(Attachment(data.id, null, data.url, null, null))
             }
 
             override suspend fun createCall(): Flow<APIResponse<PostAttachmentData>> {
-                return attachmentRemoteDataSource.uploadImageAtt(image, notes)
+                return attachmentRemoteDataSource.uploadImageAtt(image, attachment)
             }
         }.asFlow()
     }
@@ -176,15 +181,7 @@ class RemoteNoteRepository @Inject constructor(
         }.asFlow()
     }
 
-    override fun downloadAttachment(url: String, force: Boolean): Flow<Resource<Int>> {
-        return object : NetworkBoundRes<Int, Int>() {
-            override fun loadFromNetwork(data: Int): Flow<Int> {
-                return flowOf(data)
-            }
-
-            override suspend fun createCall(): Flow<APIResponse<Int>> {
-                return attachmentRemoteDataSource.downloadAttachment(url, force)
-            }
-        }.asFlow()
+    override suspend fun downloadAttachment(url: String, ketch: Ketch): Int {
+        return attachmentRemoteDataSource.downloadAttachment(url, ketch)
     }
 }

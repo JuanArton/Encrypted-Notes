@@ -1,5 +1,6 @@
 package com.juanarton.encnotes.ui.activity.main
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -13,8 +14,13 @@ import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.ui.utils.SyncAttachment
 import com.juanarton.encnotes.ui.utils.SyncNotes
+import com.ketch.Ketch
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.io.BufferedInputStream
+import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
@@ -51,16 +57,19 @@ class MainViewModel @Inject constructor(
     private var _getAttachmentsRemote: MutableLiveData<Resource<List<Attachment>>> = MutableLiveData()
     var getAttachmentRemote: LiveData<Resource<List<Attachment>>> = _getAttachmentsRemote
 
+    private var _uploadAttachment: MutableLiveData<Resource<Attachment>> = MutableLiveData()
+    var uploadAttachment: LiveData<Resource<Attachment>> = _uploadAttachment
+
     var _notDeletedAtt: MutableLiveData<List<Attachment>> = MutableLiveData()
+
+    lateinit var ketch: Ketch
 
     fun getCipherKey() = localNotesRepoUseCase.getCipherKey()
 
     fun getNotes() {
         viewModelScope.launch {
-            getAttachment()
-            localNotesRepoUseCase.getNotes().collect {
-                _getNotes.value = it
-            }
+            _getAttachments.value = localNotesRepoUseCase.getAttachments().first()
+            _getNotes.value = localNotesRepoUseCase.getNotes().first()
         }
     }
 
@@ -123,7 +132,21 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    suspend fun downloadAttachment(url: String, force: Boolean) = remoteNotesRepoUseCase.downloadAttachment(url, force)
+    fun uploadAttachment(context: Context, attachments: List<Attachment>) {
+        attachments.forEach { attachment ->
+            val file = File(context.filesDir, attachment.url)
+            val byteArray = file.inputStream().use { inputStream ->
+                BufferedInputStream(inputStream).readBytes()
+            }
+            viewModelScope.launch {
+                remoteNotesRepoUseCase.uploadImageAtt(byteArray, attachment).collect{
+                    _uploadAttachment.value = it
+                }
+            }
+        }
+    }
+
+    suspend fun downloadAttachment(url: String) = remoteNotesRepoUseCase.downloadAttachment(url, ketch)
 
     fun syncToLocal(syncNotes: SyncNotes) {
         viewModelScope.launch {
@@ -175,7 +198,27 @@ class MainViewModel @Inject constructor(
                 }
             }
 
-            getAttachment()
+            getNotes()
+        }
+    }
+
+    fun syncAttToRemote(syncAttachment: SyncAttachment, context: Context) {
+        viewModelScope.launch {
+            syncAttachment.toDeleteInServer.forEach { attachment ->
+                remoteNotesRepoUseCase.deleteNoteRemote(attachment.id).collect{}
+            }
+
+            syncAttachment.toAddToServer.forEach { attachment ->
+                val file = File(context.filesDir, attachment.url)
+                val byteArray = file.inputStream().use { inputStream ->
+                    BufferedInputStream(inputStream).readBytes()
+                }
+                remoteNotesRepoUseCase.uploadImageAtt(byteArray, attachment).collect{
+                    _uploadAttachment.value = it
+                }
+            }
+
+            getNotes()
         }
     }
 

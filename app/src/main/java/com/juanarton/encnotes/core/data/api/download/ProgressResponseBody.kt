@@ -36,3 +36,16 @@ class ProgressResponseBody(
         }
     }
 }
+
+
+private fun BufferedSource.setListener(listener: (bytesRead: Long) -> Unit): BufferedSource {
+    return object : ForwardingSource(this) {
+        override fun read(sink: Buffer, byteCount: Long): Long {
+            val bytesRead = super.read(sink, byteCount)
+            if (bytesRead != -1L) listener(bytesRead)
+            return bytesRead
+        }
+    }.buffer()
+}
+
+

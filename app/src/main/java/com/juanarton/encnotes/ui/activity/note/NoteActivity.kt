@@ -2,7 +2,6 @@ package com.juanarton.encnotes.ui.activity.note
 
 import android.app.Activity
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
@@ -15,8 +14,6 @@ import android.text.TextWatcher
 import android.util.Log
 import android.util.TypedValue
 import android.view.Window
-import android.view.WindowManager
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.enableEdgeToEdge
@@ -28,32 +25,19 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.lifecycleScope
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.bitmap.BitmapDrawableTransformation
-import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.transition.platform.MaterialContainerTransform
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.juanarton.encnotes.R
+import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.databinding.ActivityNoteBinding
 import dagger.hilt.android.AndroidEntryPoint
 import io.viascom.nanoid.NanoId
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.ResponseBody
-import java.io.ByteArrayOutputStream
-import java.lang.ref.WeakReference
 import java.util.Date
 
 @AndroidEntryPoint
@@ -71,6 +55,7 @@ class NoteActivity : AppCompatActivity() {
     private var initTitle = ""
     private var initContent = ""
     private lateinit var selectImageLauncher: ActivityResultLauncher<Intent>
+    private var newAttachment: ArrayList<Attachment> = arrayListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
@@ -105,7 +90,7 @@ class NoteActivity : AppCompatActivity() {
 
         onBackPressedDispatcher.addCallback(this) { handleBackPress() }
 
-        observeNoteState()
+        observeViewModel()
 
         binding?.apply {
             val textWatcher = object : TextWatcher {
@@ -139,7 +124,7 @@ class NoteActivity : AppCompatActivity() {
             if (result.resultCode == Activity.RESULT_OK) {
                 val imageUri: Uri? = result.data?.data
                 imageUri?.let {
-                    noteViewModel.addImgAddRemote(it, notes, contentResolver)
+                    noteViewModel.addAtt(it, contentResolver, this)
                 }
             }
         }
@@ -149,7 +134,15 @@ class NoteActivity : AppCompatActivity() {
         val notesTmp = if (Build.VERSION.SDK_INT >= 33) {
             intent.getParcelableExtra("noteData", Notes::class.java)
         } else {
+            @Suppress("DEPRECATION")
             intent.getParcelableExtra("noteData")
+        }
+
+        val attachments: ArrayList<Attachment>? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableArrayListExtra("attachments", Attachment::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableArrayListExtra("attachments")
         }
 
         notesTmp?.let {
@@ -162,7 +155,9 @@ class NoteActivity : AppCompatActivity() {
             id = it.id
             initContent = it.notesContent.toString()
             initTitle = it.notesTitle.toString()
-            noteViewModel.getAttRemote(it.id)
+        }
+
+        attachments?.let {
         }
     }
 
@@ -172,17 +167,17 @@ class NoteActivity : AppCompatActivity() {
             val content = etContent.text.toString()
 
             if (act == "add") {
-                if (title.isBlank() && content.isBlank()) {
+                if (title.isBlank() && content.isBlank() && newAttachment.size == 0) {
                     noteViewModel.permanentDelete(id)
                     ActivityCompat.finishAfterTransition(this@NoteActivity)
                 }
-                else if (title.isNotBlank() || content.isNotBlank()) {
+                else if (title.isNotBlank() || content.isNotBlank() || newAttachment.size != 0) {
                     setResult(etTitle.text.toString(), etContent.text.toString())
                 }
                 else { ActivityCompat.finishAfterTransition(this@NoteActivity) }
             }
             else if (act == "update") {
-                if (title != initTitle || content != initContent) {
+                if (title != initTitle || content != initContent || newAttachment.size != 0) {
                     setResult(etTitle.text.toString(), etContent.text.toString())
                 }
                 else { ActivityCompat.finishAfterTransition(this@NoteActivity) }
@@ -192,7 +187,7 @@ class NoteActivity : AppCompatActivity() {
     }
 
     private fun setResult (title: String, content: String) {
-        if (title != initTitle || content != initContent) {
+        if (title != initTitle || content != initContent || newAttachment.size != 0) {
             val resultIntent = Intent().apply {
                 putExtra(
                     "notesData",
@@ -205,6 +200,7 @@ class NoteActivity : AppCompatActivity() {
                     )
                 )
                 putExtra("notesEncrypted", notes)
+                putExtra("newAtt", newAttachment)
                 putExtra("action", act)
             }
             setResult(Activity.RESULT_OK, resultIntent)
@@ -260,104 +256,40 @@ class NoteActivity : AppCompatActivity() {
         }
     }
 
-    private fun observeNoteState() {
-        noteViewModel.addNoteRemote.observe(this) {
-            when(it){
-                is Resource.Success -> {
-                    Toast.makeText(
-                        this@NoteActivity,
-                        getString(R.string.notes_saved_in_cloud),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    finish()
-                }
-                is Resource.Loading -> {
-                    Log.d("Note Activity1", "Loading")
-                }
-                is Resource.Error -> {
-                    Toast.makeText(
-                        this@NoteActivity,
-                        it.message,
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    finish()
-                }
-            }
-        }
-
-        noteViewModel.getAttRemote.observe(this) {
-            when(it){
-                is Resource.Success -> {
-                    Log.d("test", it.data.toString())
-                    it.data?.let { att ->
-                        /*val url = "http://192.168.0.100:5500" + att[0].url
-                        Glide.with(this).load(url).into(binding!!.ivAtt)
-                        lifecycleScope.launch {
-                            loadEncryptedImageWithProgress(url, binding!!.ivAtt) { progress ->
-                                Log.d("test", progress.toString())
-                            }
-                        }*/
-                    }
-                }
-                is Resource.Loading -> {
-                    Log.d("Note Activity1", "Loading")
-                }
-                is Resource.Error -> {
-                    it.message?.let { it1 -> Log.d("status", it1) }
-                    Toast.makeText(
-                        this@NoteActivity,
-                        it.message,
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-        }
-
+    private fun observeViewModel() {
         noteViewModel.updateNoteLocal.observe(this) { observeNoteResource(it) }
         noteViewModel.addNoteLocal.observe(this) { observeNoteResource(it) }
-    }
 
-    suspend fun loadEncryptedImageWithProgress(
-        url: String,
-        imageView: ImageView,
-        onProgress: (Int) -> Unit
-    ) {
-        val encryptedImage = downloadImageWithProgress(url, onProgress)
+        noteViewModel.addAtt.observe(this) {
+            if (it.first) {
+                var id = ""
+                id = if (act == "add") {
+                    this.id
+                } else notes.id
+                binding?.apply {
+                    handleSaveNote(etTitle.text.toString(), etContent.text.toString())
+                }
+                noteViewModel.insertAtt(
+                    Attachment(
+                        NanoId.generate(16), id, it.second, false, Date().time
+                    )
+                )
+            }
+        }
 
-        val key = noteViewModel.getCipherKey()
-        val deserializedKey = Cryptography.deserializeKeySet(key!!)
-        val decryptedImageBytes = Cryptography.decrypt(encryptedImage, deserializedKey)
-
-        val bitmap = BitmapFactory.decodeByteArray(decryptedImageBytes, 0, decryptedImageBytes.size)
-
-        Glide.with(imageView.context)
-            .load(bitmap)
-            .into(imageView)
-    }
-
-    private suspend fun downloadImageWithProgress(url: String, onProgress: (Int) -> Unit): ByteArray {
-        return withContext(Dispatchers.IO) {
-            val client = OkHttpClient()
-            val request = Request.Builder().url(url).build()
-            val response = client.newCall(request).execute().body
-
-            val totalBytes = response.contentLength()
-            val inputStream = response.byteStream()
-
-            val buffer = ByteArray(8192)
-            var bytesRead: Int
-            var totalBytesRead = 0L
-            val outputStream = ByteArrayOutputStream()
-
-            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                totalBytesRead += bytesRead
-                outputStream.write(buffer, 0, bytesRead)
-
-                val progress = ((totalBytesRead * 100) / totalBytes).toInt()
-                onProgress(progress)
+        noteViewModel.insertAtt.observe(this) {
+            when (it) {
+                is Resource.Success -> {
+                    it.data?.let { it1 -> newAttachment.add(0, it1) }
+                }
+                is Resource.Loading -> {
+                    Log.d("Note Activity", "Loading")
+                }
+                is Resource.Error -> {
+                    Toast.makeText(this@NoteActivity, it.message, Toast.LENGTH_SHORT).show()
+                }
             }
 
-            outputStream.toByteArray()
         }
     }
 

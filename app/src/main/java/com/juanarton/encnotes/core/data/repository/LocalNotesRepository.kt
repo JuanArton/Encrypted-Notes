@@ -2,6 +2,7 @@ package com.juanarton.encnotes.core.data.repository
 
 import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
+import android.util.Log
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.Notes
@@ -17,8 +18,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
+import java.io.File
 import javax.inject.Inject
 
 class LocalNotesRepository @Inject constructor(
@@ -131,12 +134,12 @@ class LocalNotesRepository @Inject constructor(
         emit(DataMapper.mapAttachmentsEntityToDomain(attachmentLocalDataSource.getAttachmentByNoteId(id)))
     }.flowOn(Dispatchers.IO)
 
-    override fun insertAttachment(attachment: Attachment): Flow<Resource<Boolean>> = flow {
+    override fun insertAttachment(attachment: Attachment): Flow<Resource<Attachment>> = flow {
         try {
             attachmentLocalDataSource.insertAttachment(
                 DataMapper.mapAttachmentDomainToEntity(attachment)
             )
-            emit(Resource.Success(true))
+            emit(Resource.Success(attachment))
         } catch (e: SQLiteConstraintException) {
             emit(Resource.Error(context.getString(R.string.insert_error)))
         } catch (e: Exception) {
@@ -168,4 +171,7 @@ class LocalNotesRepository @Inject constructor(
             attachmentLocalDataSource.permanentDeleteAtt(id)
         }
     }
+
+    override fun writeFileToDisk(file: File, byteArray: ByteArray): Flow<Pair<Boolean, String>> =
+       attachmentLocalDataSource.writeFileToDisk(file, byteArray)
 }

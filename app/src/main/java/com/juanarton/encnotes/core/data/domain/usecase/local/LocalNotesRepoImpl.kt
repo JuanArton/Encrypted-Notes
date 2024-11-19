@@ -5,6 +5,7 @@ import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.domain.repository.ILocalNotesRepository
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import kotlinx.coroutines.flow.Flow
+import java.io.File
 import javax.inject.Inject
 
 class LocalNotesRepoImpl @Inject constructor(
@@ -58,7 +59,7 @@ class LocalNotesRepoImpl @Inject constructor(
     override fun getAttachmentByNoteId(id: String): Flow<List<Attachment>> =
         iLocalNotesRepository.getAttachmentByNoteId(id)
 
-    override fun insertAttachment(attachment: Attachment): Flow<Resource<Boolean>> =
+    override fun insertAttachment(attachment: Attachment): Flow<Resource<Attachment>> =
         iLocalNotesRepository.insertAttachment(attachment)
 
     override fun deleteAttachment(attachment: Attachment): Flow<Resource<Boolean>> =
@@ -66,4 +67,7 @@ class LocalNotesRepoImpl @Inject constructor(
 
     override fun permanentDeleteAtt(id: String) =
         iLocalNotesRepository.permanentDeleteNotes(id)
+
+    override fun writeFileToDisk(file: File, byteArray: ByteArray): Flow<Pair<Boolean, String>> =
+        iLocalNotesRepository.writeFileToDisk(file, byteArray)
 }

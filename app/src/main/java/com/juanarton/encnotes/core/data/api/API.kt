@@ -3,6 +3,7 @@ package com.juanarton.encnotes.core.data.api
 import com.juanarton.encnotes.BuildConfig
 import com.juanarton.encnotes.core.data.api.download.ProgressResponseBody
 import com.juanarton.encnotes.ui.activity.main.MainActivity.Companion.baseUrl
+import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -23,6 +24,7 @@ object API {
                 .body(ProgressResponseBody(originalResponse.body, progressListener))
                 .build()
         }
+        .cache(null)
         .build()
 
     private val retrofit = Retrofit.Builder()
@@ -38,5 +40,5 @@ object API {
         }
     }
 
-    var downloadProcesses: ArrayList<Triple<String, Int, Boolean>> = arrayListOf()
+    val activeDownloads = mutableMapOf<String, MutableStateFlow<APIResponse<Int>>>()
 }

@@ -69,7 +69,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.livedata.ktx)
 
     implementation(libs.glide)
-    ksp(libs.glide.ksp)
 
     implementation(libs.androidx.paging.runtime.ktx)
 
@@ -110,7 +109,7 @@ dependencies {
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.recyclerview.selection)
     implementation("com.google.android.flexbox:flexbox:3.0.0")
-    implementation("com.fivehundredpx:greedo-layout:1.5.1")
-
+    implementation("jp.wasabeef:glide-transformations:4.3.0")
+    implementation(libs.ketch)
     //implementation(libs.biometric)
 }

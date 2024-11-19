@@ -1,7 +1,14 @@
 package com.juanarton.encnotes.core.data.source.local
 
+import android.util.Log
 import com.juanarton.encnotes.core.data.source.local.room.dao.AttachmentsDAO
 import com.juanarton.encnotes.core.data.source.local.room.entity.AttachmentEntity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import java.io.File
+import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -28,4 +35,13 @@ class AttachmentLocalDataSource @Inject constructor(
     fun permanentDeleteAtt(id: String) {
         attachmentsDAO.permanentDeleteAtt(id)
     }
+
+    fun writeFileToDisk(file: File, byteArray: ByteArray): Flow<Pair<Boolean, String>> = flow {
+        try {
+            file.outputStream().use { it.write(byteArray) }
+            emit(Pair(true, file.name))
+        } catch (e: IOException) {
+            emit(Pair(false, ""))
+        }
+    }.flowOn(Dispatchers.IO)
 }

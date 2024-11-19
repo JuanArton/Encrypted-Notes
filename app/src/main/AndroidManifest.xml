@@ -46,6 +46,7 @@
         <activity
             android:name=".ui.activity.main.MainActivity"
             android:exported="false"
+            android:configChanges="orientation|screenSize"
             android:theme="@style/Theme.EncryptedNotes" />
     </application>
 

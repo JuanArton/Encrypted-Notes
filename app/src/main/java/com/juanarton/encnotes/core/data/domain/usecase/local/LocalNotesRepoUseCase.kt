@@ -8,6 +8,7 @@ import com.juanarton.encnotes.core.data.domain.model.Login
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import kotlinx.coroutines.flow.Flow
+import java.io.File
 
 interface LocalNotesRepoUseCase {
     fun setIsLoggedIn(isLoggedIn: Boolean): Flow<Boolean>
@@ -44,9 +45,11 @@ interface LocalNotesRepoUseCase {
 
     fun getAttachmentByNoteId(id: String): Flow<List<Attachment>>
 
-    fun insertAttachment(attachment: Attachment): Flow<Resource<Boolean>>
+    fun insertAttachment(attachment: Attachment): Flow<Resource<Attachment>>
 
     fun deleteAttachment(attachment: Attachment): Flow<Resource<Boolean>>
 
     fun permanentDeleteAtt(id: String)
+
+    fun writeFileToDisk(file: File, byteArray: ByteArray): Flow<Pair<Boolean, String>>
 }

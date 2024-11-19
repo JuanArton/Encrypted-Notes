@@ -7,13 +7,9 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.selection.ItemDetailsLookup
 import androidx.recyclerview.selection.SelectionTracker
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import com.google.android.flexbox.AlignContent
-import com.google.android.flexbox.AlignItems
 import com.google.android.flexbox.FlexDirection
-import com.google.android.flexbox.FlexWrap
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
 import com.google.android.material.card.MaterialCardView
@@ -26,8 +22,8 @@ import com.juanarton.encnotes.ui.utils.Utils
 
 
 class NotesAdapter (
-    private val onClick: (Notes, MaterialCardView) -> Unit,
-    private val mainViewModel: MainViewModel
+    private val onClick: (Notes, MaterialCardView, List<Attachment>) -> Unit,
+    private val mainViewModel: MainViewModel,
 ) : RecyclerView.Adapter<NotesAdapter.ViewHolder>(){
     var noteList: ArrayList<Notes> = arrayListOf()
     var attachmentList: ArrayList<Attachment> = arrayListOf()
@@ -38,7 +34,6 @@ class NotesAdapter (
     }
 
     fun setData(notes: List<Notes>?, attachment: List<Attachment>?) {
-        Log.d("test1", attachment.toString())
         attachmentList.apply {
             clear()
             attachment?.let { addAll(it) }
@@ -50,13 +45,21 @@ class NotesAdapter (
         }
     }
 
-    fun prependItem(item: Notes) {
+    fun prependItem(item: Notes, attachment: List<Attachment>?) {
         noteList.add(0, item)
+        attachmentList.apply {
+            clear()
+            attachment?.let { addAll(it) }
+        }
         notifyItemInserted(0)
     }
 
-    fun updateItem(index: Int, notes: Notes) {
+    fun updateItem(index: Int, notes: Notes, attachment: List<Attachment>?) {
         noteList[index] = notes
+        attachmentList.apply {
+            clear()
+            attachment?.let { addAll(it) }
+        }
         notifyItemChanged(index)
     }
 
@@ -98,14 +101,29 @@ class NotesAdapter (
 
                 val flexboxLayoutManager = FlexboxLayoutManager(context).apply {
                     flexDirection = FlexDirection.ROW
+                    justifyContent = JustifyContent.SPACE_BETWEEN
                     maxLine = 2
                 }
-                rvImgAttachment.layoutManager = flexboxLayoutManager
-                    //StaggeredGridLayoutManager(2, LinearLayoutManager.HORIZONTAL)
-                //rvImgAttachment.addItemDecoration(GridSpacingItemDecoration(Utils.dpToPx(2, context)))
+
+                val span = if (attachments.size in 1..2) attachments.size else 3
+                val gridLayout = GridLayoutManager(context, span)
+                gridLayout.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+                    override fun getSpanSize(position: Int): Int {
+                        return if (attachments.size < 3) attachments.size else 3
+                    }
+                }
+
+                if (attachments.size < 3) {
+                    rvImgAttachment.layoutManager = GridLayoutManager(context, span)
+                } else if (attachments.size in 3..5) {
+                    rvImgAttachment.layoutManager = flexboxLayoutManager
+                } else {
+                    rvImgAttachment.layoutManager = GridLayoutManager(context, span)
+                }
+
+                rvImgAttachment.addItemDecoration(GridSpacingItemDecoration(Utils.dpToPx(1, context)))
                 val rvAdapter = AttachmentAdapter(mainViewModel)
                 rvImgAttachment.adapter = rvAdapter
-                Log.d("test", attachments.toString())
 
                 rvAdapter.setData(attachments)
 
@@ -140,7 +158,7 @@ class NotesAdapter (
                 }
 
                 itemView.setOnClickListener {
-                    onClick(notes, noteItem)
+                    onClick(notes, noteItem, attachments)
                 }
             }
         }

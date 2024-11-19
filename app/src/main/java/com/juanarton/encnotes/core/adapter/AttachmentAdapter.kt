@@ -11,6 +11,8 @@ import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.utils.ImageLoader
 import com.juanarton.encnotes.databinding.AttachmentItemViewBinding
 import com.juanarton.encnotes.ui.activity.main.MainViewModel
+import com.juanarton.encnotes.ui.utils.Utils
+
 
 class AttachmentAdapter(
     private val mainViewModel: MainViewModel
@@ -25,21 +27,6 @@ class AttachmentAdapter(
         }
     }
 
-    fun prependItem(attachment: Attachment) {
-        attachmentList.add(0, attachment)
-        notifyItemInserted(0)
-    }
-
-    fun updateItem(index: Int, attachment: Attachment) {
-        attachmentList[index] = attachment
-        notifyItemChanged(index)
-    }
-
-    fun deleteItem(index: Int) {
-        attachmentList.removeAt(index)
-        notifyItemRemoved(index)
-    }
-
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
@@ -51,7 +38,7 @@ class AttachmentAdapter(
 
     override fun onBindViewHolder(holder: AttachmentAdapter.ViewHolder, position: Int) {
         val attachment = attachmentList[position]
-        holder.bind(attachment)
+        holder.bind(attachment, position)
     }
 
     override fun getItemCount(): Int = attachmentList.size
@@ -63,10 +50,17 @@ class AttachmentAdapter(
     inner class ViewHolder(itemView: View, private val lifecycleOwner: LifecycleOwner) : RecyclerView.ViewHolder(itemView) {
         private val binding = AttachmentItemViewBinding.bind(itemView)
 
-        fun bind(attachment: Attachment) {
+        fun bind(attachment: Attachment, position: Int) {
             binding.apply {
-                val context = ivAttachmentImg.context
-                ImageLoader.loadImage(context, attachment.url, ivAttachmentImg, mainViewModel, lifecycleOwner)
+                root.post {
+                    val context = ivAttachmentImg.context
+
+
+                    val imageLoader = ImageLoader()
+                    imageLoader.loadImage(
+                        context, attachment.url, binding, mainViewModel, lifecycleOwner
+                    )
+                }
             }
         }
     }
