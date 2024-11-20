@@ -1,12 +1,15 @@
 package com.juanarton.encnotes.ui.activity.main
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.Notes
+import com.juanarton.encnotes.core.data.domain.model.NotesPair
+import com.juanarton.encnotes.core.data.domain.model.NotesPairRaw
 import com.juanarton.encnotes.core.data.domain.usecase.local.LocalNotesRepoUseCase
 import com.juanarton.encnotes.core.data.domain.usecase.remote.RemoteNotesRepoUseCase
 import com.juanarton.encnotes.core.data.source.remote.Resource
@@ -26,8 +29,11 @@ class MainViewModel @Inject constructor(
     val localNotesRepoUseCase: LocalNotesRepoUseCase,
     val remoteNotesRepoUseCase: RemoteNotesRepoUseCase
 ): ViewModel() {
-    private var _getNotes: MutableLiveData<List<Notes>> = MutableLiveData()
-    var getNotes: LiveData<List<Notes>> = _getNotes
+    var _getNotesPair: MutableLiveData<NotesPairRaw> = MutableLiveData()
+    var getNotesPair: LiveData<NotesPairRaw> = _getNotesPair
+
+    private var _getNoteById: MutableLiveData<NotesPair> = MutableLiveData()
+    var getNoteById: LiveData<NotesPair> = _getNoteById
 
     private var _getNotesRemote: MutableLiveData<Resource<List<Notes>>> = MutableLiveData()
     var getNotesRemote: LiveData<Resource<List<Notes>>> = _getNotesRemote
@@ -46,11 +52,8 @@ class MainViewModel @Inject constructor(
 
     fun getIsLoggedIn(): Boolean = localNotesRepoUseCase.getIsLoggedIn()
 
-    var _notDeleted: MutableLiveData<List<Notes>> = MutableLiveData()
-    var notDeleted: LiveData<List<Notes>> = _notDeleted
-
-    private var _getAttachments: MutableLiveData<List<Attachment>> = MutableLiveData()
-    var getAttachment: LiveData<List<Attachment>> = _getAttachments
+    var _notDeleted: MutableLiveData<List<NotesPair>> = MutableLiveData()
+    var notDeleted: LiveData<List<NotesPair>> = _notDeleted
 
     private var _getAttachmentsRemote: MutableLiveData<Resource<List<Attachment>>> = MutableLiveData()
     var getAttachmentRemote: LiveData<Resource<List<Attachment>>> = _getAttachmentsRemote
@@ -64,8 +67,28 @@ class MainViewModel @Inject constructor(
 
     fun getNotes() {
         viewModelScope.launch {
-            _getAttachments.value = localNotesRepoUseCase.getAttachments().first()
-            _getNotes.value = localNotesRepoUseCase.getNotes().first()
+            val attachment: MutableLiveData<List<Attachment>> = MutableLiveData()
+            val notes: MutableLiveData<List<Notes>> = MutableLiveData()
+
+            attachment.value = localNotesRepoUseCase.getAttachments().first()
+            notes.value = localNotesRepoUseCase.getNotes().first()
+
+
+            _getNotesPair.value = NotesPairRaw(
+                notes.value ?: emptyList(), attachment.value ?: emptyList()
+            )
+        }
+    }
+
+    fun getNotesBydId(id: String) {
+        viewModelScope.launch {
+            val attachment: MutableLiveData<List<Attachment>> = MutableLiveData()
+            val notes: MutableLiveData<Notes> = MutableLiveData()
+
+            notes.value = localNotesRepoUseCase.getNotesById(id).first()
+            attachment.value = localNotesRepoUseCase.getAttachmentByNoteId(id).first()
+
+            _getNoteById.value = NotesPair(notes.value!!, attachment.value as ArrayList<Attachment>)
         }
     }
 
@@ -114,12 +137,6 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getAttachment() {
-        localNotesRepoUseCase.getAttachments().collect {
-            _getAttachments.value = it
-        }
-    }
-
     private fun getAttachmentRemote() {
         viewModelScope.launch {
             remoteNotesRepoUseCase.getAllAttRemote().collect {
@@ -158,7 +175,12 @@ class MainViewModel @Inject constructor(
                 localNotesRepoUseCase.updateNotes(notes).collect{}
             }
 
-            getNotes()
+            if(
+                syncNotes.toAddToLocal.isNotEmpty() || syncNotes.toUpdateToLocal.isNotEmpty() ||
+                syncNotes.toDeleteInLocal.isNotEmpty()
+            ) {
+                getNotes()
+            }
         }
     }
 
@@ -175,8 +197,6 @@ class MainViewModel @Inject constructor(
             syncNotes.toUpdateToServer.forEach { notes ->
                 remoteNotesRepoUseCase.updateNoteRemote(notes).collect{}
             }
-
-            getNotes()
         }
     }
 
@@ -191,8 +211,9 @@ class MainViewModel @Inject constructor(
                     localNotesRepoUseCase.insertAttachment(attachment).collect{}
                 }
             }
-
-            getNotes()
+            if (syncAttachment.toDeleteInLocal.isNotEmpty() || syncAttachment.toAddToLocal.isNotEmpty()) {
+                getNotes()
+            }
         }
     }
 
@@ -211,8 +232,6 @@ class MainViewModel @Inject constructor(
                     _uploadAttachment.value = it
                 }
             }
-
-            getNotes()
         }
     }
 
@@ -222,16 +241,35 @@ class MainViewModel @Inject constructor(
             val deserializedKey = Cryptography.deserializeKeySet(key)
 
             _notDeleted.value = _notDeleted.value?.map {
-                Notes(
-                    it.id,
-                    Cryptography.decrypt(it.notesTitle ?: "", deserializedKey),
-                    Cryptography.decrypt(it.notesContent ?: "", deserializedKey),
-                    it.isDelete,
-                    it.lastModified
+                val note = Notes(
+                    it.notes.id,
+                    Cryptography.decrypt(it.notes.notesTitle ?: "", deserializedKey),
+                    Cryptography.decrypt(it.notes.notesContent ?: "", deserializedKey),
+                    it.notes.isDelete,
+                    it.notes.lastModified
                 )
+
+                NotesPair(note, it.attachmentList)
             }
         } else {
             _notDeleted.value = emptyList()
+        }
+    }
+
+    fun decrypt(notes: Notes): Notes {
+        val key = getCipherKey()
+        if (!key.isNullOrEmpty()) {
+            val deserializedKey = Cryptography.deserializeKeySet(key)
+
+            return Notes(
+                notes.id,
+                Cryptography.decrypt(notes.notesTitle ?: "", deserializedKey),
+                Cryptography.decrypt(notes.notesContent ?: "", deserializedKey),
+                notes.isDelete,
+                notes.lastModified
+            )
+        } else {
+            return notes
         }
     }
 }

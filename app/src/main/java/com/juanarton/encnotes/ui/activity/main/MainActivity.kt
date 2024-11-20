@@ -34,7 +34,7 @@ import com.juanarton.encnotes.core.adapter.ItemsDetailsLookup
 import com.juanarton.encnotes.core.adapter.ItemsKeyProvider
 import com.juanarton.encnotes.core.adapter.NotesAdapter
 import com.juanarton.encnotes.core.data.domain.model.Attachment
-import com.juanarton.encnotes.core.data.domain.model.Notes
+import com.juanarton.encnotes.core.data.domain.model.NotesPair
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.databinding.ActivityMainBinding
@@ -54,17 +54,12 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
     private val binding get() = _binding
     private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var rvAdapter: NotesAdapter
-    private var localNotes: ArrayList<Notes> = arrayListOf()
-    private var notDeletedNotes: ArrayList<Notes> = arrayListOf()
-
-    private var localAttachment: ArrayList<Attachment> = arrayListOf()
-    private var notDeleteAttachment: ArrayList<Attachment> = arrayListOf()
-
     private var firstRun = true
     private lateinit var tracker: SelectionTracker<String>
     private var actionMode: ActionMode? = null
     private lateinit var auth: FirebaseAuth
     lateinit var ketch: Ketch
+    private var notDeletedNotes: ArrayList<NotesPair> = arrayListOf()
 
     companion object {
         init {
@@ -109,10 +104,9 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
 
         binding?.apply {
             val listener: (
-                Notes, MaterialCardView, List<Attachment>
-            ) -> Unit = { notes, materialCardView, attachments ->
+                NotesPair, MaterialCardView
+            ) -> Unit = { notes, materialCardView ->
                 val intent = Intent(this@MainActivity, NoteActivity::class.java)
-                intent.putParcelableArrayListExtra("attachmentData", java.util.ArrayList(attachments))
                 intent.putExtra("noteData", notes)
                 Intent.FLAG_ACTIVITY_NO_ANIMATION
                 val options =
@@ -159,21 +153,23 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
             )
             rvAdapter.tracker = tracker
 
-            mainViewModel.getNotes.observe(this@MainActivity) { noteList ->
+            mainViewModel.getNotesPair.observe(this@MainActivity) { notesPair ->
                 if (firstRun) mainViewModel.getNotesRemote()
-                val notDeleted = noteList.filter {
+                val notDeleted = notesPair.notes.filter {
                     !it.isDelete
                 }
-                localNotes = noteList as ArrayList<Notes>
-                mainViewModel._notDeleted.value = notDeleted
-                mainViewModel.decrypt()
-            }
+                val notDeletedAttachment = notesPair.attachmentList.filter {
+                    !it.isDelete!!
+                }
 
-            mainViewModel.getAttachment.observe(this@MainActivity) { attachments ->
-                val notDeleted = attachments.filter { !it.isDelete!! }
-                notDeleteAttachment = notDeleted as ArrayList<Attachment>
-                localAttachment = attachments as ArrayList<Attachment>
-                mainViewModel._notDeletedAtt.value = notDeleted
+                val notesPairList = notDeleted.map { note ->
+                    val noteAttachments = notDeletedAttachment.filter { it.noteId == note.id }
+                    NotesPair(note, noteAttachments as ArrayList)
+                }
+
+                notDeletedNotes = notesPairList as ArrayList
+                mainViewModel._notDeleted.value = notesPairList
+                mainViewModel.decrypt()
             }
 
             mainViewModel.getNotesRemote.observe(this@MainActivity) {
@@ -181,14 +177,15 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
                     is Resource.Success -> {
                         it.data?.let { notes ->
                             firstRun = false
-                            val sync = NoteSync.syncNotes(localNotes, notes)
+                            val sync = NoteSync.syncNotes(
+                                mainViewModel._getNotesPair.value?.notes ?: emptyList(),
+                                notes
+                            )
                             mainViewModel.syncToLocal(sync)
                             mainViewModel.syncToRemote(sync)
                         }
                     }
-                    is Resource.Loading -> {
-                        Log.d("Main Activity", "Loading")
-                    }
+                    is Resource.Loading -> {}
                     is Resource.Error -> {
                         firstRun = false
                         Toast.makeText(this@MainActivity,
@@ -205,14 +202,15 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
                 when(it){
                     is Resource.Success -> {
                         it.data?.let { attachment ->
-                            val sync = AttachmentSync.syncAttachment(localAttachment, attachment)
+                            val sync = AttachmentSync.syncAttachment(
+                                mainViewModel._getNotesPair.value?.attachmentList ?: emptyList(),
+                                attachment
+                            )
                             mainViewModel.syncAttToLocal(sync)
                             mainViewModel.syncAttToRemote(sync, this@MainActivity)
                         }
                     }
-                    is Resource.Loading -> {
-                        Log.d("Main Activity", "Loading")
-                    }
+                    is Resource.Loading -> {}
                     is Resource.Error -> {
                         firstRun = false
                         Toast.makeText(this@MainActivity,
@@ -228,9 +226,7 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
             mainViewModel.uploadAttachment.observe(this@MainActivity) {
                 when(it){
                     is Resource.Success -> {}
-                    is Resource.Loading -> {
-                        Log.d("Main Activity", "Loading")
-                    }
+                    is Resource.Loading -> {}
                     is Resource.Error -> {
                         Toast.makeText(this@MainActivity,
                             buildString {
@@ -242,9 +238,19 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
                 }
             }
 
+            mainViewModel.getNoteById.observe(this@MainActivity) { notePair ->
+                val index = notDeletedNotes.indexOfFirst { local ->
+                    local.notes.id == notePair.notes.id
+                }
+                notDeletedNotes[index] = notePair
+                rvAdapter.updateItem(
+                    index, NotesPair(mainViewModel.decrypt(notePair.notes), notePair.attachmentList)
+                )
+            }
+
             mainViewModel.notDeleted.observe(this@MainActivity) { notes ->
-                rvAdapter.setData(notes, notDeleteAttachment)
-                notDeletedNotes = notes as ArrayList<Notes>
+                rvAdapter.setData(notes)
+                notDeletedNotes = notes as ArrayList<NotesPair>
             }
 
             fabAddNote.setOnClickListener {
@@ -262,46 +268,36 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
             activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == RESULT_OK) {
                     val action = result.data?.getStringExtra("action")
-                    val encryptedNote = if (Build.VERSION.SDK_INT >= 33) {
-                        result.data?.getParcelableExtra("notesEncrypted", Notes::class.java)
-                    } else {
-                        result.data?.getParcelableExtra("notesEncrypted")
-                    }
 
                     val note = if (Build.VERSION.SDK_INT >= 33) {
-                        result.data?.getParcelableExtra("notesData", Notes::class.java)
+                        result.data?.getParcelableExtra("notesEncrypted", NotesPair::class.java)
                     } else {
-                        result.data?.getParcelableExtra("notesData")
-                    }
-
-                    val attachment = if (Build.VERSION.SDK_INT >= 33) {
-                        result.data?.getParcelableArrayListExtra("newAtt", Attachment::class.java)
-                    } else {
-                        result.data?.getParcelableExtra("newAtt")
+                        result.data?.getParcelableExtra("notesEncrypted")
                     }
 
                     action?.let { act ->
                         note?.let {
                             when (act) {
                                 "add" -> {
-                                    rvAdapter.prependItem(it, attachment)
+                                    val decrypted = mainViewModel.decrypt(note.notes)
+                                    notDeletedNotes.add(0, note)
+                                    rvAdapter.prependItem(NotesPair(decrypted, note.attachmentList))
                                     binding?.rvNotes?.smoothScrollToPosition(0)
-                                    attachment?.let {
-                                        notDeleteAttachment.addAll(attachment)
+                                    note.attachmentList.let { attachment ->
                                         mainViewModel.uploadAttachment(this@MainActivity, attachment)
                                     }
-                                    notDeletedNotes.add(0, note)
-                                    encryptedNote?.let { enc -> mainViewModel.insertNoteRemote(enc)}
+                                    note.notes.let { enc -> mainViewModel.insertNoteRemote(enc)}
                                 }
                                 "update" -> {
-                                    val index = notDeletedNotes.indexOfFirst { local -> local.id == note.id }
-                                    notDeletedNotes[index] = note
-                                    attachment?.let {
-                                        notDeleteAttachment.addAll(attachment)
-                                        mainViewModel.uploadAttachment(this@MainActivity, attachment)
+                                    mainViewModel.getNotesBydId(note.notes.id)
+                                    val index = notDeletedNotes.indexOfFirst { it.notes.id == note.notes.id }
+                                    val attList = notDeletedNotes[index].attachmentList
+                                    val upload = note.attachmentList.filterNot {
+                                        it in notDeletedNotes[index].attachmentList
                                     }
-                                    rvAdapter.updateItem(index, note, notDeleteAttachment)
-                                    encryptedNote?.let {enc -> mainViewModel.updateNoteRemote(enc)}
+                                    val delete = attList.filterNot { it in note.attachmentList }
+                                    mainViewModel.uploadAttachment(this@MainActivity, upload)
+                                    note.notes.let {enc -> mainViewModel.updateNoteRemote(enc)}
                                 }
                                 else -> {}
                             }
@@ -323,14 +319,14 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
         return when (item?.itemId) {
             R.id.note_delete -> {
                 val selected = rvAdapter.noteList.filter {
-                    tracker.selection.contains(it.id)
+                    tracker.selection.contains(it.notes.id)
                 }.toMutableList()
 
-                mainViewModel.deleteNote(selected)
-                mainViewModel.deleteNoteRemote(selected)
+                //mainViewModel.deleteNote(selected)
+                //mainViewModel.deleteNoteRemote(selected)
 
                 selected.forEach {
-                    val index = notDeletedNotes.indexOfFirst { notes -> notes.id == it.id }
+                    val index = notDeletedNotes.indexOfFirst { notes -> notes.notes.id == it.notes.id }
                     rvAdapter.deleteItem(index)
                     notDeletedNotes.removeAt(index)
                 }

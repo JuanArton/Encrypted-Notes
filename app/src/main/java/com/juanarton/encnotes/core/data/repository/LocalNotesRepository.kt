@@ -131,6 +131,8 @@ class LocalNotesRepository @Inject constructor(
     }.flowOn(Dispatchers.IO)
 
     override fun getAttachmentByNoteId(id: String): Flow<List<Attachment>> = flow {
+        Log.d("test1", id)
+        Log.d("test11", attachmentLocalDataSource.getAttachments().toString())
         emit(DataMapper.mapAttachmentsEntityToDomain(attachmentLocalDataSource.getAttachmentByNoteId(id)))
     }.flowOn(Dispatchers.IO)
 

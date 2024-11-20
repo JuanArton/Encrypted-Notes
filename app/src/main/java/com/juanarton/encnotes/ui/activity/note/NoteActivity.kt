@@ -25,11 +25,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
-import com.google.android.flexbox.JustifyContent
 import com.google.android.material.transition.platform.MaterialContainerTransform
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import com.google.firebase.Firebase
@@ -37,9 +34,9 @@ import com.google.firebase.auth.auth
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.adapter.AttachmentAdapter
 import com.juanarton.encnotes.core.adapter.GridSpacingItemDecoration
-import com.juanarton.encnotes.core.adapter.NotesAdapter
 import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.Notes
+import com.juanarton.encnotes.core.data.domain.model.NotesPair
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.databinding.ActivityNoteBinding
@@ -57,13 +54,13 @@ class NoteActivity : AppCompatActivity() {
     private val noteViewModel: NoteViewModel by viewModels()
     private var auth = Firebase.auth
     private var id = NanoId.generate(16)
-    private lateinit var notes: Notes
+    private lateinit var notesPair: NotesPair
     private var time = Date().time
     private var act = "add"
     private var initTitle = ""
     private var initContent = ""
+    private var initAttachment: MutableList<Attachment> = arrayListOf()
     private lateinit var selectImageLauncher: ActivityResultLauncher<Intent>
-    private var newAttachment: ArrayList<Attachment> = arrayListOf()
     private lateinit var rvAdapter: AttachmentAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -141,59 +138,31 @@ class NoteActivity : AppCompatActivity() {
 
     private fun initNoteData() {
         val notesTmp = if (Build.VERSION.SDK_INT >= 33) {
-            intent.getParcelableExtra("noteData", Notes::class.java)
+            intent.getParcelableExtra("noteData", NotesPair::class.java)
         } else {
             @Suppress("DEPRECATION")
             intent.getParcelableExtra("noteData")
         }
 
-        val attachments: ArrayList<Attachment>? = if (Build.VERSION.SDK_INT >= 33) {
-            intent.getParcelableArrayListExtra("attachmentData", Attachment::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            intent.getParcelableArrayListExtra("attachmentData")
-        }
+        rvAdapter = AttachmentAdapter(
+            noteViewModel.localNotesRepoUseCase, noteViewModel.remoteNotesRepoUseCase,
+            Ketch.builder().build(this@NoteActivity)
+        )
 
         notesTmp?.let {
-            notes = it
+            notesPair = it
             act = "update"
             binding?.apply {
-                etTitle.setText(notes.notesTitle)
-                etContent.setText(notes.notesContent)
+                etTitle.setText(notesPair.notes.notesTitle)
+                etContent.setText(notesPair.notes.notesContent)
             }
-            id = it.id
-            initContent = it.notesContent.toString()
-            initTitle = it.notesTitle.toString()
-        }
+            id = it.notes.id
+            initContent = it.notes.notesContent.toString()
+            initTitle = it.notes.notesTitle.toString()
+            initAttachment.addAll(it.attachmentList)
 
-        attachments?.let {
-            binding?.apply {
-                val span = if (attachments.size < 3 || attachments.size == 4) attachments.size else 3
-
-                if (attachments.size < 3) {
-                    rvImgAttachment.layoutManager = GridLayoutManager(this@NoteActivity, span)
-                } else if (attachments.size == 4) {
-                    rvImgAttachment.layoutManager = GridLayoutManager(this@NoteActivity, 2)
-                } else if (attachments.size == 3) {
-                    rvImgAttachment.layoutManager = FlexboxLayoutManager(this@NoteActivity).apply {
-                        flexDirection = FlexDirection.ROW
-                        maxLine = 2
-                    }
-                } else {
-                    rvImgAttachment.layoutManager = StaggeredGridLayoutManager(span, LinearLayoutManager.VERTICAL)
-                }
-
-                if (attachments.size > 1) {
-                    rvImgAttachment.addItemDecoration(GridSpacingItemDecoration(Utils.dpToPx(5, this@NoteActivity)))
-                }
-
-                rvAdapter = AttachmentAdapter(
-                    noteViewModel.localNotesRepoUseCase, noteViewModel.remoteNotesRepoUseCase,
-                    Ketch.builder().build(this@NoteActivity)
-                )
-                rvImgAttachment.adapter = rvAdapter
-                rvAdapter.setData(it)
-            }
+            prepareRecyclerAdapter()
+            rvAdapter.setData(it.attachmentList.asReversed())
         }
     }
 
@@ -203,17 +172,16 @@ class NoteActivity : AppCompatActivity() {
             val content = etContent.text.toString()
 
             if (act == "add") {
-                if (title.isBlank() && content.isBlank() && newAttachment.size == 0) {
-                    noteViewModel.permanentDelete(id)
+                if (title.isBlank() && content.isBlank() && !::notesPair.isInitialized) {
                     ActivityCompat.finishAfterTransition(this@NoteActivity)
                 }
-                else if (title.isNotBlank() || content.isNotBlank() || newAttachment.size != 0) {
+                else if (title.isNotBlank() || content.isNotBlank() || notesPair.attachmentList.isNotEmpty()) {
                     setResult(etTitle.text.toString(), etContent.text.toString())
                 }
                 else { ActivityCompat.finishAfterTransition(this@NoteActivity) }
             }
             else if (act == "update") {
-                if (title != initTitle || content != initContent || newAttachment.size != 0) {
+                if (title != initTitle || content != initContent || notesPair.attachmentList != initAttachment) {
                     setResult(etTitle.text.toString(), etContent.text.toString())
                 }
                 else { ActivityCompat.finishAfterTransition(this@NoteActivity) }
@@ -222,14 +190,9 @@ class NoteActivity : AppCompatActivity() {
     }
 
     private fun setResult (title: String, content: String) {
-        if (title != initTitle || content != initContent || newAttachment.size != 0) {
+        if (title != initTitle || content != initContent || notesPair.attachmentList.isNotEmpty()) {
             val resultIntent = Intent().apply {
-                putExtra(
-                    "notesData",
-                    Notes(id, title, content, false, time)
-                )
-                putExtra("notesEncrypted", notes)
-                putExtra("newAtt", newAttachment)
+                putExtra("notesEncrypted", notesPair)
                 putExtra("action", act)
             }
             setResult(Activity.RESULT_OK, resultIntent)
@@ -245,25 +208,26 @@ class NoteActivity : AppCompatActivity() {
         if (!key.isNullOrEmpty()) {
             val deserializedKey = Cryptography.deserializeKeySet(key)
             if (ownerId != null) {
-                if (::notes.isInitialized) {
-                    id = notes.id
-                    notes = Notes(
-                        notes.id,
+                if (::notesPair.isInitialized) {
+                    id = notesPair.notes.id
+                    notesPair.notes = Notes(
+                        notesPair.notes.id,
                         Cryptography.encrypt(title, deserializedKey),
                         Cryptography.encrypt(content, deserializedKey),
                         false,
                         time
                     )
-                    noteViewModel.updateNoteLocal(notes)
+                    noteViewModel.updateNoteLocal(notesPair.notes)
                 } else {
-                    notes = Notes(
+                    val notes = Notes(
                         id,
                         Cryptography.encrypt(title, deserializedKey),
                         Cryptography.encrypt(content, deserializedKey),
                         false,
                         time
                     )
-                    noteViewModel.insertNote(notes)
+                    notesPair = NotesPair(notes, arrayListOf())
+                    noteViewModel.insertNote(notesPair.notes)
                 }
             } else {
                 Toast.makeText(
@@ -294,7 +258,7 @@ class NoteActivity : AppCompatActivity() {
                 var id = ""
                 id = if (act == "add") {
                     this.id
-                } else notes.id
+                } else notesPair.notes.id
                 binding?.apply {
                     handleSaveNote(etTitle.text.toString(), etContent.text.toString())
                 }
@@ -309,7 +273,13 @@ class NoteActivity : AppCompatActivity() {
         noteViewModel.insertAtt.observe(this) {
             when (it) {
                 is Resource.Success -> {
-                    it.data?.let { it1 -> newAttachment.add(0, it1) }
+                    it.data?.let { attachment ->
+                        if(notesPair.attachmentList.size == 0) {
+                            prepareRecyclerAdapter()
+                        }
+                        notesPair.attachmentList.add(0, attachment)
+                        rvAdapter.addData(attachment)
+                    }
                 }
                 is Resource.Loading -> {
                     Log.d("Note Activity", "Loading")
@@ -328,6 +298,34 @@ class NoteActivity : AppCompatActivity() {
             is Resource.Error -> {
                 Toast.makeText(this@NoteActivity, resource.message, Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    private fun prepareRecyclerAdapter() {
+        binding?.apply {
+            val span = if (
+                notesPair.attachmentList.size in 1..2
+                || notesPair.attachmentList.size == 4
+            ) notesPair.attachmentList.size else 3
+
+            if (notesPair.attachmentList.size < 3) {
+                rvImgAttachment.layoutManager = GridLayoutManager(this@NoteActivity, span)
+            } else if (notesPair.attachmentList.size == 4) {
+                rvImgAttachment.layoutManager = GridLayoutManager(this@NoteActivity, 2)
+            } else if (notesPair.attachmentList.size == 3) {
+                rvImgAttachment.layoutManager = FlexboxLayoutManager(this@NoteActivity).apply {
+                    flexDirection = FlexDirection.ROW
+                    maxLine = 2
+                }
+            } else {
+                rvImgAttachment.layoutManager = GridLayoutManager(this@NoteActivity, span)
+            }
+
+            if (notesPair.attachmentList.size > 1) {
+                rvImgAttachment.addItemDecoration(GridSpacingItemDecoration(Utils.dpToPx(5, this@NoteActivity)))
+            }
+
+            rvImgAttachment.adapter = rvAdapter
         }
     }
 

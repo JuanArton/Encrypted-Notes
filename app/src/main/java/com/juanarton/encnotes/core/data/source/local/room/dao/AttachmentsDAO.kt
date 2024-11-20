@@ -12,7 +12,7 @@ interface AttachmentsDAO {
     @Query("SELECT * FROM attachments")
     fun getAttachments(): List<AttachmentEntity>
 
-    @Query("SELECT * FROM attachments WHERE id = :id")
+    @Query("SELECT * FROM attachments WHERE notes_id = :id")
     fun getAttachmentsByNoteId(id: String): List<AttachmentEntity>
 
     @Insert(onConflict = OnConflictStrategy.ABORT, entity = AttachmentEntity::class)

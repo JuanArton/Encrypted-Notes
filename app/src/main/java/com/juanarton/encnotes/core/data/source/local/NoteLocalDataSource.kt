@@ -1,5 +1,6 @@
 package com.juanarton.encnotes.core.data.source.local
 
+import android.util.Log
 import com.juanarton.encnotes.core.data.source.local.room.dao.NotesDAO
 import com.juanarton.encnotes.core.data.source.local.room.entity.NotesEntity
 import com.juanarton.encnotes.core.utils.Cryptography

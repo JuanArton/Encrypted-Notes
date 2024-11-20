@@ -30,6 +30,11 @@ class AttachmentAdapter(
         }
     }
 
+    fun addData(attachment: Attachment) {
+        attachmentList.add(0, attachment)
+        notifyItemInserted(0)
+    }
+
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int

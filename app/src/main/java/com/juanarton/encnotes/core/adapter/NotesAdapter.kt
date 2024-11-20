@@ -1,6 +1,7 @@
 package com.juanarton.encnotes.core.adapter
 
-import android.util.Log
+import android.graphics.Color
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,35 +15,27 @@ import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
 import com.google.android.material.card.MaterialCardView
 import com.juanarton.encnotes.R
-import com.juanarton.encnotes.core.data.domain.model.Attachment
-import com.juanarton.encnotes.core.data.domain.model.Notes
+import com.juanarton.encnotes.core.data.domain.model.NotesPair
 import com.juanarton.encnotes.core.data.domain.usecase.local.LocalNotesRepoUseCase
 import com.juanarton.encnotes.core.data.domain.usecase.remote.RemoteNotesRepoUseCase
 import com.juanarton.encnotes.databinding.NoteItemViewBinding
-import com.juanarton.encnotes.ui.activity.main.MainViewModel
 import com.juanarton.encnotes.ui.utils.Utils
 import com.ketch.Ketch
 
-
 class NotesAdapter (
-    private val onClick: (Notes, MaterialCardView, List<Attachment>) -> Unit,
+    private val onClick: (NotesPair, MaterialCardView) -> Unit,
     private val localNotesRepoUseCase: LocalNotesRepoUseCase,
     private val remoteNotesRepoUseCase: RemoteNotesRepoUseCase,
     private val ketch: Ketch
 ) : RecyclerView.Adapter<NotesAdapter.ViewHolder>(){
-    var noteList: ArrayList<Notes> = arrayListOf()
-    var attachmentList: ArrayList<Attachment> = arrayListOf()
+    var noteList: ArrayList<NotesPair> = arrayListOf()
     var tracker: SelectionTracker<String>? = null
 
     init {
         setHasStableIds(true)
     }
 
-    fun setData(notes: List<Notes>?, attachment: List<Attachment>?) {
-        attachmentList.apply {
-            clear()
-            attachment?.let { addAll(it) }
-        }
+    fun setData(notes: List<NotesPair>?) {
         noteList.apply {
             clear()
             notes?.let { addAll(it) }
@@ -50,21 +43,13 @@ class NotesAdapter (
         }
     }
 
-    fun prependItem(item: Notes, attachment: List<Attachment>?) {
+    fun prependItem(item: NotesPair) {
         noteList.add(0, item)
-        attachmentList.apply {
-            clear()
-            attachment?.let { addAll(it) }
-        }
         notifyItemInserted(0)
     }
 
-    fun updateItem(index: Int, notes: Notes, attachment: List<Attachment>?) {
+    fun updateItem(index: Int, notes: NotesPair) {
         noteList[index] = notes
-        attachmentList.apply {
-            clear()
-            attachment?.let { addAll(it) }
-        }
         notifyItemChanged(index)
     }
 
@@ -83,24 +68,22 @@ class NotesAdapter (
 
     override fun onBindViewHolder(holder: NotesAdapter.ViewHolder, position: Int) {
         val note = noteList[position]
-        tracker?.let { holder.bind(note, it.isSelected(noteList[position].id)) }
+        tracker?.let { holder.bind(note, it.isSelected(noteList[position].notes.id)) }
     }
 
     override fun getItemCount(): Int = noteList.size
 
     override fun getItemId(position: Int): Long {
-        return noteList[position].id.hashCode().toLong()
+        return noteList[position].notes.id.hashCode().toLong()
     }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val binding = NoteItemViewBinding.bind(itemView)
-        fun bind(notes: Notes, isActive: Boolean) {
+        fun bind(notes: NotesPair, isActive: Boolean) {
             binding.apply {
-                val title = notes.notesTitle?.trim()
-                val content = notes.notesContent?.trim()
-                val attachments = attachmentList.filter {
-                    it.noteId == notes.id
-                }.take(6)
+                val title = notes.notes.notesTitle?.trim()
+                val content = notes.notes.notesContent?.trim()
+                val attachment = notes.attachmentList.asReversed().take(6)
 
                 val context = tvNotesTitle.context
 
@@ -110,11 +93,11 @@ class NotesAdapter (
                     maxLine = 2
                 }
 
-                val span = if (attachments.size in 1..2) attachments.size else 3
+                val span = if (attachment.size in 1..2) attachment.size else 3
 
-                if (attachments.size < 3) {
+                if (attachment.size < 3) {
                     rvImgAttachment.layoutManager = GridLayoutManager(context, span)
-                } else if (attachments.size in 3..5) {
+                } else if (attachment.size in 3..5) {
                     rvImgAttachment.layoutManager = flexboxLayoutManager
                 } else {
                     rvImgAttachment.layoutManager = GridLayoutManager(context, span)
@@ -124,7 +107,7 @@ class NotesAdapter (
                 val rvAdapter = AttachmentAdapter(localNotesRepoUseCase, remoteNotesRepoUseCase, ketch)
                 rvImgAttachment.adapter = rvAdapter
 
-                rvAdapter.setData(attachments)
+                rvAdapter.setData(attachment)
 
                 if (title.isNullOrEmpty()) {
                     tvNotesTitle.visibility = View.GONE
@@ -141,23 +124,32 @@ class NotesAdapter (
                     tvNotesContent.text = content
                 }
 
+                if (title.isNullOrEmpty() && content.isNullOrEmpty()) {
+                    llNotes.visibility = View.GONE
+                } else llNotes.visibility = View.VISIBLE
+
+                val typedValue = TypedValue()
+                clickMask.context.theme.resolveAttribute(com.google.android.material.R.attr.colorPrimary, typedValue, true)
                 if (isActive) {
-                    binding.root.setBackgroundColor(
-                        ContextCompat.getColor(
-                            binding.root.context,
-                            R.color.transparentBlack
+                    binding.apply {
+                        clickMask.setBackgroundColor(
+                            ContextCompat.getColor(
+                                binding.clickMask.context,
+                                R.color.transparentBlack
+                            )
                         )
-                    )
+                        noteItem.strokeColor = typedValue.data
+                    }
                 } else {
-                    binding.root.setBackgroundColor(
-                        ContextCompat.getColor(
-                            binding.root.context,
-                            R.color.brightSurface
-                        ))
+                    binding.clickMask.setBackgroundColor(Color.TRANSPARENT)
+                    noteItem.strokeColor = ContextCompat.getColor(
+                        binding.clickMask.context,
+                        R.color.outlineColor
+                    )
                 }
 
                 binding.clickMask.setOnClickListener {
-                    onClick(notes, noteItem, attachments)
+                    onClick(notes, noteItem)
                 }
             }
         }
@@ -165,7 +157,7 @@ class NotesAdapter (
         fun getItemDetails(): ItemDetailsLookup.ItemDetails<String> =
             object : ItemDetailsLookup.ItemDetails<String>() {
                 override fun getPosition(): Int = bindingAdapterPosition
-                override fun getSelectionKey(): String = noteList[bindingAdapterPosition].id
+                override fun getSelectionKey(): String = noteList[bindingAdapterPosition].notes.id
             }
     }
 }
