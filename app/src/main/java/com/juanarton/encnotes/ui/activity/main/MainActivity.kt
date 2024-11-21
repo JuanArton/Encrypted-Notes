@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.Window
@@ -204,7 +205,7 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
                                 mainViewModel._getNotesPair.value?.attachmentList ?: emptyList(),
                                 attachment
                             )
-                            mainViewModel.syncAttToLocal(sync)
+                            mainViewModel.syncAttToLocal(sync, this@MainActivity)
                             mainViewModel.syncAttToRemote(sync, this@MainActivity)
                         }
                     }
@@ -289,11 +290,9 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
                                 "update" -> {
                                     mainViewModel.getNotesBydId(note.notes.id)
                                     val index = notDeletedNotes.indexOfFirst { it.notes.id == note.notes.id }
-                                    val attList = notDeletedNotes[index].attachmentList
                                     val upload = note.attachmentList.filterNot {
                                         it in notDeletedNotes[index].attachmentList
                                     }
-                                    val delete = attList.filterNot { it in note.attachmentList }
                                     mainViewModel.uploadAttachment(this@MainActivity, upload)
                                     note.notes.let {enc -> mainViewModel.updateNoteRemote(enc)}
                                 }

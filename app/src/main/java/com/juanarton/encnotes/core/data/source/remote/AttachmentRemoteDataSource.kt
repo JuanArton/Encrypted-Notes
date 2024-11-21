@@ -74,7 +74,6 @@ class AttachmentRemoteDataSource @Inject constructor(
 
         val digest = MessageDigest.getInstance("SHA-256")
         digest.update(image)
-
         val hash = digest.digest().joinToString("") { "%02x".format(it) }
 
         val requestBody = image.toRequestBody("image/jpeg".toMediaType(), 0, image.size)

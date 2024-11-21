@@ -94,7 +94,7 @@ class NoteViewModel @Inject constructor(
 
     fun deleteAttRemote(id: String) {
         viewModelScope.launch {
-            remoteNotesRepoUseCase.deleteNoteRemote(id).collect {
+            remoteNotesRepoUseCase.deleteAttById(id).collect {
                 _deleteAttRemote.value = it
             }
         }

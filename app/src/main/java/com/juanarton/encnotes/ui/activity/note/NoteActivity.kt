@@ -24,8 +24,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityOptionsCompat
 import androidx.recyclerview.widget.GridLayoutManager
-import com.google.android.flexbox.FlexDirection
-import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
@@ -137,13 +135,6 @@ class NoteActivity : AppCompatActivity() {
     }
 
     private fun initNoteData() {
-        val notesTmp = if (Build.VERSION.SDK_INT >= 33) {
-            intent.getParcelableExtra("noteData", NotesPair::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            intent.getParcelableExtra("noteData")
-        }
-
         val listener: (
             Attachment, ImageView
         ) -> Unit = { attachment, imageView ->
@@ -164,6 +155,19 @@ class NoteActivity : AppCompatActivity() {
             Ketch.builder().build(this@NoteActivity)
         )
 
+        binding?.apply {
+            val span = if (::notesPair.isInitialized) calculateSpan() else 1
+            rvImgAttachment.layoutManager = GridLayoutManager(this@NoteActivity, span)
+            rvImgAttachment.adapter = rvAdapter
+        }
+
+        val notesTmp = if (Build.VERSION.SDK_INT >= 33) {
+            intent.getParcelableExtra("noteData", NotesPair::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableExtra("noteData")
+        }
+
         notesTmp?.let {
             notesPair = it
             act = "update"
@@ -175,8 +179,6 @@ class NoteActivity : AppCompatActivity() {
             initContent = it.notes.notesContent.toString()
             initTitle = it.notes.notesTitle.toString()
             initAttachment.addAll(it.attachmentList)
-
-            prepareRecyclerAdapter()
             rvAdapter.setData(it.attachmentList.asReversed())
         }
 
@@ -189,6 +191,15 @@ class NoteActivity : AppCompatActivity() {
                     id?.let {
                         when (act) {
                             "delete" -> {
+                                val index = notesPair.attachmentList.asReversed().indexOfFirst { it.id == id }
+                                notesPair.attachmentList.removeAt(index)
+                                binding?.apply {
+                                    handleSaveNote(etTitle.text.toString(), etContent.text.toString())
+                                    val layoutManager = binding?.rvImgAttachment?.layoutManager as GridLayoutManager
+                                    layoutManager.spanCount = calculateSpan()
+                                }
+                                rvAdapter.deleteData(index)
+                                noteViewModel.deleteAttRemote(id)
                             }
                             else -> {}
                         }
@@ -222,7 +233,7 @@ class NoteActivity : AppCompatActivity() {
     }
 
     private fun setResult (title: String, content: String) {
-        if (title != initTitle || content != initContent || notesPair.attachmentList.isNotEmpty()) {
+        if (title != initTitle || content != initContent || notesPair.attachmentList != initAttachment) {
             val resultIntent = Intent().apply {
                 putExtra("notesEncrypted", notesPair)
                 putExtra("action", act)
@@ -306,16 +317,17 @@ class NoteActivity : AppCompatActivity() {
             when (it) {
                 is Resource.Success -> {
                     it.data?.let { attachment ->
-                        if(notesPair.attachmentList.size == 0) {
-                            prepareRecyclerAdapter()
-                        }
                         notesPair.attachmentList.add(0, attachment)
+                        if(notesPair.attachmentList.size != 0) {
+                            binding?.apply {
+                                val layoutManager = rvImgAttachment.layoutManager as GridLayoutManager
+                                layoutManager.spanCount = calculateSpan()
+                            }
+                        }
                         rvAdapter.addData(attachment)
                     }
                 }
-                is Resource.Loading -> {
-                    Log.d("Note Activity", "Loading")
-                }
+                is Resource.Loading -> {}
                 is Resource.Error -> {
                     Toast.makeText(this@NoteActivity, it.message, Toast.LENGTH_SHORT).show()
                 }
@@ -333,31 +345,20 @@ class NoteActivity : AppCompatActivity() {
         }
     }
 
-    private fun prepareRecyclerAdapter() {
+    private fun calculateSpan(): Int {
         binding?.apply {
-            val span = if (
-                notesPair.attachmentList.size in 1..2
-                || notesPair.attachmentList.size == 4
-            ) notesPair.attachmentList.size else 3
-
-            if (notesPair.attachmentList.size < 3) {
-                rvImgAttachment.layoutManager = GridLayoutManager(this@NoteActivity, span)
-            } else if (notesPair.attachmentList.size == 4) {
-                rvImgAttachment.layoutManager = GridLayoutManager(this@NoteActivity, 2)
-            } else if (notesPair.attachmentList.size == 3) {
-                rvImgAttachment.layoutManager = FlexboxLayoutManager(this@NoteActivity).apply {
-                    flexDirection = FlexDirection.ROW
-                    maxLine = 2
-                }
-            } else {
-                rvImgAttachment.layoutManager = GridLayoutManager(this@NoteActivity, span)
-            }
-
+            val gridSpacingDecoration = GridSpacingItemDecoration(Utils.dpToPx(3, this@NoteActivity))
             if (notesPair.attachmentList.size > 1) {
-                rvImgAttachment.addItemDecoration(GridSpacingItemDecoration(Utils.dpToPx(5, this@NoteActivity)))
+                rvImgAttachment.addItemDecoration(gridSpacingDecoration)
+            } else {
+                rvImgAttachment.removeItemDecoration(gridSpacingDecoration)
             }
+        }
 
-            rvImgAttachment.adapter = rvAdapter
+        return when (notesPair.attachmentList.size) {
+            in 1..3 -> notesPair.attachmentList.size
+            4 -> 2
+            else -> 3
         }
     }
 

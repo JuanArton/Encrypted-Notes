@@ -27,7 +27,6 @@ class AttachmentAdapter(
         attachmentList.apply {
             clear()
             attachment?.let { addAll(it) }
-            Log.d("test", attachmentList.toString())
             notifyDataSetChanged()
         }
     }
@@ -35,6 +34,11 @@ class AttachmentAdapter(
     fun addData(attachment: Attachment) {
         attachmentList.add(0, attachment)
         notifyItemInserted(0)
+    }
+
+    fun deleteData(index: Int) {
+        attachmentList.removeAt(index)
+        notifyItemRemoved(index)
     }
 
     override fun onCreateViewHolder(

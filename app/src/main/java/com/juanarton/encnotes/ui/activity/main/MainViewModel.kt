@@ -200,10 +200,12 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun syncAttToLocal(syncAttachment: SyncAttachment) {
+    fun syncAttToLocal(syncAttachment: SyncAttachment, context: Context) {
         viewModelScope.launch {
             syncAttachment.toDeleteInLocal.forEach { attachment ->
+                val file = File(context.filesDir, attachment.url)
                 localNotesRepoUseCase.deleteAttachment(attachment).collect{}
+                localNotesRepoUseCase.deleteFileFromDisk(file)
             }
 
             syncAttachment.toAddToLocal.forEach { attachment ->
@@ -220,7 +222,7 @@ class MainViewModel @Inject constructor(
     fun syncAttToRemote(syncAttachment: SyncAttachment, context: Context) {
         viewModelScope.launch {
             syncAttachment.toDeleteInServer.forEach { attachment ->
-                remoteNotesRepoUseCase.deleteNoteRemote(attachment.id).collect{}
+                remoteNotesRepoUseCase.deleteAttById(attachment.id).collect{}
             }
 
             syncAttachment.toAddToServer.forEach { attachment ->

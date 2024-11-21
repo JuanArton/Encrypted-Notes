@@ -1,5 +1,7 @@
 package com.juanarton.encnotes.ui.activity.imagedetail
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -56,6 +58,7 @@ class ImageDetailActivity : AppCompatActivity() {
 
         attachment?.let {
             binding?.apply {
+                Log.d("status", it.id)
                 this@ImageDetailActivity.attachment = it
                 val imageLoader = ImageLoader()
                 imageLoader.loadImage(
@@ -78,9 +81,7 @@ class ImageDetailActivity : AppCompatActivity() {
                         imageDetailViewModel.deleteAttFromDisk(attachment, this)
                     }
                 }
-                is Resource.Loading -> {
-                    Log.d("Note Activity", "Loading")
-                }
+                is Resource.Loading -> {}
                 is Resource.Error -> {
                     Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
                 }
@@ -89,7 +90,12 @@ class ImageDetailActivity : AppCompatActivity() {
 
         imageDetailViewModel.deleteAttFromDisk.observe(this) {
             if (it) {
-                ActivityCompat.finishAfterTransition(this)
+                val resultIntent = Intent().apply {
+                    putExtra("action", "delete")
+                    putExtra("id", attachment?.id)
+                }
+                setResult(Activity.RESULT_OK, resultIntent)
+                ActivityCompat.finishAfterTransition(this@ImageDetailActivity)
             }
         }
     }

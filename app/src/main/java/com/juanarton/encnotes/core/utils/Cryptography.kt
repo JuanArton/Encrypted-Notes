@@ -19,13 +19,6 @@ class Cryptography {
 
         fun initTink() {
             TinkConfig.register()
-            /*
-            try {
-                TinkConfig.register()
-            } catch (e: GeneralSecurityException) {
-                throw RuntimeException(e)
-            }
-             */
         }
 
         fun encrypt(data: String, keysetHandle: KeysetHandle): String {

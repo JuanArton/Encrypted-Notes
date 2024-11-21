@@ -1,13 +1,11 @@
 package com.juanarton.encnotes.core.adapter
 
-import android.content.Intent
 import android.graphics.Color
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.selection.ItemDetailsLookup
 import androidx.recyclerview.selection.SelectionTracker
@@ -23,7 +21,6 @@ import com.juanarton.encnotes.core.data.domain.model.NotesPair
 import com.juanarton.encnotes.core.data.domain.usecase.local.LocalNotesRepoUseCase
 import com.juanarton.encnotes.core.data.domain.usecase.remote.RemoteNotesRepoUseCase
 import com.juanarton.encnotes.databinding.NoteItemViewBinding
-import com.juanarton.encnotes.ui.activity.imagedetail.ImageDetailActivity
 import com.juanarton.encnotes.ui.utils.Utils
 import com.ketch.Ketch
 
@@ -97,6 +94,8 @@ class NotesAdapter (
                     justifyContent = JustifyContent.SPACE_BETWEEN
                     maxLine = 2
                 }
+                val divider = ContextCompat.getDrawable(context, R.drawable.divider)!!
+                val dividerItemDecoration = DividerItemDecoration(divider)
 
                 val span = if (attachment.size in 1..2) attachment.size else 3
 
@@ -104,11 +103,12 @@ class NotesAdapter (
                     rvImgAttachment.layoutManager = GridLayoutManager(context, span)
                 } else if (attachment.size in 3..5) {
                     rvImgAttachment.layoutManager = flexboxLayoutManager
+                    rvImgAttachment.addItemDecoration(dividerItemDecoration)
                 } else {
                     rvImgAttachment.layoutManager = GridLayoutManager(context, span)
                 }
 
-                rvImgAttachment.addItemDecoration(GridSpacingItemDecoration(Utils.dpToPx(1, context)))
+                rvImgAttachment.addItemDecoration(GridSpacingItemDecoration(Utils.dpToPx(2, context)))
                 val listener: (
                     Attachment, ImageView
                 ) -> Unit = { _, _ ->
@@ -136,7 +136,7 @@ class NotesAdapter (
                     tvNotesContent.text = content
                 }
 
-                if (title.isNullOrEmpty() && content.isNullOrEmpty()) {
+                if (title.isNullOrEmpty() && content.isNullOrEmpty() && notes.attachmentList.isNotEmpty()) {
                     llNotes.visibility = View.GONE
                 } else llNotes.visibility = View.VISIBLE
 
