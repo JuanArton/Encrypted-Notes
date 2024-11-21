@@ -42,6 +42,7 @@ import com.juanarton.encnotes.ui.utils.AttachmentSync
 import com.juanarton.encnotes.ui.utils.NoteSync
 import com.juanarton.encnotes.ui.utils.Utils
 import com.ketch.Ketch
+import com.lopei.collageview.CollageView
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -303,6 +304,18 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
                     }
                 }
             }
+
+            val url = listOf(
+                "https://images.unsplash.com/photo-1542396601-dca920ea2807?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxleHBsb3JlLWZlZWR8Mnx8fGVufDB8fHx8fA%3D%3D",
+                "https://images.unsplash.com/photo-1542379653-b928db1b4956?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxleHBsb3JlLWZlZWR8M3x8fGVufDB8fHx8fA%3D%3D",
+                "https://images.unsplash.com/photo-1521109464564-2fa2faa95858?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxleHBsb3JlLWZlZWR8Nnx8fGVufDB8fHx8fA%3D%3D",
+                "https://images.unsplash.com/photo-1542461927-dd68c85adc56?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxleHBsb3JlLWZlZWR8OHx8fGVufDB8fHx8fA%3D%3D",
+                "https://images.unsplash.com/photo-1542640244-7e672d6cef4e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxleHBsb3JlLWZlZWR8MTR8fHxlbnwwfHx8fHw%3D"
+            )
+            collageView
+                .defaultPhotosForLine(3)
+                .useFirstAsHeader(false)
+                .loadPhotos(url)
         }
     }
 

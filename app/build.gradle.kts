@@ -111,5 +111,6 @@ dependencies {
     implementation(libs.flexbox)
     implementation("jp.wasabeef:glide-transformations:4.3.0")
     implementation(libs.ketch)
+    implementation(project(":collageview"))
     //implementation(libs.biometric)
 }
