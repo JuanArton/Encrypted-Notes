@@ -12,11 +12,9 @@ import com.juanarton.encnotes.core.data.api.authentications.updatekey.PutUpdateK
 import com.juanarton.encnotes.core.data.api.note.addnote.PostNote
 import com.juanarton.encnotes.core.data.api.note.addnote.PostNoteData
 import com.juanarton.encnotes.core.data.api.note.addnote.PostNoteResponse
-import com.juanarton.encnotes.core.data.api.note.deleteNote.DeleteNoteResponse
+import com.juanarton.encnotes.core.data.api.note.deleteNote.DeleteResponse
 import com.juanarton.encnotes.core.data.api.note.getallnote.GetAllNotesRes
 import com.juanarton.encnotes.core.data.api.note.getallnote.NoteData
-import com.juanarton.encnotes.core.data.api.note.postAttachment.PostAttachmentData
-import com.juanarton.encnotes.core.data.api.note.postAttachment.PostAttachmentResponse
 import com.juanarton.encnotes.core.data.api.note.updateNote.PutNote
 import com.juanarton.encnotes.core.data.api.note.updateNote.PutNoteResponse
 import com.juanarton.encnotes.core.data.api.user.register.PostRegister
@@ -24,16 +22,11 @@ import com.juanarton.encnotes.core.data.api.user.register.RegisterData
 import com.juanarton.encnotes.core.data.api.user.register.RegisterResponse
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.source.local.SharedPrefDataSource
-import io.viascom.nanoid.NanoId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
-import org.json.JSONObject
 import retrofit2.Response
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -207,20 +200,20 @@ class NoteRemoteDataSource @Inject constructor(
                 val response = makeDeleteNoteRequest(id)
 
                 if (response.isSuccessful) {
-                    val deleteResponse = Gson().fromJson(response.body()?.string(), DeleteNoteResponse::class.java)
+                    val deleteResponse = Gson().fromJson(response.body()?.string(), DeleteResponse::class.java)
                     emit(APIResponse.Success(deleteResponse.message))
                 } else {
-                    val errorResponse = Gson().fromJson(response.errorBody()?.string(), DeleteNoteResponse::class.java)
+                    val errorResponse = Gson().fromJson(response.errorBody()?.string(), DeleteResponse::class.java)
 
                     if (errorResponse.message == "Token maximum age exceeded") {
                         refreshAccessKey()
                         val retryResponse = makeDeleteNoteRequest(id)
 
                         if (retryResponse.isSuccessful) {
-                            val retryDeleteResponse = Gson().fromJson(retryResponse.body()?.string(), DeleteNoteResponse::class.java)
+                            val retryDeleteResponse = Gson().fromJson(retryResponse.body()?.string(), DeleteResponse::class.java)
                             emit(APIResponse.Success(retryDeleteResponse.message))
                         } else {
-                            val retryErrorResponse = Gson().fromJson(retryResponse.errorBody()?.string(), DeleteNoteResponse::class.java)
+                            val retryErrorResponse = Gson().fromJson(retryResponse.errorBody()?.string(), DeleteResponse::class.java)
                             emit(APIResponse.Error(retryErrorResponse.message))
                         }
                     } else {
@@ -228,7 +221,7 @@ class NoteRemoteDataSource @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                emit(APIResponse.Error("${context.getString(R.string.update_notes_failed)}: $e"))
+                emit(APIResponse.Error("${context.getString(R.string.delete_notes_failed)}: $e"))
             }
         }.flowOn(Dispatchers.IO)
 

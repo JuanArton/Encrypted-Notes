@@ -4,6 +4,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import com.juanarton.encnotes.R
@@ -15,6 +16,7 @@ import com.juanarton.encnotes.databinding.AttachmentItemViewBinding
 import com.ketch.Ketch
 
 class AttachmentAdapter(
+    private val onClick: (Attachment, ImageView) -> Unit,
     private val localNotesRepoUseCase: LocalNotesRepoUseCase,
     private val remoteNotesRepoUseCase: RemoteNotesRepoUseCase,
     private val ketch: Ketch
@@ -65,9 +67,13 @@ class AttachmentAdapter(
 
                     val imageLoader = ImageLoader()
                     imageLoader.loadImage(
-                        context, attachment.url, binding, localNotesRepoUseCase,
+                        context, attachment.url, ivAttachmentImg, ivAttachmentImgBg, localNotesRepoUseCase,
                         remoteNotesRepoUseCase, lifecycleOwner, ketch
                     )
+
+                    ivAttachmentImg.setOnClickListener {
+                        onClick(attachment, ivAttachmentImg)
+                    }
                 }
             }
         }

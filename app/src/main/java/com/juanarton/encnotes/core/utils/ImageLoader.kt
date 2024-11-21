@@ -18,7 +18,6 @@ import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.juanarton.encnotes.core.data.domain.usecase.local.LocalNotesRepoUseCase
 import com.juanarton.encnotes.core.data.domain.usecase.remote.RemoteNotesRepoUseCase
-import com.juanarton.encnotes.databinding.AttachmentItemViewBinding
 import com.ketch.Ketch
 import jp.wasabeef.glide.transformations.BlurTransformation
 import kotlinx.coroutines.Dispatchers
@@ -29,40 +28,42 @@ import java.io.File
 
 class ImageLoader {
     fun loadImage(
-        context: Context, url: String, binding: AttachmentItemViewBinding,
+        context: Context, url: String, imageView: ImageView, background: ImageView?,
         localNotesRepoUseCase: LocalNotesRepoUseCase, remoteNotesRepoUseCase: RemoteNotesRepoUseCase,
         lifecycleOwner: LifecycleOwner, ketch: Ketch
     ) {
         val key = localNotesRepoUseCase.getCipherKey()
-        binding.apply {
-            if (!key.isNullOrEmpty()) {
-                val deserializedKey = Cryptography.deserializeKeySet(key)
+        if (!key.isNullOrEmpty()) {
+            val deserializedKey = Cryptography.deserializeKeySet(key)
 
-                try {
-                    val decryptedImage = Cryptography.decrypt(readImage(url, context), deserializedKey)
-                    showImage(context, ivAttachmentImg, decryptedImage, ivAttachmentImg.width)
-                    blurBackground(ivAttachmentImgBg, context, decryptedImage, ivAttachmentImgBg.width)
-                } catch (e: Exception) {
-                    val fullUrl = buildString {
-                        append("http://192.168.0.100:5500/attachment/images/")
-                        append(url)
-                    }
+            try {
+                val decryptedImage = Cryptography.decrypt(readImage(url, context), deserializedKey)
+                showImage(context, imageView, decryptedImage, imageView.width)
+                if (background != null) {
+                    blurBackground(background, context, decryptedImage, background.width)
+                }
+            } catch (e: Exception) {
+                val fullUrl = buildString {
+                    append("http://192.168.0.100:5500/attachment/images/")
+                    append(url)
+                }
 
-                    lifecycleOwner.lifecycleScope.launch {
-                        val id = remoteNotesRepoUseCase.downloadAttachment(fullUrl, ketch)
+                lifecycleOwner.lifecycleScope.launch {
+                    val id = remoteNotesRepoUseCase.downloadAttachment(fullUrl, ketch)
 
-                        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                            ketch.observeDownloadById(id)
-                                .flowOn(Dispatchers.IO)
-                                .collect { downloadModel ->
-                                    if (downloadModel.status.name == "SUCCESS") {
-                                        val decryptedImage = Cryptography.decrypt(readImage(url, context), deserializedKey)
-                                        showImage(context, ivAttachmentImg, decryptedImage, ivAttachmentImg.width)
-                                        blurBackground(ivAttachmentImgBg, context, decryptedImage, ivAttachmentImgBg.width)
-                                        ketch.clearDb(downloadModel.id, false)
+                    lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                        ketch.observeDownloadById(id)
+                            .flowOn(Dispatchers.IO)
+                            .collect { downloadModel ->
+                                if (downloadModel.status.name == "SUCCESS") {
+                                    val decryptedImage = Cryptography.decrypt(readImage(url, context), deserializedKey)
+                                    showImage(context, imageView, decryptedImage, imageView.width)
+                                    if (background != null) {
+                                        blurBackground(background, context, decryptedImage, background.width)
                                     }
+                                    ketch.clearDb(downloadModel.id, false)
                                 }
-                        }
+                            }
                     }
                 }
             }

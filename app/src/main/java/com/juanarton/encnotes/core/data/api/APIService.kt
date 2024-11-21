@@ -83,7 +83,9 @@ interface APIService {
         @Header("Authorization") accessToken: String,
     ): Response<ResponseBody>
 
-    @GET
-    @Streaming
-    suspend fun downloadAtt(@Url fileUrl: String): ResponseBody
+    @DELETE("attachment")
+    suspend fun deleteAttachment(
+        @Query("id") id: String,
+        @Header("Authorization") accessToken: String,
+    ): Response<ResponseBody>
 }

@@ -1,48 +1,33 @@
 package com.juanarton.encnotes.core.data.source.remote
 
 import android.content.Context
-import android.util.Log
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.repeatOnLifecycle
 import com.google.gson.Gson
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.api.API
 import com.juanarton.encnotes.core.data.api.APIResponse
-import com.juanarton.encnotes.core.data.api.ProgressListener
 import com.juanarton.encnotes.core.data.api.attachments.getattachment.AttachmentData
 import com.juanarton.encnotes.core.data.api.attachments.getattachment.GetAttachmentResponse
 import com.juanarton.encnotes.core.data.api.authentications.updatekey.PutUpdateKey
-import com.juanarton.encnotes.core.data.api.download.ProgressResponseBody
+import com.juanarton.encnotes.core.data.api.note.deleteNote.DeleteResponse
 import com.juanarton.encnotes.core.data.api.note.postAttachment.PostAttachmentData
 import com.juanarton.encnotes.core.data.api.note.postAttachment.PostAttachmentResponse
 import com.juanarton.encnotes.core.data.domain.model.Attachment
-import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.source.local.SharedPrefDataSource
 import com.ketch.Ketch
-import io.viascom.nanoid.NanoId
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
 import org.json.JSONObject
 import retrofit2.Response
-import java.io.File
-import java.io.FileOutputStream
 import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.coroutines.resume
 
 @Singleton
 class AttachmentRemoteDataSource @Inject constructor(
@@ -177,12 +162,6 @@ class AttachmentRemoteDataSource @Inject constructor(
         return API.services.getAllAtt(accessKey)
     }
 
-    private suspend fun refreshAccessKey() {
-        val refreshKey = sharedPrefDataSource.getRefreshKey()!!
-        val newAccessKey = API.services.updateAccessKey(PutUpdateKey(refreshKey))
-        sharedPrefDataSource.setAccessKey(newAccessKey.updateKeyData.accessToken)
-    }
-
     suspend fun downloadAttachment(url: String, ketch: Ketch): Int {
         val fileName = "/" + url.substringAfterLast("/")
         val path = context.filesDir.toString()
@@ -200,57 +179,45 @@ class AttachmentRemoteDataSource @Inject constructor(
         }
     }
 
-    fun downloadAttachment1(url: String): Flow<APIResponse<Int>> {
-        synchronized(API.activeDownloads) {
-            if (API.activeDownloads.containsKey(url)) {
-                return API.activeDownloads[url]!!
-            }
+    fun deleteAttById(id: String): Flow<APIResponse<String>> =
+        flow {
+            try {
+                val response = makeDeleteAttById(id)
 
-            val downloadStateFlow = MutableStateFlow<APIResponse<Int>>(APIResponse.Success(0))
-            API.activeDownloads[url] = downloadStateFlow
+                if (response.isSuccessful) {
+                    val deleteAttResponse = Gson().fromJson(response.body()?.string(), DeleteResponse::class.java)
+                    emit(APIResponse.Success(deleteAttResponse.message))
+                } else {
+                    val errorResponse = Gson().fromJson(response.errorBody()?.string(), DeleteResponse::class.java)
 
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    API.progressListener = object : ProgressListener {
-                        override fun onProgress(
-                            bytesRead: Long,
-                            contentLength: Long,
-                            done: Boolean
-                        ) {
-                            val progress = if (contentLength > 0) {
-                                ((bytesRead * 100) / contentLength).toInt()
-                            } else 0
-                            launch {
-                                if (progress == 100) {
-                                    downloadStateFlow.emit(APIResponse.Success(progress))
-                                }
-                            }
+                    if (errorResponse.message == "Token maximum age exceeded") {
+                        refreshAccessKey()
+                        val retryResponse = makeDeleteAttById(id)
+
+                        if (retryResponse.isSuccessful) {
+                            val retryDeleteResponse = Gson().fromJson(retryResponse.body()?.string(), DeleteResponse::class.java)
+                            emit(APIResponse.Success(retryDeleteResponse.message))
+                        } else {
+                            val retryErrorResponse = Gson().fromJson(retryResponse.errorBody()?.string(), DeleteResponse::class.java)
+                            emit(APIResponse.Error(retryErrorResponse.message))
                         }
-                    }
-
-                    val responseBody = API.services.downloadAtt(url)
-
-                    responseBody.byteStream().use { input ->
-                        val fileName = url.substringAfterLast("/")
-                        val file = File(context.filesDir, fileName)
-
-                        FileOutputStream(file).use { output ->
-                            input.copyTo(output)
-                        }
-                    }
-
-                    delay(250)
-                    downloadStateFlow.emit(APIResponse.Success(100))
-                } catch (e: Exception) {
-                    downloadStateFlow.emit(APIResponse.Error("Download failed: ${e.message}"))
-                } finally {
-                    synchronized(API.activeDownloads) {
-                        API.activeDownloads.remove(url)
+                    } else {
+                        emit(APIResponse.Error(errorResponse.message))
                     }
                 }
+            } catch (e: Exception) {
+                emit(APIResponse.Error("${context.getString(R.string.unable_delete_attachment)}: $e"))
             }
+        }.flowOn(Dispatchers.IO)
 
-            return downloadStateFlow
-        }
+    private suspend fun makeDeleteAttById(id: String): Response<ResponseBody> {
+        val accessKey = sharedPrefDataSource.getAccessKey()!!
+        return API.services.deleteAttachment(id, accessKey)
+    }
+
+    private suspend fun refreshAccessKey() {
+        val refreshKey = sharedPrefDataSource.getRefreshKey()!!
+        val newAccessKey = API.services.updateAccessKey(PutUpdateKey(refreshKey))
+        sharedPrefDataSource.setAccessKey(newAccessKey.updateKeyData.accessToken)
     }
 }

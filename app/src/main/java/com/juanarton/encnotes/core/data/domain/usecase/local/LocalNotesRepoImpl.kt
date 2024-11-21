@@ -70,4 +70,7 @@ class LocalNotesRepoImpl @Inject constructor(
 
     override fun writeFileToDisk(file: File, byteArray: ByteArray): Flow<Pair<Boolean, String>> =
         iLocalNotesRepository.writeFileToDisk(file, byteArray)
+
+    override fun deleteFileFromDisk(file: File): Boolean =
+        iLocalNotesRepository.deleteFileFromDisk(file)
 }

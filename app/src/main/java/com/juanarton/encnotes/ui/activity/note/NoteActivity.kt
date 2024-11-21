@@ -2,8 +2,6 @@ package com.juanarton.encnotes.ui.activity.note
 
 import android.app.Activity
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -15,6 +13,7 @@ import android.transition.Transition
 import android.util.Log
 import android.util.TypedValue
 import android.view.Window
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.enableEdgeToEdge
@@ -23,11 +22,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+import androidx.core.app.ActivityOptionsCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
-import com.google.android.material.transition.platform.MaterialContainerTransform
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
@@ -40,6 +38,7 @@ import com.juanarton.encnotes.core.data.domain.model.NotesPair
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.databinding.ActivityNoteBinding
+import com.juanarton.encnotes.ui.activity.imagedetail.ImageDetailActivity
 import com.juanarton.encnotes.ui.utils.Utils
 import com.ketch.Ketch
 import dagger.hilt.android.AndroidEntryPoint
@@ -62,6 +61,7 @@ class NoteActivity : AppCompatActivity() {
     private var initAttachment: MutableList<Attachment> = arrayListOf()
     private lateinit var selectImageLauncher: ActivityResultLauncher<Intent>
     private lateinit var rvAdapter: AttachmentAdapter
+    private lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
@@ -72,7 +72,7 @@ class NoteActivity : AppCompatActivity() {
         var runnable: Runnable? = null
 
         binding?.main?.transitionName = "shared_element_end_root"
-        val transform = buildContainerTransform()
+        val transform = Utils.buildContainerTransform(this)
         transform.addListener(object : Transition.TransitionListener {
             override fun onTransitionStart(transition: Transition?) {}
             override fun onTransitionEnd(transition: Transition?) {
@@ -144,8 +144,23 @@ class NoteActivity : AppCompatActivity() {
             intent.getParcelableExtra("noteData")
         }
 
+        val listener: (
+            Attachment, ImageView
+        ) -> Unit = { attachment, imageView ->
+            val intent = Intent(this@NoteActivity, ImageDetailActivity::class.java)
+            intent.putExtra("attachment", attachment)
+            Intent.FLAG_ACTIVITY_NO_ANIMATION
+            val options =
+                ActivityOptionsCompat.makeSceneTransitionAnimation(
+                    this@NoteActivity,
+                    imageView,
+                    "shared_element_end_root",
+                )
+            activityResultLauncher.launch(intent, options)
+        }
+
         rvAdapter = AttachmentAdapter(
-            noteViewModel.localNotesRepoUseCase, noteViewModel.remoteNotesRepoUseCase,
+            listener, noteViewModel.localNotesRepoUseCase, noteViewModel.remoteNotesRepoUseCase,
             Ketch.builder().build(this@NoteActivity)
         )
 
@@ -163,6 +178,23 @@ class NoteActivity : AppCompatActivity() {
 
             prepareRecyclerAdapter()
             rvAdapter.setData(it.attachmentList.asReversed())
+        }
+
+        activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val action = result.data?.getStringExtra("action")
+                val id = result.data?.getStringExtra("id")
+
+                action?.let { act ->
+                    id?.let {
+                        when (act) {
+                            "delete" -> {
+                            }
+                            else -> {}
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -326,27 +358,6 @@ class NoteActivity : AppCompatActivity() {
             }
 
             rvImgAttachment.adapter = rvAdapter
-        }
-    }
-
-    private fun buildContainerTransform(): MaterialContainerTransform {
-        val typedValue = TypedValue()
-        val theme = this.theme
-        theme.resolveAttribute(android.R.attr.windowBackground, typedValue, true)
-
-        val color: Int = if (typedValue.type >= TypedValue.TYPE_FIRST_COLOR_INT && typedValue.type <= TypedValue.TYPE_LAST_COLOR_INT) {
-            typedValue.data
-        } else {
-            val drawable = ContextCompat.getDrawable(this, typedValue.resourceId)
-            (drawable as? ColorDrawable)?.color ?: Color.TRANSPARENT
-        }
-
-        return MaterialContainerTransform().apply {
-            addTarget(R.id.main)
-            scrimColor = color
-            containerColor = Color.TRANSPARENT
-            endContainerColor = color
-            startContainerColor = color
         }
     }
 

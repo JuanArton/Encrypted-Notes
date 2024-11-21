@@ -176,4 +176,7 @@ class LocalNotesRepository @Inject constructor(
 
     override fun writeFileToDisk(file: File, byteArray: ByteArray): Flow<Pair<Boolean, String>> =
        attachmentLocalDataSource.writeFileToDisk(file, byteArray)
+
+    override fun deleteFileFromDisk(file: File): Boolean =
+        attachmentLocalDataSource.deleteFileFromDisk(file)
 }

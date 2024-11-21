@@ -44,4 +44,17 @@ class AttachmentLocalDataSource @Inject constructor(
             emit(Pair(false, ""))
         }
     }.flowOn(Dispatchers.IO)
+
+    fun deleteFileFromDisk(file: File): Boolean  {
+        try {
+            val isDeleted = file.delete()
+            return if (isDeleted) {
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            return false
+        }
+    }
 }

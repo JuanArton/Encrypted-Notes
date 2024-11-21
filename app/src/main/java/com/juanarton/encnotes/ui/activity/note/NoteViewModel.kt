@@ -28,7 +28,7 @@ class NoteViewModel @Inject constructor(
     val localNotesRepoUseCase: LocalNotesRepoUseCase,
     val remoteNotesRepoUseCase: RemoteNotesRepoUseCase
 ): ViewModel() {
-    private var _addNoteLocal: MutableLiveData<Resource<Boolean>> = MutableLiveData()
+    private val _addNoteLocal: MutableLiveData<Resource<Boolean>> = MutableLiveData()
     var addNoteLocal: LiveData<Resource<Boolean>> = _addNoteLocal
 
     private var _updateNoteLocal: MutableLiveData<Resource<Boolean>> = MutableLiveData()
@@ -39,6 +39,9 @@ class NoteViewModel @Inject constructor(
 
     private val _insertAtt: MutableLiveData<Resource<Attachment>> = MutableLiveData()
     val insertAtt: LiveData<Resource<Attachment>> = _insertAtt
+
+    private val _deleteAttRemote: MutableLiveData<Resource<String>> = MutableLiveData()
+    val deleteAttRemote: LiveData<Resource<String>> = _deleteAttRemote
 
     fun getCipherKey() = localNotesRepoUseCase.getCipherKey()
 
@@ -85,6 +88,14 @@ class NoteViewModel @Inject constructor(
         viewModelScope.launch {
             localNotesRepoUseCase.insertAttachment(attachment).collect {
                 _insertAtt.value = it
+            }
+        }
+    }
+
+    fun deleteAttRemote(id: String) {
+        viewModelScope.launch {
+            remoteNotesRepoUseCase.deleteNoteRemote(id).collect {
+                _deleteAttRemote.value = it
             }
         }
     }

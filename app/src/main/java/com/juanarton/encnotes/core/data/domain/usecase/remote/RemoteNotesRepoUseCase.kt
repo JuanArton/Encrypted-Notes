@@ -38,4 +38,6 @@ interface RemoteNotesRepoUseCase {
     fun getAllAttRemote(): Flow<Resource<List<Attachment>>>
 
     suspend fun downloadAttachment(url: String, ketch: Ketch): Int
+
+    fun deleteAttById(id: String): Flow<Resource<String>>
 }

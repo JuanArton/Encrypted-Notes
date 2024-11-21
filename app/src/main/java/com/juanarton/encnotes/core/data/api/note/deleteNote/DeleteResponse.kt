@@ -2,7 +2,7 @@ package com.juanarton.encnotes.core.data.api.note.deleteNote
 
 import com.google.gson.annotations.SerializedName
 
-data class DeleteNoteResponse(
+data class DeleteResponse(
     @SerializedName("status")
     val status: String?,
 

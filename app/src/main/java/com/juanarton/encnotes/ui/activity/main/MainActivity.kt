@@ -4,7 +4,6 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.Window
@@ -33,7 +32,6 @@ import com.juanarton.encnotes.core.adapter.GridSpacingItemDecoration
 import com.juanarton.encnotes.core.adapter.ItemsDetailsLookup
 import com.juanarton.encnotes.core.adapter.ItemsKeyProvider
 import com.juanarton.encnotes.core.adapter.NotesAdapter
-import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.NotesPair
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.Cryptography

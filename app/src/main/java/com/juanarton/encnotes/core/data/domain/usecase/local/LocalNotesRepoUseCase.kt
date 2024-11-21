@@ -52,4 +52,6 @@ interface LocalNotesRepoUseCase {
     fun permanentDeleteAtt(id: String)
 
     fun writeFileToDisk(file: File, byteArray: ByteArray): Flow<Pair<Boolean, String>>
+
+    fun deleteFileFromDisk(file: File): Boolean
 }

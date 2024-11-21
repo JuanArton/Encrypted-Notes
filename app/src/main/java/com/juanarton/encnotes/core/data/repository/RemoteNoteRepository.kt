@@ -184,4 +184,16 @@ class RemoteNoteRepository @Inject constructor(
     override suspend fun downloadAttachment(url: String, ketch: Ketch): Int {
         return attachmentRemoteDataSource.downloadAttachment(url, ketch)
     }
+
+    override fun deleteAttById(id: String): Flow<Resource<String>> {
+        return object: NetworkBoundRes<String, String>() {
+            override fun loadFromNetwork(data: String): Flow<String> {
+                return flowOf(data)
+            }
+
+            override suspend fun createCall(): Flow<APIResponse<String>> {
+                return attachmentRemoteDataSource.deleteAttById(id)
+            }
+        }.asFlow()
+    }
 }

@@ -1,10 +1,13 @@
 package com.juanarton.encnotes.core.adapter
 
+import android.content.Intent
 import android.graphics.Color
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.selection.ItemDetailsLookup
 import androidx.recyclerview.selection.SelectionTracker
@@ -15,10 +18,12 @@ import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
 import com.google.android.material.card.MaterialCardView
 import com.juanarton.encnotes.R
+import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.NotesPair
 import com.juanarton.encnotes.core.data.domain.usecase.local.LocalNotesRepoUseCase
 import com.juanarton.encnotes.core.data.domain.usecase.remote.RemoteNotesRepoUseCase
 import com.juanarton.encnotes.databinding.NoteItemViewBinding
+import com.juanarton.encnotes.ui.activity.imagedetail.ImageDetailActivity
 import com.juanarton.encnotes.ui.utils.Utils
 import com.ketch.Ketch
 
@@ -104,7 +109,14 @@ class NotesAdapter (
                 }
 
                 rvImgAttachment.addItemDecoration(GridSpacingItemDecoration(Utils.dpToPx(1, context)))
-                val rvAdapter = AttachmentAdapter(localNotesRepoUseCase, remoteNotesRepoUseCase, ketch)
+                val listener: (
+                    Attachment, ImageView
+                ) -> Unit = { _, _ ->
+                    }
+
+                val rvAdapter = AttachmentAdapter(
+                    listener, localNotesRepoUseCase, remoteNotesRepoUseCase, ketch
+                )
                 rvImgAttachment.adapter = rvAdapter
 
                 rvAdapter.setData(attachment)
