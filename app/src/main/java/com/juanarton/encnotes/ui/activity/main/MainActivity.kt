@@ -4,7 +4,6 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.Window
@@ -39,8 +38,8 @@ import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.databinding.ActivityMainBinding
 import com.juanarton.encnotes.ui.activity.login.LoginActivity
 import com.juanarton.encnotes.ui.activity.note.NoteActivity
-import com.juanarton.encnotes.ui.utils.AttachmentSync
-import com.juanarton.encnotes.ui.utils.NoteSync
+import com.juanarton.encnotes.core.utils.AttachmentSync
+import com.juanarton.encnotes.core.utils.NoteSync
 import com.juanarton.encnotes.ui.utils.Utils
 import com.ketch.Ketch
 import dagger.hilt.android.AndroidEntryPoint

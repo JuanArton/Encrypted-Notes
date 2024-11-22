@@ -108,8 +108,11 @@ dependencies {
 
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.recyclerview.selection)
+
     implementation(libs.flexbox)
-    implementation("jp.wasabeef:glide-transformations:4.3.0")
+
+    implementation(libs.glide.transformations)
+
     implementation(libs.ketch)
     //implementation(libs.biometric)
 }

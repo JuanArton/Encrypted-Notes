@@ -20,6 +20,7 @@ import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.ImageLoader
 import com.juanarton.encnotes.databinding.ActivityImageDetailBinding
 import com.juanarton.encnotes.ui.utils.Utils
+import com.juanarton.encnotes.ui.utils.ZoomPanHelper
 import com.ketch.Ketch
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -58,8 +59,9 @@ class ImageDetailActivity : AppCompatActivity() {
 
         attachment?.let {
             binding?.apply {
-                Log.d("status", it.id)
                 this@ImageDetailActivity.attachment = it
+
+                ZoomPanHelper(ivAttachment)
                 val imageLoader = ImageLoader()
                 imageLoader.loadImage(
                     this@ImageDetailActivity, it.url, ivAttachment, null,

@@ -10,7 +10,6 @@ import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.transition.Transition
-import android.util.Log
 import android.util.TypedValue
 import android.view.Window
 import android.widget.ImageView
@@ -178,6 +177,10 @@ class NoteActivity : AppCompatActivity() {
             id = it.notes.id
             initContent = it.notes.notesContent.toString()
             initTitle = it.notes.notesTitle.toString()
+            binding?.apply {
+                rvImgAttachment.layoutManager = GridLayoutManager(this@NoteActivity, calculateSpan())
+                rvImgAttachment.adapter = rvAdapter
+            }
             initAttachment.addAll(it.attachmentList)
             rvAdapter.setData(it.attachmentList.asReversed())
         }

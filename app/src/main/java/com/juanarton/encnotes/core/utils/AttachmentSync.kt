@@ -1,6 +1,5 @@
-package com.juanarton.encnotes.ui.utils
+package com.juanarton.encnotes.core.utils
 
-import android.util.Log
 import com.juanarton.encnotes.core.data.domain.model.Attachment
 
 object AttachmentSync {

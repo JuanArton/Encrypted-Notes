@@ -1,7 +1,6 @@
 package com.juanarton.encnotes.ui.activity.main
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -14,9 +13,8 @@ import com.juanarton.encnotes.core.data.domain.usecase.local.LocalNotesRepoUseCa
 import com.juanarton.encnotes.core.data.domain.usecase.remote.RemoteNotesRepoUseCase
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.Cryptography
-import com.juanarton.encnotes.ui.utils.SyncAttachment
-import com.juanarton.encnotes.ui.utils.SyncNotes
-import com.ketch.Ketch
+import com.juanarton.encnotes.core.utils.SyncAttachment
+import com.juanarton.encnotes.core.utils.SyncNotes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
