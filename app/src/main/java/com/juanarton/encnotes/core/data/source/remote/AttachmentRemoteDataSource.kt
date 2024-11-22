@@ -72,10 +72,6 @@ class AttachmentRemoteDataSource @Inject constructor(
     ): Response<ResponseBody> {
         val accessKey = sharedPrefDataSource.getAccessKey()!!
 
-        val digest = MessageDigest.getInstance("SHA-256")
-        digest.update(image)
-        val hash = digest.digest().joinToString("") { "%02x".format(it) }
-
         val requestBody = image.toRequestBody("image/jpeg".toMediaType(), 0, image.size)
         val imagePart = MultipartBody.Part.createFormData("data", attachment.url, requestBody)
 
@@ -83,7 +79,7 @@ class AttachmentRemoteDataSource @Inject constructor(
             .apply {
                 put("id", attachment.id)
                 put("lastModified", attachment.lastModified)
-                put("hash", hash)
+                put("type", attachment.type)
             }.toString().toRequestBody("application/json".toMediaType())
 
         return API.services.uploadImageAtt(attachment.noteId!!, imagePart, json, accessKey)

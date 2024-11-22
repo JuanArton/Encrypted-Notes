@@ -10,6 +10,7 @@ import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.transition.Transition
+import android.util.Log
 import android.util.TypedValue
 import android.view.Window
 import android.widget.ImageView
@@ -194,14 +195,19 @@ class NoteActivity : AppCompatActivity() {
                     id?.let {
                         when (act) {
                             "delete" -> {
+                                val previousSpan = calculateSpan()
                                 val index = notesPair.attachmentList.asReversed().indexOfFirst { it.id == id }
                                 notesPair.attachmentList.removeAt(index)
+                                val newSpan = calculateSpan()
                                 binding?.apply {
                                     handleSaveNote(etTitle.text.toString(), etContent.text.toString())
                                     val layoutManager = binding?.rvImgAttachment?.layoutManager as GridLayoutManager
                                     layoutManager.spanCount = calculateSpan()
+                                    if (previousSpan != newSpan) {
+                                        rvAdapter.deleteData(index)
+                                        rvAdapter.notifyDataSetChanged()
+                                    }
                                 }
-                                rvAdapter.deleteData(index)
                                 noteViewModel.deleteAttRemote(id)
                             }
                             else -> {}
@@ -310,7 +316,7 @@ class NoteActivity : AppCompatActivity() {
                 }
                 noteViewModel.insertAtt(
                     Attachment(
-                        NanoId.generate(16), id, it.second, false, Date().time
+                        NanoId.generate(16), id, it.second, false, "image", Date().time
                     )
                 )
             }
@@ -320,14 +326,19 @@ class NoteActivity : AppCompatActivity() {
             when (it) {
                 is Resource.Success -> {
                     it.data?.let { attachment ->
+                        val previousSpan = calculateSpan()
                         notesPair.attachmentList.add(0, attachment)
                         if(notesPair.attachmentList.size != 0) {
                             binding?.apply {
+                                val newSpan = calculateSpan()
                                 val layoutManager = rvImgAttachment.layoutManager as GridLayoutManager
-                                layoutManager.spanCount = calculateSpan()
+                                layoutManager.spanCount = newSpan
+                                if (previousSpan != newSpan) {
+                                    rvAdapter.addData(attachment)
+                                    rvAdapter.notifyDataSetChanged()
+                                }
                             }
                         }
-                        rvAdapter.addData(attachment)
                     }
                 }
                 is Resource.Loading -> {}

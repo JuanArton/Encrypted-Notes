@@ -10,7 +10,7 @@ import com.juanarton.encnotes.core.data.source.local.room.entity.NotesEntity
 @Database(entities = [
     NotesEntity::class,
     AttachmentEntity::class
-], version = 4, exportSchema = false)
+], version = 1, exportSchema = false)
 abstract class NotesAppDatabase : RoomDatabase() {
     abstract fun notesDAO(): NotesDAO
     abstract fun attachmentDAO(): AttachmentsDAO

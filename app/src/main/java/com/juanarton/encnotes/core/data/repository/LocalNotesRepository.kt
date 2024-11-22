@@ -155,6 +155,7 @@ class LocalNotesRepository @Inject constructor(
                     "",
                     "",
                     true,
+                    attachment.type ?: "",
                     attachment.lastModified ?: 0L
                 )
             )

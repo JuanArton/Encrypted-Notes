@@ -34,12 +34,12 @@ import com.juanarton.encnotes.core.adapter.ItemsKeyProvider
 import com.juanarton.encnotes.core.adapter.NotesAdapter
 import com.juanarton.encnotes.core.data.domain.model.NotesPair
 import com.juanarton.encnotes.core.data.source.remote.Resource
+import com.juanarton.encnotes.core.utils.AttachmentSync
 import com.juanarton.encnotes.core.utils.Cryptography
+import com.juanarton.encnotes.core.utils.NoteSync
 import com.juanarton.encnotes.databinding.ActivityMainBinding
 import com.juanarton.encnotes.ui.activity.login.LoginActivity
 import com.juanarton.encnotes.ui.activity.note.NoteActivity
-import com.juanarton.encnotes.core.utils.AttachmentSync
-import com.juanarton.encnotes.core.utils.NoteSync
 import com.juanarton.encnotes.ui.utils.Utils
 import com.ketch.Ketch
 import dagger.hilt.android.AndroidEntryPoint
@@ -89,11 +89,6 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
         _binding = ActivityMainBinding.inflate(layoutInflater)
 
         setContentView(binding?.root)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
 
         Cryptography.initTink()
         ketch = Ketch.builder().build(this)
@@ -118,7 +113,20 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
 
             val staggeredLayout = StaggeredGridLayoutManager(2, LinearLayoutManager.VERTICAL)
             rvNotes.layoutManager = staggeredLayout
-            rvNotes.addItemDecoration(GridSpacingItemDecoration(Utils.dpToPx(7, this@MainActivity)))
+
+            ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+                rvNotes.addItemDecoration(
+                    GridSpacingItemDecoration(
+                        Utils.dpToPx(7, this@MainActivity), systemBars.top, systemBars.bottom
+                    )
+                )
+
+                v.setPadding(systemBars.left, 0, systemBars.right, 0)
+                insets
+            }
+
             rvAdapter = NotesAdapter(
                 listener, mainViewModel.localNotesRepoUseCase, mainViewModel.remoteNotesRepoUseCase, ketch
             )
@@ -326,9 +334,7 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
                     rvAdapter.deleteItem(index)
                     notDeletedNotes.removeAt(index)
                 }
-
                 tracker.clearSelection()
-
                 true
             }
             else -> {
@@ -344,7 +350,6 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-
         val spanCount = if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) 3 else 2
         binding?.rvNotes?.layoutManager = StaggeredGridLayoutManager(spanCount, LinearLayoutManager.VERTICAL)
     }

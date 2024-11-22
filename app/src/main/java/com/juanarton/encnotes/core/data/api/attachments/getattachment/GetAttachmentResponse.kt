@@ -31,6 +31,9 @@ data class AttachmentData(
     @SerializedName("isDelete")
     val isDelete: Boolean = false,
 
+    @SerializedName("type")
+    val type: String,
+
     @SerializedName("lastModified")
     val lastModified: Long
 )

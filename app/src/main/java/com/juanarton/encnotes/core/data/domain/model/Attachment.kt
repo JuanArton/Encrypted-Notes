@@ -9,5 +9,6 @@ data class Attachment(
     val noteId: String?,
     val url: String,
     val isDelete: Boolean?,
+    val type: String?,
     val lastModified: Long?
 ): Parcelable

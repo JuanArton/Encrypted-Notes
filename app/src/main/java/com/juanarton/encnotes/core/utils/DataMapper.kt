@@ -59,6 +59,7 @@ object DataMapper {
                 it.notesId,
                 it.url,
                 it.isDelete,
+                it.type,
                 it.lastModified
             )
         }
@@ -71,6 +72,7 @@ object DataMapper {
                 it.noteId,
                 it.url ?: "",
                 it.isDelete,
+                it.type,
                 it.lastModified
             )
         }
@@ -82,6 +84,7 @@ object DataMapper {
             attachment.noteId,
             attachment.url,
             attachment.isDelete ?: false,
+            attachment.type ?: "",
             attachment.lastModified ?: 0L
         )
     }

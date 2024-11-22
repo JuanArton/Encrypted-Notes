@@ -148,7 +148,9 @@ class RemoteNoteRepository @Inject constructor(
     override fun uploadImageAttRemote(image: ByteArray, attachment: Attachment): Flow<Resource<Attachment>> {
         return object : NetworkBoundRes<Attachment, PostAttachmentData>() {
             override fun loadFromNetwork(data: PostAttachmentData): Flow<Attachment> {
-                return flowOf(Attachment(data.id, null, data.url, null, null))
+                return flowOf(
+                    Attachment(data.id, null, data.url, null, null, null)
+                )
             }
 
             override suspend fun createCall(): Flow<APIResponse<PostAttachmentData>> {

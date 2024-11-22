@@ -19,6 +19,9 @@ data class AttachmentEntity (
     @ColumnInfo(name = "is_delete")
     val isDelete: Boolean,
 
+    @ColumnInfo(name = "type")
+    val type: String,
+
     @ColumnInfo(name = "last_modified")
     val lastModified: Long,
 )
