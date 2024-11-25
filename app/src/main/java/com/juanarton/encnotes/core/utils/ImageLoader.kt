@@ -18,6 +18,7 @@ import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.juanarton.encnotes.core.data.domain.usecase.local.LocalNotesRepoUseCase
 import com.juanarton.encnotes.core.data.domain.usecase.remote.RemoteNotesRepoUseCase
+import com.juanarton.encnotes.ui.activity.main.MainActivity
 import com.ketch.Ketch
 import jp.wasabeef.glide.transformations.BlurTransformation
 import kotlinx.coroutines.Dispatchers
@@ -44,7 +45,8 @@ class ImageLoader {
                 }
             } catch (e: Exception) {
                 val fullUrl = buildString {
-                    append("http://192.168.0.100:5500/attachment/images/")
+                    append(MainActivity.baseUrl())
+                    append("attachment/images/")
                     append(url)
                 }
 

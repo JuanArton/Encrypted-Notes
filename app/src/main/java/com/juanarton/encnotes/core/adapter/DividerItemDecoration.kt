@@ -1,6 +1,5 @@
 package com.juanarton.encnotes.core.adapter
 
-import android.content.Context
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
 import androidx.recyclerview.widget.RecyclerView

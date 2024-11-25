@@ -37,7 +37,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="20dp"
                 android:text="@string/insert_key_message"/>
 
             <TextView
@@ -61,11 +61,11 @@
                 app:boxCornerRadiusBottomEnd="25dp"
                 app:boxCornerRadiusTopEnd="25dp"
                 app:boxStrokeColor="@color/text_input_outline_color">
-
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etCipherKey"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:focusable="true"
                     android:hint="@string/insert_cipher_key"/>
             </com.google.android.material.textfield.TextInputLayout>
 

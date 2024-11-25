@@ -108,7 +108,10 @@ class NotesAdapter (
                     rvImgAttachment.layoutManager = GridLayoutManager(context, span)
                 }
 
-                rvImgAttachment.addItemDecoration(GridSpacingItemDecoration(Utils.dpToPx(2, context)))
+                if (rvImgAttachment.itemDecorationCount < 1) {
+                    rvImgAttachment.addItemDecoration(GridSpacingItemDecoration(Utils.dpToPx(2, context), 0, 0))
+                }
+
                 val listener: (
                     Attachment, ImageView
                 ) -> Unit = { _, _ ->

@@ -1,6 +1,5 @@
 package com.juanarton.encnotes.core.data.source.local
 
-import android.util.Log
 import com.juanarton.encnotes.core.data.source.local.room.dao.AttachmentsDAO
 import com.juanarton.encnotes.core.data.source.local.room.entity.AttachmentEntity
 import kotlinx.coroutines.Dispatchers

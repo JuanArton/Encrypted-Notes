@@ -43,7 +43,7 @@ interface ILocalNotesRepository {
 
     fun insertAttachment(attachment: Attachment): Flow<Resource<Attachment>>
 
-    fun deleteAttachment(attachment: Attachment): Flow<Resource<Boolean>>
+    fun deleteAttachment(attachment: Attachment): Flow<Resource<Attachment>>
 
     fun permanentDeleteAtt(id: String)
 

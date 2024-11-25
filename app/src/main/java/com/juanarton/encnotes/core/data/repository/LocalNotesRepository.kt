@@ -159,7 +159,7 @@ class LocalNotesRepository @Inject constructor(
                     attachment.lastModified ?: 0L
                 )
             )
-            emit(Resource.Success(true))
+            emit(Resource.Success(attachment))
         } catch (e: SQLiteConstraintException) {
             emit(Resource.Error(context.getString(R.string.delete_att_error)))
         } catch (e: Exception) {

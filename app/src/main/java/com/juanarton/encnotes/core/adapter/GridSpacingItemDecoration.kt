@@ -13,36 +13,40 @@ class GridSpacingItemDecoration(
 ) : RecyclerView.ItemDecoration() {
 
     private val halfSpace = space / 2
+    private val applied: ArrayList<Int> = arrayListOf()
 
     override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
         val layoutManager = parent.layoutManager
         val itemCount = parent.adapter?.itemCount ?: 0
-        val position = parent.getChildAdapterPosition(view) // current item's position
+        val position = parent.getChildAdapterPosition(view)
 
         if (layoutManager is GridLayoutManager) {
-            val spanCount = layoutManager.spanCount
-            val isFirstRow = position < spanCount
-            val isLastRow = position >= itemCount - spanCount
+            if (position !in applied) {
+                val spanCount = layoutManager.spanCount
+                val isFirstRow = position < spanCount
+                val isLastRow = position >= itemCount - spanCount
 
-            outRect.top = if (isFirstRow) topMarginFirstRow else halfSpace
-            outRect.left = if (position % spanCount == 0) space else halfSpace
-            outRect.right = halfSpace
-            outRect.bottom = if (isLastRow) bottomMarginLastRow else halfSpace
-
+                outRect.top = if (isFirstRow) topMarginFirstRow else halfSpace
+                outRect.left = if (position % spanCount == 0) space else halfSpace
+                outRect.right = halfSpace
+                outRect.bottom = if (isLastRow) bottomMarginLastRow else halfSpace
+            }
         } else if (layoutManager is StaggeredGridLayoutManager) {
-            if (parent.paddingLeft != halfSpace) {
+            if (position !in applied) {
                 parent.setPadding(halfSpace, halfSpace, halfSpace, halfSpace)
                 parent.clipToPadding = false
+
+                outRect.left = halfSpace
+                outRect.right = halfSpace
+
+                val isFirstRow = position < layoutManager.spanCount
+                val isLastRow = position >= itemCount - layoutManager.spanCount
+
+                outRect.top = if (isFirstRow) topMarginFirstRow else halfSpace
+                outRect.bottom = if (isLastRow) bottomMarginLastRow else halfSpace
             }
-
-            val isFirstRow = position < layoutManager.spanCount
-            val isLastRow = position >= itemCount - layoutManager.spanCount
-
-            outRect.top = if (isFirstRow) topMarginFirstRow else halfSpace
-            outRect.bottom = if (isLastRow) bottomMarginLastRow else halfSpace
-            outRect.left = halfSpace
-            outRect.right = halfSpace
         }
     }
 }
+
 

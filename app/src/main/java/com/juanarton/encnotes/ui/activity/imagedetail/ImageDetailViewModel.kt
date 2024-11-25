@@ -22,8 +22,8 @@ class ImageDetailViewModel @Inject constructor(
     private val _deleteAttFromDisk: MutableLiveData<Boolean> = MutableLiveData()
     val deleteAttFromDisk: LiveData<Boolean> = _deleteAttFromDisk
 
-    private val _deleteAtt: MutableLiveData<Resource<Boolean>> = MutableLiveData()
-    val deleteAtt: LiveData<Resource<Boolean>> = _deleteAtt
+    private val _deleteAtt: MutableLiveData<Resource<Attachment>> = MutableLiveData()
+    val deleteAtt: LiveData<Resource<Attachment>> = _deleteAtt
 
     fun deleteAttFromDisk(attachment: Attachment, context: Context) {
         val file = File(context.filesDir, attachment.url)

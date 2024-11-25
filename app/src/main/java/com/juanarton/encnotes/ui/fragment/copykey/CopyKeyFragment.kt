@@ -78,6 +78,7 @@ class CopyKeyFragment : Fragment() {
                                 if (setAccKey && setRefKey && setLoggedIn && setCipherKey) {
                                     loadingDialog.dismiss()
                                     startActivity(Intent(requireContext(), MainActivity::class.java))
+                                    requireActivity().finish()
                                 } else {
                                     Toast.makeText(
                                         requireContext(),

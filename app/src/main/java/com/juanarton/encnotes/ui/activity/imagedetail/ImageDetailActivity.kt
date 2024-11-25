@@ -79,7 +79,7 @@ class ImageDetailActivity : AppCompatActivity() {
         imageDetailViewModel.deleteAtt.observe(this) {
             when (it) {
                 is Resource.Success -> {
-                    attachment?.let {
+                    it.data?.let { attachment ->
                         imageDetailViewModel.deleteAttFromDisk(attachment, this)
                     }
                 }
@@ -96,7 +96,7 @@ class ImageDetailActivity : AppCompatActivity() {
                     putExtra("action", "delete")
                     putExtra("id", attachment?.id)
                 }
-                setResult(Activity.RESULT_OK, resultIntent)
+                setResult(RESULT_OK, resultIntent)
                 ActivityCompat.finishAfterTransition(this@ImageDetailActivity)
             }
         }

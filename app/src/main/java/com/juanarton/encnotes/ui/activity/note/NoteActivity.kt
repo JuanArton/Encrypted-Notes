@@ -1,6 +1,5 @@
 package com.juanarton.encnotes.ui.activity.note
 
-import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -9,9 +8,7 @@ import android.os.Handler
 import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
-import android.transition.Transition
-import android.util.Log
-import android.util.TypedValue
+import android.view.ViewGroup
 import android.view.Window
 import android.widget.ImageView
 import android.widget.Toast
@@ -23,6 +20,8 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityOptionsCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import com.google.firebase.Firebase
@@ -71,18 +70,7 @@ class NoteActivity : AppCompatActivity() {
 
         binding?.main?.transitionName = "shared_element_end_root"
         val transform = Utils.buildContainerTransform(this)
-        transform.addListener(object : Transition.TransitionListener {
-            override fun onTransitionStart(transition: Transition?) {}
-            override fun onTransitionEnd(transition: Transition?) {
-                val typedValue = TypedValue()
-                this@NoteActivity.theme.resolveAttribute(com.google.android.material.R.attr.colorSurfaceContainerLow, typedValue, true)
-                val window: Window = this@NoteActivity.window
-                window.navigationBarColor = typedValue.data
-            }
-            override fun onTransitionCancel(transition: Transition?) {}
-            override fun onTransitionPause(transition: Transition?) {}
-            override fun onTransitionResume(transition: Transition?) {}
-        })
+
         setEnterSharedElementCallback(MaterialContainerTransformSharedElementCallback())
         window.sharedElementEnterTransition = transform
         window.sharedElementReturnTransition = transform
@@ -96,6 +84,36 @@ class NoteActivity : AppCompatActivity() {
 
         observeViewModel()
 
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val isKeyboardVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+            val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
+
+            binding?.apply {
+                val rlParams = rlBottomTool.layoutParams as ViewGroup.MarginLayoutParams
+                val tbParams = toolbar.layoutParams as ViewGroup.MarginLayoutParams
+                val rvParams = rvImgAttachment.layoutParams as ViewGroup.MarginLayoutParams
+                tbParams.topMargin = systemBars.top
+
+                if (isKeyboardVisible) {
+                    rlParams.bottomMargin = imeInsets.bottom
+                    rlBottomTool.setPadding(
+                        Utils.dpToPx(10, this@NoteActivity), 0, Utils.dpToPx(10, this@NoteActivity), 0
+                    )
+                } else {
+                    rlParams.bottomMargin = 0
+                    rlBottomTool.setPadding(
+                        Utils.dpToPx(10, this@NoteActivity), 0, Utils.dpToPx(10, this@NoteActivity), systemBars.bottom
+                    )
+                }
+
+                rvParams.topMargin = -systemBars.top
+            }
+
+            v.setPadding(systemBars.left, 0, systemBars.right, 0)
+            insets
+        }
+
         binding?.apply {
             val textWatcher = object : TextWatcher {
                 override fun afterTextChanged(s: Editable?) {
@@ -106,7 +124,7 @@ class NoteActivity : AppCompatActivity() {
                             etContent.text.toString()
                         )
                     }
-                    runnable?.let { handler.postDelayed(it, 500) }
+                    runnable.let { handler.postDelayed(it, 500) }
                 }
 
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -125,7 +143,7 @@ class NoteActivity : AppCompatActivity() {
         selectImageLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
+            if (result.resultCode == RESULT_OK) {
                 val imageUri: Uri? = result.data?.data
                 imageUri?.let {
                     noteViewModel.addAtt(it, contentResolver, this)
@@ -247,7 +265,7 @@ class NoteActivity : AppCompatActivity() {
                 putExtra("notesEncrypted", notesPair)
                 putExtra("action", act)
             }
-            setResult(Activity.RESULT_OK, resultIntent)
+            setResult(RESULT_OK, resultIntent)
             ActivityCompat.finishAfterTransition(this@NoteActivity)
         } else { ActivityCompat.finishAfterTransition(this@NoteActivity) }
     }
@@ -328,7 +346,7 @@ class NoteActivity : AppCompatActivity() {
                     it.data?.let { attachment ->
                         val previousSpan = calculateSpan()
                         notesPair.attachmentList.add(0, attachment)
-                        if(notesPair.attachmentList.size != 0) {
+                        if(notesPair.attachmentList.isNotEmpty()) {
                             binding?.apply {
                                 val newSpan = calculateSpan()
                                 val layoutManager = rvImgAttachment.layoutManager as GridLayoutManager
@@ -361,7 +379,7 @@ class NoteActivity : AppCompatActivity() {
 
     private fun calculateSpan(): Int {
         binding?.apply {
-            val gridSpacingDecoration = GridSpacingItemDecoration(Utils.dpToPx(3, this@NoteActivity))
+            val gridSpacingDecoration = GridSpacingItemDecoration(Utils.dpToPx(3, this@NoteActivity), 0, 0)
             if (notesPair.attachmentList.size > 1) {
                 rvImgAttachment.addItemDecoration(gridSpacingDecoration)
             } else {

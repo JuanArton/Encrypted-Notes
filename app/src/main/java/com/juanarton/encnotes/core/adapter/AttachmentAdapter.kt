@@ -1,6 +1,5 @@
 package com.juanarton.encnotes.core.adapter
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -44,13 +43,13 @@ class AttachmentAdapter(
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
-    ): AttachmentAdapter.ViewHolder {
+    ): ViewHolder {
         val lifeCycleOwner = parent.context as LifecycleOwner
         val view = LayoutInflater.from(parent.context).inflate(R.layout.attachment_item_view, parent, false)
         return ViewHolder(view, lifeCycleOwner)
     }
 
-    override fun onBindViewHolder(holder: AttachmentAdapter.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val attachment = attachmentList[position]
         holder.bind(attachment)
     }

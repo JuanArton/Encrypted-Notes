@@ -59,7 +59,14 @@ class MainViewModel @Inject constructor(
     private var _uploadAttachment: MutableLiveData<Resource<Attachment>> = MutableLiveData()
     var uploadAttachment: LiveData<Resource<Attachment>> = _uploadAttachment
 
-    var _notDeletedAtt: MutableLiveData<List<Attachment>> = MutableLiveData()
+    private val _deleteAttRemote: MutableLiveData<Resource<String>> = MutableLiveData()
+    val deleteAttRemote: LiveData<Resource<String>> = _deleteAttRemote
+
+    private val _deleteAttFromDisk: MutableLiveData<Boolean> = MutableLiveData()
+    val deleteAttFromDisk: LiveData<Boolean> = _deleteAttFromDisk
+
+    private val _deleteAtt: MutableLiveData<Resource<Attachment>> = MutableLiveData()
+    val deleteAtt: LiveData<Resource<Attachment>> = _deleteAtt
 
     fun getCipherKey() = localNotesRepoUseCase.getCipherKey()
 
@@ -152,6 +159,33 @@ class MainViewModel @Inject constructor(
             viewModelScope.launch {
                 remoteNotesRepoUseCase.uploadImageAtt(byteArray, attachment).collect{
                     _uploadAttachment.value = it
+                }
+            }
+        }
+    }
+
+    fun deleteAttRemote(attachments: List<Attachment>) {
+        viewModelScope.launch {
+            attachments.forEach {
+                remoteNotesRepoUseCase.deleteAttById(it.id).collect {
+                    _deleteAttRemote.value = it
+                }
+            }
+        }
+    }
+
+    fun deleteAttFromDisk(attachment: Attachment, context: Context) {
+        val file = File(context.filesDir, attachment.url)
+        viewModelScope.launch {
+            _deleteAttFromDisk.value = localNotesRepoUseCase.deleteFileFromDisk(file)
+        }
+    }
+
+    fun deleteAtt(attachments: List<Attachment>) {
+        viewModelScope.launch {
+            attachments.forEach {
+                localNotesRepoUseCase.deleteAttachment(it).collect {
+                    _deleteAtt.value = it
                 }
             }
         }

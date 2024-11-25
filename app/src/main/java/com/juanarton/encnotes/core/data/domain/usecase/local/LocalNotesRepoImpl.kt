@@ -62,7 +62,7 @@ class LocalNotesRepoImpl @Inject constructor(
     override fun insertAttachment(attachment: Attachment): Flow<Resource<Attachment>> =
         iLocalNotesRepository.insertAttachment(attachment)
 
-    override fun deleteAttachment(attachment: Attachment): Flow<Resource<Boolean>> =
+    override fun deleteAttachment(attachment: Attachment): Flow<Resource<Attachment>> =
         iLocalNotesRepository.deleteAttachment(attachment)
 
     override fun permanentDeleteAtt(id: String) =

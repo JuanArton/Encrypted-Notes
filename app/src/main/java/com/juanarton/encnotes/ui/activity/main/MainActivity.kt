@@ -1,20 +1,27 @@
 package com.juanarton.encnotes.ui.activity.main
 
+import android.animation.ValueAnimator
 import android.content.Intent
 import android.content.res.Configuration
+import android.content.res.Resources
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
+import android.util.Log
+import android.util.TypedValue
+import android.view.View
+import android.view.ViewGroup
 import android.view.Window
+import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.view.ActionMode
 import androidx.core.app.ActivityOptionsCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.selection.SelectionPredicates
@@ -23,6 +30,7 @@ import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.search.SearchBar
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -45,7 +53,7 @@ import com.ketch.Ketch
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity(), ActionMode.Callback {
+class MainActivity : AppCompatActivity() {
 
     private val mainViewModel: MainViewModel by viewModels()
     private var _binding: ActivityMainBinding? = null
@@ -54,7 +62,6 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
     private lateinit var rvAdapter: NotesAdapter
     private var firstRun = true
     private lateinit var tracker: SelectionTracker<String>
-    private var actionMode: ActionMode? = null
     private lateinit var auth: FirebaseAuth
     lateinit var ketch: Ketch
     private var notDeletedNotes: ArrayList<NotesPair> = arrayListOf()
@@ -89,11 +96,17 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
         _binding = ActivityMainBinding.inflate(layoutInflater)
 
         setContentView(binding?.root)
+        setSupportActionBar(binding?.toolbar)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
 
         Cryptography.initTink()
         ketch = Ketch.builder().build(this)
 
         mainViewModel.getNotes()
+
+        val typedValue = TypedValue()
+        theme.resolveAttribute(com.google.android.material.R.attr.colorPrimarySurface, typedValue, true)
+        window.statusBarColor = typedValue.data and 0x00FFFFFF or (178 shl 24)
 
         binding?.apply {
             val listener: (
@@ -117,11 +130,20 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
             ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
                 val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
 
-                rvNotes.addItemDecoration(
-                    GridSpacingItemDecoration(
-                        Utils.dpToPx(7, this@MainActivity), systemBars.top, systemBars.bottom
+                val tbParams = toolbar.layoutParams as ViewGroup.MarginLayoutParams
+                tbParams.topMargin = systemBars.top
+
+                if (rvNotes.itemDecorationCount < 1) {
+                    rvNotes.addItemDecoration(
+                        GridSpacingItemDecoration(
+                            Utils.dpToPx(7, this@MainActivity),
+                            tbParams.height + Utils.dpToPx(10, this@MainActivity),
+                            systemBars.bottom
+                        )
                     )
-                )
+                }
+                val rvParams = rvNotes.layoutParams as FrameLayout.LayoutParams
+                rvParams.bottomMargin = systemBars.bottom
 
                 v.setPadding(systemBars.left, 0, systemBars.right, 0)
                 insets
@@ -132,132 +154,9 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
             )
             rvNotes.adapter = rvAdapter
 
-            tracker = SelectionTracker.Builder(
-                "selectionItem",
-                rvNotes,
-                ItemsKeyProvider(rvAdapter),
-                ItemsDetailsLookup(rvNotes),
-                StorageStrategy.createStringStorage()
-            ).withSelectionPredicate(
-                SelectionPredicates.createSelectAnything()
-            ).build()
+            setupTracker()
 
-            tracker.addObserver(object : SelectionTracker.SelectionObserver<String>() {
-                    override fun onSelectionChanged() {
-                        super.onSelectionChanged()
-                        if (actionMode == null) {
-                            actionMode = startSupportActionMode(this@MainActivity)
-                        }
-                        val items = tracker.selection.size()
-                        if (items > 0) {
-                            actionMode?.title = "$items Selected"
-                        } else {
-                            actionMode?.finish()
-                        }
-                    }
-                }
-            )
-            rvAdapter.tracker = tracker
-
-            mainViewModel.getNotesPair.observe(this@MainActivity) { notesPair ->
-                if (firstRun) mainViewModel.getNotesRemote()
-                val notDeleted = notesPair.notes.filter {
-                    !it.isDelete
-                }
-                val notDeletedAttachment = notesPair.attachmentList.filter {
-                    !it.isDelete!!
-                }
-
-                val notesPairList = notDeleted.map { note ->
-                    val noteAttachments = notDeletedAttachment.filter { it.noteId == note.id }
-                    NotesPair(note, noteAttachments as ArrayList)
-                }
-
-                notDeletedNotes = notesPairList as ArrayList
-                mainViewModel._notDeleted.value = notesPairList
-                mainViewModel.decrypt()
-            }
-
-            mainViewModel.getNotesRemote.observe(this@MainActivity) {
-                when(it){
-                    is Resource.Success -> {
-                        it.data?.let { notes ->
-                            firstRun = false
-                            val sync = NoteSync.syncNotes(
-                                mainViewModel._getNotesPair.value?.notes ?: emptyList(),
-                                notes
-                            )
-                            mainViewModel.syncToLocal(sync)
-                            mainViewModel.syncToRemote(sync)
-                        }
-                    }
-                    is Resource.Loading -> {}
-                    is Resource.Error -> {
-                        firstRun = false
-                        Toast.makeText(this@MainActivity,
-                            buildString {
-                                append(getString(R.string.failed_to_sync_notes))
-                                append(it.message)
-                            }, Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
-            }
-
-            mainViewModel.getAttachmentRemote.observe(this@MainActivity) {
-                when(it){
-                    is Resource.Success -> {
-                        it.data?.let { attachment ->
-                            val sync = AttachmentSync.syncAttachment(
-                                mainViewModel._getNotesPair.value?.attachmentList ?: emptyList(),
-                                attachment
-                            )
-                            mainViewModel.syncAttToLocal(sync, this@MainActivity)
-                            mainViewModel.syncAttToRemote(sync, this@MainActivity)
-                        }
-                    }
-                    is Resource.Loading -> {}
-                    is Resource.Error -> {
-                        firstRun = false
-                        Toast.makeText(this@MainActivity,
-                            buildString {
-                                append(getString(R.string.failed_to_sync_notes))
-                                append(it.message)
-                            }, Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
-            }
-
-            mainViewModel.uploadAttachment.observe(this@MainActivity) {
-                when(it){
-                    is Resource.Success -> {}
-                    is Resource.Loading -> {}
-                    is Resource.Error -> {
-                        Toast.makeText(this@MainActivity,
-                            buildString {
-                                append(getString(R.string.failed_to_sync_notes))
-                                append(it.message)
-                            }, Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
-            }
-
-            mainViewModel.getNoteById.observe(this@MainActivity) { notePair ->
-                val index = notDeletedNotes.indexOfFirst { local ->
-                    local.notes.id == notePair.notes.id
-                }
-                notDeletedNotes[index] = notePair
-                rvAdapter.updateItem(
-                    index, NotesPair(mainViewModel.decrypt(notePair.notes), notePair.attachmentList)
-                )
-            }
-
-            mainViewModel.notDeleted.observe(this@MainActivity) { notes ->
-                rvAdapter.setData(notes)
-                notDeletedNotes = notes as ArrayList<NotesPair>
-            }
+            observeViewModel()
 
             fabAddNote.setOnClickListener {
                 val intent = Intent(this@MainActivity, NoteActivity::class.java)
@@ -269,6 +168,41 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
                         "shared_element_end_root",
                     )
                 activityResultLauncher.launch(intent, options)
+            }
+
+            ibDelete.setOnClickListener {
+                val selected = rvAdapter.noteList.filter {
+                    tracker.selection.contains(it.notes.id)
+                }.toMutableList()
+                val listNotes = selected.map { it.notes }
+                val listAttachment = selected.map { it.attachmentList }
+
+                mainViewModel.deleteNote(listNotes)
+                mainViewModel.deleteNoteRemote(listNotes)
+
+                listAttachment.forEach {
+                    mainViewModel.deleteAtt(it)
+                    mainViewModel.deleteAttRemote(it)
+                }
+
+                selected.forEach {
+                    val index = notDeletedNotes.indexOfFirst { notes -> notes.notes.id == it.notes.id }
+                    rvAdapter.deleteItem(index)
+                    notDeletedNotes.removeAt(index)
+                }
+                tracker.clearSelection()
+            }
+
+            ibClose.setOnClickListener {
+                tracker.clearSelection()
+            }
+
+            onBackPressedDispatcher.addCallback(this@MainActivity) {
+                if (tracker.selection.size() > 0) {
+                    tracker.clearSelection()
+                } else {
+                    finish()
+                }
             }
 
             activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -312,40 +246,149 @@ class MainActivity : AppCompatActivity(), ActionMode.Callback {
         }
     }
 
-    override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-        mode?.menuInflater?.inflate(R.menu.select_menu_item, menu)
-        return true
-    }
-
-    override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean = true
-
-    override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
-        return when (item?.itemId) {
-            R.id.note_delete -> {
-                val selected = rvAdapter.noteList.filter {
-                    tracker.selection.contains(it.notes.id)
-                }.toMutableList()
-
-                //mainViewModel.deleteNote(selected)
-                //mainViewModel.deleteNoteRemote(selected)
-
-                selected.forEach {
-                    val index = notDeletedNotes.indexOfFirst { notes -> notes.notes.id == it.notes.id }
-                    rvAdapter.deleteItem(index)
-                    notDeletedNotes.removeAt(index)
-                }
-                tracker.clearSelection()
-                true
+    private fun observeViewModel() {
+        mainViewModel.getNotesPair.observe(this@MainActivity) { notesPair ->
+            if (firstRun) mainViewModel.getNotesRemote()
+            val notDeleted = notesPair.notes.filter {
+                !it.isDelete
             }
-            else -> {
-                false
+            val notDeletedAttachment = notesPair.attachmentList.filter {
+                !it.isDelete!!
+            }
+
+            val notesPairList = notDeleted.map { note ->
+                val noteAttachments = notDeletedAttachment.filter { it.noteId == note.id }
+                NotesPair(note, noteAttachments as ArrayList)
+            }
+
+            notDeletedNotes = notesPairList as ArrayList
+            mainViewModel._notDeleted.value = notesPairList
+            mainViewModel.decrypt()
+        }
+
+        mainViewModel.getNotesRemote.observe(this@MainActivity) {
+            when(it){
+                is Resource.Success -> {
+                    it.data?.let { notes ->
+                        firstRun = false
+                        val sync = NoteSync.syncNotes(
+                            mainViewModel._getNotesPair.value?.notes ?: emptyList(),
+                            notes
+                        )
+                        mainViewModel.syncToLocal(sync)
+                        mainViewModel.syncToRemote(sync)
+                    }
+                }
+                is Resource.Loading -> {}
+                is Resource.Error -> {
+                    firstRun = false
+                    Toast.makeText(this@MainActivity,
+                        buildString {
+                            append(getString(R.string.failed_to_sync_notes))
+                            append(it.message)
+                        }, Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+
+        mainViewModel.getAttachmentRemote.observe(this@MainActivity) {
+            when(it){
+                is Resource.Success -> {
+                    it.data?.let { attachment ->
+                        val sync = AttachmentSync.syncAttachment(
+                            mainViewModel._getNotesPair.value?.attachmentList ?: emptyList(),
+                            attachment
+                        )
+                        mainViewModel.syncAttToLocal(sync, this@MainActivity)
+                        mainViewModel.syncAttToRemote(sync, this@MainActivity)
+                    }
+                }
+                is Resource.Loading -> {}
+                is Resource.Error -> {
+                    firstRun = false
+                    Toast.makeText(this@MainActivity,
+                        buildString {
+                            append(getString(R.string.failed_to_sync_notes))
+                            append(it.message)
+                        }, Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+
+        mainViewModel.uploadAttachment.observe(this@MainActivity) {
+            when(it){
+                is Resource.Success -> {}
+                is Resource.Loading -> {}
+                is Resource.Error -> {
+                    Toast.makeText(this@MainActivity,
+                        buildString {
+                            append(getString(R.string.failed_to_sync_notes))
+                            append(it.message)
+                        }, Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+
+        mainViewModel.getNoteById.observe(this@MainActivity) { notePair ->
+            val index = notDeletedNotes.indexOfFirst { local ->
+                local.notes.id == notePair.notes.id
+            }
+            notDeletedNotes[index] = notePair
+            rvAdapter.updateItem(
+                index, NotesPair(mainViewModel.decrypt(notePair.notes), notePair.attachmentList)
+            )
+        }
+
+        mainViewModel.notDeleted.observe(this@MainActivity) { notes ->
+            rvAdapter.setData(notes)
+            notDeletedNotes = notes as ArrayList<NotesPair>
+        }
+
+        mainViewModel.deleteAtt.observe(this) {
+            when (it) {
+                is Resource.Success -> {
+                    it.data?.let { attachment ->
+                        mainViewModel.deleteAttFromDisk(attachment, this)
+                    }
+                }
+                is Resource.Loading -> {}
+                is Resource.Error -> {
+                    Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
 
-    override fun onDestroyActionMode(mode: ActionMode?) {
-        tracker.clearSelection()
-        actionMode = null
+    private fun setupTracker() {
+        binding?.apply {
+            tracker = SelectionTracker.Builder(
+                "selectionItem",
+                rvNotes,
+                ItemsKeyProvider(rvAdapter),
+                ItemsDetailsLookup(rvNotes),
+                StorageStrategy.createStringStorage()
+            ).withSelectionPredicate(
+                SelectionPredicates.createSelectAnything()
+            ).build()
+
+            tracker.addObserver(object : SelectionTracker.SelectionObserver<String>() {
+                override fun onSelectionChanged() {
+                    super.onSelectionChanged()
+
+                    binding?.apply {
+                        if (tracker.selection.size() > 0) {
+                            Utils.expandSearchBar(rippleView, searchTopBar, toolbar)
+                        } else {
+                            Utils.restoreSearchBar(rippleView, searchTopBar, this@MainActivity)
+                        }
+                    }
+                }
+            })
+            rvAdapter.tracker = tracker
+        }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

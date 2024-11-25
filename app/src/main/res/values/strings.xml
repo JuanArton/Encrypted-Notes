@@ -58,4 +58,6 @@
     <string name="failed_to_download_attachment">Failed to load attachment</string>
     <string name="attachment_image">Attachment image</string>
     <string name="delete_attachment_button">Delete attachment button</string>
+    <string name="delete_button">Delete button</string>
+    <string name="search_your_notes">Search your notes</string>
 </resources>
