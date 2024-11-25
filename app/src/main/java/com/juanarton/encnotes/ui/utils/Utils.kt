@@ -2,27 +2,16 @@ package com.juanarton.encnotes.ui.utils
 
 import android.animation.ValueAnimator
 import android.content.Context
-import android.content.res.Resources
 import android.graphics.Color
-import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
-import android.os.Build
-import android.util.Log
 import android.util.TypedValue
 import android.view.View
-import android.view.Window
-import android.widget.FrameLayout
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.search.SearchBar
 import com.google.android.material.transition.platform.MaterialContainerTransform
 import com.juanarton.encnotes.R
-import com.juanarton.encnotes.core.data.source.remote.Resource
-import com.juanarton.encnotes.ui.activity.main.MainActivity
 
 object Utils {
     fun dpToPx(dp: Int, context: Context): Int {
@@ -128,5 +117,13 @@ object Utils {
         }
         animator.duration = 300
         animator.start()
+    }
+
+    fun buildString(vararg strings: String?): String {
+        return buildString {
+            for (str in strings) {
+                append(str)
+            }
+        }
     }
 }

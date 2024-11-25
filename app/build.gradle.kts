@@ -114,5 +114,7 @@ dependencies {
     implementation(libs.glide.transformations)
 
     implementation(libs.ketch)
+
+    implementation("com.airbnb.android:lottie:6.6.0")
     //implementation(libs.biometric)
 }

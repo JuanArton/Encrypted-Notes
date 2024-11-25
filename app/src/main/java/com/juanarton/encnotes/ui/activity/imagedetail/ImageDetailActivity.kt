@@ -67,7 +67,7 @@ class ImageDetailActivity : AppCompatActivity() {
                     this@ImageDetailActivity, it.url, ivAttachment, null,
                     imageDetailViewModel.localNotesRepoUseCase, imageDetailViewModel.remoteNotesRepoUseCase,
                     this@ImageDetailActivity as LifecycleOwner,
-                    Ketch.builder().build(this@ImageDetailActivity)
+                    Ketch.builder().build(this@ImageDetailActivity), null, null
                 )
 
                 ibDeleteAtt.setOnClickListener {

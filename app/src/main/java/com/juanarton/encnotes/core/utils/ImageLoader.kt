@@ -8,7 +8,10 @@ import android.graphics.Paint
 import android.graphics.RenderEffect
 import android.graphics.Shader
 import android.os.Build
+import android.view.View
 import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -16,6 +19,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.juanarton.encnotes.core.data.domain.usecase.local.LocalNotesRepoUseCase
 import com.juanarton.encnotes.core.data.domain.usecase.remote.RemoteNotesRepoUseCase
 import com.juanarton.encnotes.ui.activity.main.MainActivity
@@ -31,7 +35,7 @@ class ImageLoader {
     fun loadImage(
         context: Context, url: String, imageView: ImageView, background: ImageView?,
         localNotesRepoUseCase: LocalNotesRepoUseCase, remoteNotesRepoUseCase: RemoteNotesRepoUseCase,
-        lifecycleOwner: LifecycleOwner, ketch: Ketch
+        lifecycleOwner: LifecycleOwner, ketch: Ketch, cpiLoading: CircularProgressIndicator?, tvProgress: TextView?
     ) {
         val key = localNotesRepoUseCase.getCipherKey()
         if (!key.isNullOrEmpty()) {
@@ -52,11 +56,18 @@ class ImageLoader {
 
                 lifecycleOwner.lifecycleScope.launch {
                     val id = remoteNotesRepoUseCase.downloadAttachment(fullUrl, ketch)
+                    cpiLoading?.visibility = View.VISIBLE
+                    tvProgress?.visibility = View.VISIBLE
 
                     lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                         ketch.observeDownloadById(id)
                             .flowOn(Dispatchers.IO)
                             .collect { downloadModel ->
+                                cpiLoading?.progress = downloadModel.progress
+                                tvProgress?.text = buildString {
+                                    append(downloadModel.progress)
+                                    append("%")
+                                }
                                 if (downloadModel.status.name == "SUCCESS") {
                                     val decryptedImage = Cryptography.decrypt(readImage(url, context), deserializedKey)
                                     showImage(context, imageView, decryptedImage, imageView.width)
@@ -64,6 +75,8 @@ class ImageLoader {
                                         blurBackground(background, context, decryptedImage, background.width)
                                     }
                                     ketch.clearDb(downloadModel.id, false)
+                                    cpiLoading?.visibility = View.INVISIBLE
+                                    tvProgress?.visibility = View.INVISIBLE
                                 }
                             }
                     }
@@ -75,6 +88,12 @@ class ImageLoader {
     private fun showImage(
         context: Context, imageView: ImageView, decryptedImage: ByteArray, width: Int
     ) {
+        val ivParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.MATCH_PARENT
+        )
+        imageView.layoutParams = ivParams
+
         val widthHeight = calculateWidthHeight(decryptedImage, width)
         Glide.with(context)
             .load(decryptedImage)
@@ -85,6 +104,13 @@ class ImageLoader {
     private fun blurBackground(
         imageView: ImageView, context: Context, byteArray: ByteArray, width: Int
     ) {
+
+        val ivParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.MATCH_PARENT
+        )
+        imageView.layoutParams = ivParams
+
         val widthHeight = calculateWidthHeight(byteArray, width)
         val transparentImage = transparentImage(byteArray)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {

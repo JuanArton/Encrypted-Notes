@@ -8,10 +8,9 @@
     <ImageView
         android:id="@+id/iv_attachment_img_bg"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="200dp"
         android:layout_gravity="center"
         android:contentDescription="@string/attachment_image"
-        android:src="@drawable/baseline_block_24"
         android:scaleType="centerCrop"
         android:foregroundGravity="center"
         app:layout_constraintEnd_toEndOf="parent"
@@ -24,9 +23,34 @@
         android:layout_height="match_parent"
         android:background="@null"
         android:contentDescription="@string/attachment_image"
-        android:src="@drawable/baseline_block_24"
         android:scaleType="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.progressindicator.CircularProgressIndicator
+        android:id="@+id/cpiLoading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="invisible"
+        app:indicatorSize="70dp"
+        app:trackColor="?attr/colorSecondary"
+        app:trackCornerRadius="25dp"
+        app:indicatorColor="?attr/colorPrimary"
+        app:layout_constraintBottom_toBottomOf="@+id/iv_attachment_img_bg"
+        app:layout_constraintEnd_toEndOf="@+id/iv_attachment_img_bg"
+        app:layout_constraintStart_toStartOf="@+id/iv_attachment_img_bg"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvProgress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="0"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/cpiLoading"
+        app:layout_constraintEnd_toEndOf="@+id/cpiLoading"
+        app:layout_constraintStart_toStartOf="@+id/cpiLoading"
+        app:layout_constraintTop_toTopOf="@+id/cpiLoading" />
 </androidx.constraintlayout.widget.ConstraintLayout>

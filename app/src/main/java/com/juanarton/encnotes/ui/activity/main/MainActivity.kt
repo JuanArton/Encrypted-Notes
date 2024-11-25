@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.util.TypedValue
 import android.view.ViewGroup
 import android.view.Window
@@ -62,7 +63,6 @@ class MainActivity : AppCompatActivity() {
     lateinit var ketch: Ketch
     private lateinit var localNotes: NotesPairRaw
     private var notDeletedNotes: ArrayList<NotesPair> = arrayListOf()
-    private var rvFirstDraw = true
 
     companion object {
         init {
@@ -98,6 +98,7 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.setDisplayShowTitleEnabled(false)
 
         Cryptography.initTink()
+
         ketch = Ketch.builder().build(this)
 
         mainViewModel.getNotes()
@@ -126,7 +127,6 @@ class MainActivity : AppCompatActivity() {
 
             ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
                 val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-
                 val tbParams = toolbar.layoutParams as ViewGroup.MarginLayoutParams
                 tbParams.topMargin = systemBars.top
 
@@ -139,9 +139,9 @@ class MainActivity : AppCompatActivity() {
                         )
                     )
                 }
+
                 val rvParams = rvNotes.layoutParams as FrameLayout.LayoutParams
                 rvParams.bottomMargin = systemBars.bottom
-
                 v.setPadding(systemBars.left, 0, systemBars.right, 0)
                 insets
             }
@@ -150,23 +150,13 @@ class MainActivity : AppCompatActivity() {
                 listener, mainViewModel.localNotesRepoUseCase, mainViewModel.remoteNotesRepoUseCase, ketch
             )
             rvNotes.adapter = rvAdapter
+
             rvAdapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
                 override fun onChanged() {
                     super.onChanged()
+
                     binding?.apply {
-                        rvNotes.post {
-                            if (!rvNotes.isComputingLayout) {
-                                if (rvFirstDraw) {
-                                    rvFirstDraw = false
-                                } else {
-                                    rvNotes.layoutManager = StaggeredGridLayoutManager(2, LinearLayoutManager.VERTICAL)
-                                }
-                            }
-
-                            if (!rvNotes.isAnimating) {
-
-                            }
-                        }
+                        rvNotes.post { if (!rvNotes.isComputingLayout) refreshRecyclerView() }
                     }
                 }
             })
@@ -217,15 +207,13 @@ class MainActivity : AppCompatActivity() {
             onBackPressedDispatcher.addCallback(this@MainActivity) {
                 if (tracker.selection.size() > 0) {
                     tracker.clearSelection()
-                } else {
-                    finish()
-                }
+                } else { finish() }
+                refreshRecyclerView()
             }
 
             activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == RESULT_OK) {
                     val action = result.data?.getStringExtra("action")
-
                     val note = if (Build.VERSION.SDK_INT >= 33) {
                         result.data?.getParcelableExtra("notesEncrypted", NotesPair::class.java)
                     } else {
@@ -234,42 +222,36 @@ class MainActivity : AppCompatActivity() {
 
                     action?.let { act ->
                         note?.let {
+                            val index = notDeletedNotes.indexOfFirst { it.notes.id == note.notes.id }
                             when (act) {
                                 "add" -> {
                                     val decrypted = mainViewModel.decrypt(note.notes)
                                     notDeletedNotes.add(0, note)
                                     rvAdapter.prependItem(NotesPair(decrypted, note.attachmentList))
-                                    binding?.rvNotes?.smoothScrollToPosition(0)
                                     note.attachmentList.let { attachment ->
                                         mainViewModel.uploadAttachment(this@MainActivity, attachment)
                                     }
                                     note.notes.let { enc -> mainViewModel.insertNoteRemote(enc)}
-                                    Handler().postDelayed({
-                                        val layoutManager = binding?.rvNotes?.layoutManager as StaggeredGridLayoutManager
-                                        layoutManager.invalidateSpanAssignments()
-                                    }, 3000)
+                                    refreshRecyclerView()
                                 }
                                 "update" -> {
                                     mainViewModel.getNotesBydId(note.notes.id)
-                                    val index = notDeletedNotes.indexOfFirst { it.notes.id == note.notes.id }
                                     val upload = note.attachmentList.filterNot {
                                         it in notDeletedNotes[index].attachmentList
                                     }
                                     mainViewModel.uploadAttachment(this@MainActivity, upload)
                                     note.notes.let {enc -> mainViewModel.updateNoteRemote(enc)}
                                     binding?.rvNotes?.smoothScrollToPosition(index)
+                                    refreshRecyclerView()
                                 }
                                 "delete" -> {
-                                    val index = notDeletedNotes.indexOfFirst { it.notes.id == note.notes.id }
-
                                     mainViewModel.deleteNote(notDeletedNotes[index].notes)
                                     mainViewModel.deleteNoteRemote(notDeletedNotes[index].notes)
-
                                     mainViewModel.deleteAtt(notDeletedNotes[index].attachmentList)
                                     mainViewModel.deleteAttRemote(notDeletedNotes[index].attachmentList)
-
                                     rvAdapter.deleteItem(index)
                                     notDeletedNotes.removeAt(index)
+                                    refreshRecyclerView()
                                 }
                                 else -> {}
                             }
@@ -283,12 +265,8 @@ class MainActivity : AppCompatActivity() {
     private fun observeViewModel() {
         mainViewModel.getNotesPair.observe(this@MainActivity) { notesPair ->
             if (firstRun) mainViewModel.getNotesRemote()
-            val notDeleted = notesPair.notes.filter {
-                !it.isDelete
-            }
-            val notDeletedAttachment = notesPair.attachmentList.filter {
-                !it.isDelete!!
-            }
+            val notDeleted = notesPair.notes.filter { !it.isDelete }
+            val notDeletedAttachment = notesPair.attachmentList.filter { !it.isDelete!! }
 
             val notesPairList = notDeleted.map { note ->
                 val noteAttachments = notDeletedAttachment.filter { it.noteId == note.id }
@@ -306,10 +284,12 @@ class MainActivity : AppCompatActivity() {
                 is Resource.Success -> {
                     it.data?.let { notes ->
                         firstRun = false
+
                         val sync = NoteSync.syncNotes(
                             localNotes.notes,
                             notes
                         )
+
                         mainViewModel.syncToLocal(sync)
                         mainViewModel.syncToRemote(sync)
                     }
@@ -317,11 +297,8 @@ class MainActivity : AppCompatActivity() {
                 is Resource.Loading -> {}
                 is Resource.Error -> {
                     firstRun = false
-                    Toast.makeText(this@MainActivity,
-                        buildString {
-                            append(getString(R.string.failed_to_sync_notes))
-                            append(it.message)
-                        }, Toast.LENGTH_SHORT
+                    Toast.makeText(
+                        this@MainActivity, Utils.buildString(getString(R.string.failed_to_sync_notes), it.message), Toast.LENGTH_SHORT
                     ).show()
                 }
             }
@@ -335,6 +312,7 @@ class MainActivity : AppCompatActivity() {
                             localNotes.attachmentList,
                             attachment
                         )
+
                         mainViewModel.syncAttToLocal(sync, this@MainActivity)
                         mainViewModel.syncAttToRemote(sync, this@MainActivity)
                     }
@@ -342,11 +320,8 @@ class MainActivity : AppCompatActivity() {
                 is Resource.Loading -> {}
                 is Resource.Error -> {
                     firstRun = false
-                    Toast.makeText(this@MainActivity,
-                        buildString {
-                            append(getString(R.string.failed_to_sync_notes))
-                            append(it.message)
-                        }, Toast.LENGTH_SHORT
+                    Toast.makeText(
+                        this@MainActivity, Utils.buildString(getString(R.string.failed_to_sync_notes), it.message), Toast.LENGTH_SHORT
                     ).show()
                 }
             }
@@ -357,21 +332,17 @@ class MainActivity : AppCompatActivity() {
                 is Resource.Success -> {}
                 is Resource.Loading -> {}
                 is Resource.Error -> {
-                    Toast.makeText(this@MainActivity,
-                        buildString {
-                            append(getString(R.string.failed_to_sync_notes))
-                            append(it.message)
-                        }, Toast.LENGTH_SHORT
+                    Toast.makeText(
+                        this@MainActivity, Utils.buildString(getString(R.string.failed_to_sync_notes), it.message), Toast.LENGTH_SHORT
                     ).show()
                 }
             }
         }
 
         mainViewModel.getNoteById.observe(this@MainActivity) { notePair ->
-            val index = notDeletedNotes.indexOfFirst { local ->
-                local.notes.id == notePair.notes.id
-            }
+            val index = notDeletedNotes.indexOfFirst { local -> local.notes.id == notePair.notes.id }
             notDeletedNotes[index] = notePair
+
             rvAdapter.updateItem(
                 index, NotesPair(mainViewModel.decrypt(notePair.notes), notePair.attachmentList)
             )
@@ -385,9 +356,7 @@ class MainActivity : AppCompatActivity() {
         mainViewModel.deleteAtt.observe(this) {
             when (it) {
                 is Resource.Success -> {
-                    it.data?.let { attachment ->
-                        mainViewModel.deleteAttFromDisk(attachment, this)
-                    }
+                    it.data?.let { attachment -> mainViewModel.deleteAttFromDisk(attachment, this) }
                 }
                 is Resource.Loading -> {}
                 is Resource.Error -> {
@@ -399,12 +368,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupTracker() {
         binding?.apply {
-            tracker = SelectionTracker.Builder(
-                "selectionItem",
-                rvNotes,
-                ItemsKeyProvider(rvAdapter),
-                ItemsDetailsLookup(rvNotes),
-                StorageStrategy.createStringStorage()
+            tracker = SelectionTracker.Builder("selectionItem", rvNotes, ItemsKeyProvider(rvAdapter),
+                ItemsDetailsLookup(rvNotes), StorageStrategy.createStringStorage()
             ).withSelectionPredicate(
                 SelectionPredicates.createSelectAnything()
             ).build()
@@ -412,7 +377,6 @@ class MainActivity : AppCompatActivity() {
             tracker.addObserver(object : SelectionTracker.SelectionObserver<String>() {
                 override fun onSelectionChanged() {
                     super.onSelectionChanged()
-
                     binding?.apply {
                         if (tracker.selection.size() > 0) {
                             Utils.expandSearchBar(rippleView, searchTopBar, toolbar)
@@ -422,8 +386,17 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             })
+
             rvAdapter.tracker = tracker
         }
+    }
+
+    private fun refreshRecyclerView() {
+        Handler(Looper.getMainLooper()).postDelayed({
+            val layoutManager = binding?.rvNotes?.layoutManager as StaggeredGridLayoutManager
+            binding?.rvNotes?.smoothScrollToPosition(0)
+            layoutManager.invalidateSpanAssignments()
+        }, 500)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

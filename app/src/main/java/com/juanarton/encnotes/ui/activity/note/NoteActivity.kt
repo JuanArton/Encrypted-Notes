@@ -94,13 +94,11 @@ class NoteActivity : AppCompatActivity() {
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             val isKeyboardVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
             val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
-
             binding?.apply {
                 val rlParams = rlBottomTool.layoutParams as ViewGroup.MarginLayoutParams
                 val tbParams = toolbar.layoutParams as ViewGroup.MarginLayoutParams
                 val rvParams = rvImgAttachment.layoutParams as ViewGroup.MarginLayoutParams
                 tbParams.topMargin = systemBars.top
-
                 if (isKeyboardVisible) {
                     rlParams.bottomMargin = imeInsets.bottom
                     rlBottomTool.setPadding(
@@ -112,10 +110,8 @@ class NoteActivity : AppCompatActivity() {
                         Utils.dpToPx(10, this@NoteActivity), 0, Utils.dpToPx(10, this@NoteActivity), systemBars.bottom
                     )
                 }
-
                 rvParams.topMargin = -systemBars.top
             }
-
             v.setPadding(systemBars.left, 0, systemBars.right, 0)
             insets
         }
@@ -132,9 +128,7 @@ class NoteActivity : AppCompatActivity() {
                     }
                     runnable.let { handler.postDelayed(it, 500) }
                 }
-
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             }
 
@@ -305,20 +299,12 @@ class NoteActivity : AppCompatActivity() {
                 }
             } else {
                 Toast.makeText(
-                    this@NoteActivity,
-                    buildString {
-                        append(getString(R.string.unable_add_note))
-                        append(" : ")
-                        append(getString(R.string.empty_uid))
-                    },
-                    Toast.LENGTH_SHORT
+                    this@NoteActivity, Utils.buildString(getString(R.string.unable_add_note), " : ", getString(R.string.empty_uid)), Toast.LENGTH_SHORT
                 ).show()
             }
         } else {
             Toast.makeText(
-                this@NoteActivity,
-                getString(R.string.unable_retrieve_key),
-                Toast.LENGTH_SHORT
+                this@NoteActivity, getString(R.string.unable_retrieve_key), Toast.LENGTH_SHORT
             ).show()
         }
     }
@@ -326,7 +312,6 @@ class NoteActivity : AppCompatActivity() {
     private fun observeViewModel() {
         noteViewModel.updateNoteLocal.observe(this) { observeNoteResource(it) }
         noteViewModel.addNoteLocal.observe(this) { observeNoteResource(it) }
-
         noteViewModel.addAtt.observe(this) {
             if (it.first) {
                 var id = ""
@@ -337,9 +322,7 @@ class NoteActivity : AppCompatActivity() {
                     handleSaveNote(etTitle.text.toString(), etContent.text.toString())
                 }
                 noteViewModel.insertAtt(
-                    Attachment(
-                        NanoId.generate(16), id, it.second, false, "image", Date().time
-                    )
+                    Attachment(NanoId.generate(16), id, it.second, false, "image", Date().time)
                 )
             }
         }
@@ -390,7 +373,6 @@ class NoteActivity : AppCompatActivity() {
                 rvImgAttachment.removeItemDecoration(gridSpacingDecoration)
             }
         }
-
         return when (notesPair.attachmentList.size) {
             in 1..3 -> notesPair.attachmentList.size
             4 -> 2
