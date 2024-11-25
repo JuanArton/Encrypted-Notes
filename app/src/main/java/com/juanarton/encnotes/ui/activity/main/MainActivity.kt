@@ -1,15 +1,11 @@
 package com.juanarton.encnotes.ui.activity.main
 
-import android.animation.ValueAnimator
 import android.content.Intent
 import android.content.res.Configuration
-import android.content.res.Resources
-import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
+import android.os.Handler
 import android.util.TypedValue
-import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.FrameLayout
@@ -21,16 +17,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
-import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.selection.SelectionPredicates
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.google.android.material.card.MaterialCardView
-import com.google.android.material.search.SearchBar
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -41,6 +36,7 @@ import com.juanarton.encnotes.core.adapter.ItemsDetailsLookup
 import com.juanarton.encnotes.core.adapter.ItemsKeyProvider
 import com.juanarton.encnotes.core.adapter.NotesAdapter
 import com.juanarton.encnotes.core.data.domain.model.NotesPair
+import com.juanarton.encnotes.core.data.domain.model.NotesPairRaw
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.AttachmentSync
 import com.juanarton.encnotes.core.utils.Cryptography
@@ -64,7 +60,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tracker: SelectionTracker<String>
     private lateinit var auth: FirebaseAuth
     lateinit var ketch: Ketch
+    private lateinit var localNotes: NotesPairRaw
     private var notDeletedNotes: ArrayList<NotesPair> = arrayListOf()
+    private var rvFirstDraw = true
 
     companion object {
         init {
@@ -124,8 +122,7 @@ class MainActivity : AppCompatActivity() {
                 activityResultLauncher.launch(intent, options)
             }
 
-            val staggeredLayout = StaggeredGridLayoutManager(2, LinearLayoutManager.VERTICAL)
-            rvNotes.layoutManager = staggeredLayout
+            rvNotes.layoutManager = StaggeredGridLayoutManager(2, LinearLayoutManager.VERTICAL)
 
             ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
                 val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -153,6 +150,26 @@ class MainActivity : AppCompatActivity() {
                 listener, mainViewModel.localNotesRepoUseCase, mainViewModel.remoteNotesRepoUseCase, ketch
             )
             rvNotes.adapter = rvAdapter
+            rvAdapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+                override fun onChanged() {
+                    super.onChanged()
+                    binding?.apply {
+                        rvNotes.post {
+                            if (!rvNotes.isComputingLayout) {
+                                if (rvFirstDraw) {
+                                    rvFirstDraw = false
+                                } else {
+                                    rvNotes.layoutManager = StaggeredGridLayoutManager(2, LinearLayoutManager.VERTICAL)
+                                }
+                            }
+
+                            if (!rvNotes.isAnimating) {
+
+                            }
+                        }
+                    }
+                }
+            })
 
             setupTracker()
 
@@ -227,6 +244,10 @@ class MainActivity : AppCompatActivity() {
                                         mainViewModel.uploadAttachment(this@MainActivity, attachment)
                                     }
                                     note.notes.let { enc -> mainViewModel.insertNoteRemote(enc)}
+                                    Handler().postDelayed({
+                                        val layoutManager = binding?.rvNotes?.layoutManager as StaggeredGridLayoutManager
+                                        layoutManager.invalidateSpanAssignments()
+                                    }, 3000)
                                 }
                                 "update" -> {
                                     mainViewModel.getNotesBydId(note.notes.id)
@@ -236,6 +257,19 @@ class MainActivity : AppCompatActivity() {
                                     }
                                     mainViewModel.uploadAttachment(this@MainActivity, upload)
                                     note.notes.let {enc -> mainViewModel.updateNoteRemote(enc)}
+                                    binding?.rvNotes?.smoothScrollToPosition(index)
+                                }
+                                "delete" -> {
+                                    val index = notDeletedNotes.indexOfFirst { it.notes.id == note.notes.id }
+
+                                    mainViewModel.deleteNote(notDeletedNotes[index].notes)
+                                    mainViewModel.deleteNoteRemote(notDeletedNotes[index].notes)
+
+                                    mainViewModel.deleteAtt(notDeletedNotes[index].attachmentList)
+                                    mainViewModel.deleteAttRemote(notDeletedNotes[index].attachmentList)
+
+                                    rvAdapter.deleteItem(index)
+                                    notDeletedNotes.removeAt(index)
                                 }
                                 else -> {}
                             }
@@ -261,6 +295,7 @@ class MainActivity : AppCompatActivity() {
                 NotesPair(note, noteAttachments as ArrayList)
             }
 
+            localNotes = notesPair
             notDeletedNotes = notesPairList as ArrayList
             mainViewModel._notDeleted.value = notesPairList
             mainViewModel.decrypt()
@@ -272,7 +307,7 @@ class MainActivity : AppCompatActivity() {
                     it.data?.let { notes ->
                         firstRun = false
                         val sync = NoteSync.syncNotes(
-                            mainViewModel._getNotesPair.value?.notes ?: emptyList(),
+                            localNotes.notes,
                             notes
                         )
                         mainViewModel.syncToLocal(sync)
@@ -297,7 +332,7 @@ class MainActivity : AppCompatActivity() {
                 is Resource.Success -> {
                     it.data?.let { attachment ->
                         val sync = AttachmentSync.syncAttachment(
-                            mainViewModel._getNotesPair.value?.attachmentList ?: emptyList(),
+                            localNotes.attachmentList,
                             attachment
                         )
                         mainViewModel.syncAttToLocal(sync, this@MainActivity)

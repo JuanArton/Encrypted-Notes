@@ -66,7 +66,7 @@ class LocalNotesRepoImpl @Inject constructor(
         iLocalNotesRepository.deleteAttachment(attachment)
 
     override fun permanentDeleteAtt(id: String) =
-        iLocalNotesRepository.permanentDeleteNotes(id)
+        iLocalNotesRepository.permanentDeleteAtt(id)
 
     override fun writeFileToDisk(file: File, byteArray: ByteArray): Flow<Pair<Boolean, String>> =
         iLocalNotesRepository.writeFileToDisk(file, byteArray)

@@ -8,6 +8,8 @@ import android.os.Handler
 import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.Menu
+import android.view.MenuItem
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.ImageView
@@ -77,6 +79,10 @@ class NoteActivity : AppCompatActivity() {
 
         setContentView(binding?.root)
         super.onCreate(savedInstanceState)
+
+        setSupportActionBar(binding?.toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.title = null
 
         initNoteData()
 
@@ -246,28 +252,26 @@ class NoteActivity : AppCompatActivity() {
                     ActivityCompat.finishAfterTransition(this@NoteActivity)
                 }
                 else if (title.isNotBlank() || content.isNotBlank() || notesPair.attachmentList.isNotEmpty()) {
-                    setResult(etTitle.text.toString(), etContent.text.toString())
+                    setResult()
                 }
                 else { ActivityCompat.finishAfterTransition(this@NoteActivity) }
             }
             else if (act == "update") {
                 if (title != initTitle || content != initContent || notesPair.attachmentList != initAttachment) {
-                    setResult(etTitle.text.toString(), etContent.text.toString())
+                    setResult()
                 }
                 else { ActivityCompat.finishAfterTransition(this@NoteActivity) }
             }
         }
     }
 
-    private fun setResult (title: String, content: String) {
-        if (title != initTitle || content != initContent || notesPair.attachmentList != initAttachment) {
-            val resultIntent = Intent().apply {
-                putExtra("notesEncrypted", notesPair)
-                putExtra("action", act)
-            }
-            setResult(RESULT_OK, resultIntent)
-            ActivityCompat.finishAfterTransition(this@NoteActivity)
-        } else { ActivityCompat.finishAfterTransition(this@NoteActivity) }
+    private fun setResult () {
+        val resultIntent = Intent().apply {
+            putExtra("notesEncrypted", notesPair)
+            putExtra("action", act)
+        }
+        setResult(RESULT_OK, resultIntent)
+        ActivityCompat.finishAfterTransition(this@NoteActivity)
     }
 
     private fun handleSaveNote(title: String, content: String) {
@@ -399,6 +403,26 @@ class NoteActivity : AppCompatActivity() {
             type = "image/*"
         }
         selectImageLauncher.launch(intent)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.select_menu_item, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                ActivityCompat.finishAfterTransition(this@NoteActivity)
+                true
+            }
+            R.id.note_delete -> {
+                act = "delete"
+                setResult()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     override fun onDestroy() {

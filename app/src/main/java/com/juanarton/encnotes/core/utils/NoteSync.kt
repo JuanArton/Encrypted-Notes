@@ -1,11 +1,14 @@
 package com.juanarton.encnotes.core.utils
 
+import android.util.Log
 import com.juanarton.encnotes.core.data.domain.model.Notes
 
 object NoteSync {
     fun syncNotes(localNotes: List<Notes>, remoteNotes: List<Notes>): SyncNotes {
         val localMap = localNotes.associateBy { it.id }
         val remoteMap = remoteNotes.associateBy { it.id }
+        Log.d("testL", localNotes.toString())
+        Log.d("testR", remoteNotes.asReversed().toString())
 
         // List of data to update to the server (local is newer than remote)
         val toUpdateToServer = localNotes.filter { local ->

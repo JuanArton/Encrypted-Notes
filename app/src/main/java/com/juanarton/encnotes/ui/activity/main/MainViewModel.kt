@@ -1,6 +1,7 @@
 package com.juanarton.encnotes.ui.activity.main
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -78,7 +79,6 @@ class MainViewModel @Inject constructor(
             attachment.value = localNotesRepoUseCase.getAttachments().first()
             notes.value = localNotesRepoUseCase.getNotes().first()
 
-
             _getNotesPair.value = NotesPairRaw(
                 notes.value ?: emptyList(), attachment.value ?: emptyList()
             )
@@ -142,6 +142,22 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun deleteNote(note: Notes) {
+        viewModelScope.launch {
+            localNotesRepoUseCase.deleteNotes(note).collect {
+                _deleteNote.value = it
+            }
+        }
+    }
+
+    fun deleteNoteRemote(note: Notes) {
+        viewModelScope.launch {
+            remoteNotesRepoUseCase.deleteNoteRemote(note.id).collect {
+                _deleteNoteRemote.value = it
+            }
+        }
+    }
+
     private fun getAttachmentRemote() {
         viewModelScope.launch {
             remoteNotesRepoUseCase.getAllAttRemote().collect {
@@ -198,9 +214,7 @@ class MainViewModel @Inject constructor(
             }
 
             syncNotes.toAddToLocal.forEach { notes ->
-                if (!notes.isDelete) {
-                    localNotesRepoUseCase.insertNotes(notes).collect{}
-                }
+                localNotesRepoUseCase.insertNotes(notes).collect{}
             }
 
             syncNotes.toUpdateToLocal.forEach { notes ->
@@ -241,9 +255,7 @@ class MainViewModel @Inject constructor(
             }
 
             syncAttachment.toAddToLocal.forEach { attachment ->
-                if (!attachment.isDelete!!) {
-                    localNotesRepoUseCase.insertAttachment(attachment).collect{}
-                }
+                localNotesRepoUseCase.insertAttachment(attachment).collect{}
             }
             if (syncAttachment.toDeleteInLocal.isNotEmpty() || syncAttachment.toAddToLocal.isNotEmpty()) {
                 getNotes()
