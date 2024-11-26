@@ -18,7 +18,7 @@
         <!-- Set the splash screen background, animated icon, and animation
         duration. -->
         <item name="windowSplashScreenBackground">?attr/colorPrimarySurface</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_round</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/encnotestransparent</item>
         <item name="windowSplashScreenAnimationDuration">200</item>
 
         <!-- Set the theme of the Activity that directly follows your splash

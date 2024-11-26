@@ -12,6 +12,9 @@ import com.google.android.material.card.MaterialCardView
 import com.google.android.material.search.SearchBar
 import com.google.android.material.transition.platform.MaterialContainerTransform
 import com.juanarton.encnotes.R
+import java.text.SimpleDateFormat
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 object Utils {
     fun dpToPx(dp: Int, context: Context): Int {
@@ -119,10 +122,34 @@ object Utils {
         animator.start()
     }
 
-    fun buildString(vararg strings: String?): String {
+    fun buildString(vararg strings: Any?): String {
         return buildString {
             for (str in strings) {
                 append(str)
+            }
+        }
+    }
+
+    fun parseTimeToDate(timeMillis: Long, context: Context): String {
+        val currentTime = System.currentTimeMillis()
+        val diffMillis = currentTime - timeMillis
+
+        return when {
+            diffMillis < TimeUnit.HOURS.toMillis(1) -> {
+                val minutes = TimeUnit.MILLISECONDS.toMinutes(diffMillis)
+                buildString(context.getString(R.string.edited), " ", minutes, " ", context.getString(R.string.minutes_ago))
+            }
+            diffMillis <= TimeUnit.HOURS.toMillis(24) -> {
+                val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+                buildString(context.getString(R.string.edited), " ", context.getString(R.string.at), " ", dateFormat)
+            }
+            diffMillis <= TimeUnit.HOURS.toMillis(48) -> {
+                val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+                buildString(context.getString(R.string.edited), " ", context.getString(R.string.yesterday), " ", dateFormat.format(Date(timeMillis)))
+            }
+            else -> {
+                val dateFormat = SimpleDateFormat("HH:mm, dd MMM yyyy", Locale.getDefault())
+                buildString(context.getString(R.string.edited), dateFormat.format(Date(timeMillis)))
             }
         }
     }

@@ -189,14 +189,13 @@ class NoteActivity : AppCompatActivity() {
         notesTmp?.let {
             notesPair = it
             act = "update"
-            binding?.apply {
-                etTitle.setText(notesPair.notes.notesTitle)
-                etContent.setText(notesPair.notes.notesContent)
-            }
             id = it.notes.id
             initContent = it.notes.notesContent.toString()
             initTitle = it.notes.notesTitle.toString()
             binding?.apply {
+                etTitle.setText(notesPair.notes.notesTitle)
+                etContent.setText(notesPair.notes.notesContent)
+                tvEditedAt.text = Utils.parseTimeToDate(it.notes.lastModified, this@NoteActivity)
                 rvImgAttachment.layoutManager = GridLayoutManager(this@NoteActivity, calculateSpan())
                 rvImgAttachment.adapter = rvAdapter
             }
@@ -297,6 +296,7 @@ class NoteActivity : AppCompatActivity() {
                     notesPair = NotesPair(notes, arrayListOf())
                     noteViewModel.insertNote(notesPair.notes)
                 }
+                binding?.tvEditedAt?.text = Utils.parseTimeToDate(notesPair.notes.lastModified, this@NoteActivity)
             } else {
                 Toast.makeText(
                     this@NoteActivity, Utils.buildString(getString(R.string.unable_add_note), " : ", getString(R.string.empty_uid)), Toast.LENGTH_SHORT
