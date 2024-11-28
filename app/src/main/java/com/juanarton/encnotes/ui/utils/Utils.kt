@@ -229,7 +229,7 @@ object Utils {
         }
     }
 
-    fun setStatusbarColor(context: Context, isDarkTheme: Boolean): Int {
+    fun getSurfaceColor(context: Context, isDarkTheme: Boolean): Int {
         val typedValue = TypedValue()
 
         if (isDarkTheme) {

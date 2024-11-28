@@ -8,8 +8,6 @@ import android.os.Handler
 import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
-import android.util.TypedValue
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.FrameLayout
@@ -20,7 +18,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -118,10 +115,10 @@ class MainActivity : AppCompatActivity() {
             else -> false
         }
 
-        val color: Int = Utils.setStatusbarColor(this, isDarkTheme)
+        val color: Int = Utils.getSurfaceColor(this, isDarkTheme)
 
         window.statusBarColor = color and 0x00FFFFFF or (178 shl 24)
-
+        window.navigationBarColor = color and 0x00FFFFFF or (0 shl 24)
 
         binding?.apply {
             Utils.loadAvatar(this@MainActivity, auth.currentUser!!.photoUrl.toString(), this@MainActivity as LifecycleOwner, searchTopBar)
