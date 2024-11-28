@@ -1,6 +1,8 @@
 package com.juanarton.encnotes.core.adapter
 
+import android.content.Context
 import android.graphics.Color
+import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -28,7 +30,8 @@ class NotesAdapter (
     private val onClick: (NotesPair, MaterialCardView) -> Unit,
     private val localNotesRepoUseCase: LocalNotesRepoUseCase,
     private val remoteNotesRepoUseCase: RemoteNotesRepoUseCase,
-    private val ketch: Ketch
+    private val ketch: Ketch,
+    private val context: Context
 ) : RecyclerView.Adapter<NotesAdapter.ViewHolder>(){
     var noteList: ArrayList<NotesPair> = arrayListOf()
     var tracker: SelectionTracker<String>? = null
@@ -63,14 +66,18 @@ class NotesAdapter (
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
-    ): NotesAdapter.ViewHolder {
+    ): ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.note_item_view, parent, false)
         return ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: NotesAdapter.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val note = noteList[position]
-        tracker?.let { holder.bind(note, it.isSelected(noteList[position].notes.id)) }
+        if (tracker != null) {
+            tracker?.let { holder.bind(note, it.isSelected(noteList[position].notes.id)) }
+        } else {
+            holder.bind(note, false)
+        }
     }
 
     override fun getItemCount(): Int = noteList.size
@@ -86,8 +93,6 @@ class NotesAdapter (
                 val title = notes.notes.notesTitle?.trim()
                 val content = notes.notes.notesContent?.trim()
                 val attachment = notes.attachmentList.asReversed().take(6)
-
-                val context = tvNotesTitle.context
 
                 val flexboxLayoutManager = FlexboxLayoutManager(context).apply {
                     flexDirection = FlexDirection.ROW
@@ -118,7 +123,7 @@ class NotesAdapter (
                     }
 
                 val rvAdapter = AttachmentAdapter(
-                    listener, localNotesRepoUseCase, remoteNotesRepoUseCase, ketch
+                    listener, localNotesRepoUseCase, remoteNotesRepoUseCase, ketch, context
                 )
                 rvImgAttachment.adapter = rvAdapter
 

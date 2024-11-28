@@ -4,14 +4,24 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
 import android.util.TypedValue
 import android.view.View
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.search.SearchBar
 import com.google.android.material.transition.platform.MaterialContainerTransform
 import com.juanarton.encnotes.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -132,25 +142,80 @@ object Utils {
 
     fun parseTimeToDate(timeMillis: Long, context: Context): String {
         val currentTime = System.currentTimeMillis()
-        val diffMillis = currentTime - timeMillis
+
+        val currentCalendar = Calendar.getInstance().apply { timeInMillis = currentTime }
+        val targetCalendar = Calendar.getInstance().apply { timeInMillis = timeMillis }
 
         return when {
-            diffMillis < TimeUnit.HOURS.toMillis(1) -> {
-                val minutes = TimeUnit.MILLISECONDS.toMinutes(diffMillis)
-                buildString(context.getString(R.string.edited), " ", minutes, " ", context.getString(R.string.minutes_ago))
+            currentCalendar.get(Calendar.YEAR) == targetCalendar.get(Calendar.YEAR) &&
+                    currentCalendar.get(Calendar.DAY_OF_YEAR) == targetCalendar.get(Calendar.DAY_OF_YEAR) -> {
+                val minutes = TimeUnit.MILLISECONDS.toMinutes(currentTime - timeMillis)
+                buildString {
+                    append(context.getString(R.string.edited))
+                    append(" ")
+                    append(minutes)
+                    append(" ")
+                    append(context.getString(R.string.minutes_ago))
+                }
             }
-            diffMillis <= TimeUnit.HOURS.toMillis(24) -> {
+            currentCalendar.get(Calendar.YEAR) == targetCalendar.get(Calendar.YEAR) &&
+                    currentCalendar.get(Calendar.DAY_OF_YEAR) == targetCalendar.get(Calendar.DAY_OF_YEAR) + 1 -> {
                 val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-                buildString(context.getString(R.string.edited), " ", context.getString(R.string.at), " ", dateFormat)
-            }
-            diffMillis <= TimeUnit.HOURS.toMillis(48) -> {
-                val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-                buildString(context.getString(R.string.edited), " ", context.getString(R.string.yesterday), " ", dateFormat.format(Date(timeMillis)))
+                buildString {
+                    append(context.getString(R.string.edited))
+                    append(" ")
+                    append(context.getString(R.string.yesterday))
+                    append(" ")
+                    append(dateFormat.format(Date(timeMillis)))
+                }
             }
             else -> {
-                val dateFormat = SimpleDateFormat("HH:mm, dd MMM yyyy", Locale.getDefault())
-                buildString(context.getString(R.string.edited), dateFormat.format(Date(timeMillis)))
+                val dateFormat = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
+                buildString {
+                    append(context.getString(R.string.edited))
+                    append(" ")
+                    append(dateFormat.format(Date(timeMillis)))
+                }
             }
+        }
+    }
+
+
+    fun loadAvatar(context: Context, url: String, lifecycleOwner: LifecycleOwner, searchBar: SearchBar) {
+        try {
+            Glide.with(context)
+                .load(url)
+                .centerCrop()
+                .circleCrop()
+                .sizeMultiplier(0.50f)
+                .addListener(object : RequestListener<Drawable> {
+                    override fun onLoadFailed(
+                        e: GlideException?,
+                        model: Any?,
+                        target: Target<Drawable?>?,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        return true
+                    }
+
+                    override fun onResourceReady(
+                        resource: Drawable?,
+                        model: Any?,
+                        target: Target<Drawable?>?,
+                        dataSource: DataSource?,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        resource?.let { renderProfileImage(it, lifecycleOwner, searchBar) }
+                        return true
+                    }
+
+                }).submit()
+        } catch (e: Exception) {}
+    }
+
+    fun renderProfileImage(resource:Drawable, lifecycleOwner: LifecycleOwner, searchView: SearchBar) {
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.Main){
+            searchView.menu.findItem(R.id.profile).icon = resource
         }
     }
 }

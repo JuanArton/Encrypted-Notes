@@ -145,17 +145,13 @@ class NoteActivity : AppCompatActivity() {
         ) { result ->
             if (result.resultCode == RESULT_OK) {
                 val imageUri: Uri? = result.data?.data
-                imageUri?.let {
-                    noteViewModel.addAtt(it, contentResolver, this)
-                }
+                imageUri?.let { noteViewModel.addAtt(it, contentResolver, this) }
             }
         }
     }
 
     private fun initNoteData() {
-        val listener: (
-            Attachment, ImageView
-        ) -> Unit = { attachment, imageView ->
+        val listener: (Attachment, ImageView) -> Unit = { attachment, imageView ->
             val intent = Intent(this@NoteActivity, ImageDetailActivity::class.java)
             intent.putExtra("attachment", attachment)
             Intent.FLAG_ACTIVITY_NO_ANIMATION
@@ -170,7 +166,7 @@ class NoteActivity : AppCompatActivity() {
 
         rvAdapter = AttachmentAdapter(
             listener, noteViewModel.localNotesRepoUseCase, noteViewModel.remoteNotesRepoUseCase,
-            Ketch.builder().build(this@NoteActivity)
+            Ketch.builder().build(this@NoteActivity), this@NoteActivity
         )
 
         binding?.apply {

@@ -20,9 +20,13 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="34">
         <activity
+            android:name=".ui.activity.settings.SettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.EncryptedNotes" />
+        <activity
             android:name=".ui.activity.imagedetail.ImageDetailActivity"
-            android:theme="@style/Theme.EncryptedNotes"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.EncryptedNotes" />
         <activity
             android:name=".ui.activity.note.NoteActivity"
             android:exported="false"

@@ -6,10 +6,15 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
 import android.util.TypedValue
 import android.view.ViewGroup
 import android.view.Window
+import android.view.inputmethod.EditorInfo
 import android.widget.FrameLayout
+import android.widget.SearchView
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.enableEdgeToEdge
@@ -20,6 +25,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.selection.SelectionPredicates
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
@@ -45,6 +51,7 @@ import com.juanarton.encnotes.core.utils.NoteSync
 import com.juanarton.encnotes.databinding.ActivityMainBinding
 import com.juanarton.encnotes.ui.activity.login.LoginActivity
 import com.juanarton.encnotes.ui.activity.note.NoteActivity
+import com.juanarton.encnotes.ui.activity.settings.SettingsActivity
 import com.juanarton.encnotes.ui.utils.Utils
 import com.ketch.Ketch
 import dagger.hilt.android.AndroidEntryPoint
@@ -63,6 +70,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var ketch: Ketch
     private lateinit var localNotes: NotesPairRaw
     private var notDeletedNotes: ArrayList<NotesPair> = arrayListOf()
+    private lateinit var listener: (NotesPair, MaterialCardView) -> Unit
 
     companion object {
         init {
@@ -92,6 +100,8 @@ class MainActivity : AppCompatActivity() {
     private fun initView() {
         enableEdgeToEdge()
         _binding = ActivityMainBinding.inflate(layoutInflater)
+        val handler = Handler(Looper.getMainLooper())
+        var runnable: Runnable? = null
 
         setContentView(binding?.root)
         setSupportActionBar(binding?.toolbar)
@@ -108,9 +118,14 @@ class MainActivity : AppCompatActivity() {
         window.statusBarColor = typedValue.data and 0x00FFFFFF or (178 shl 24)
 
         binding?.apply {
-            val listener: (
-                NotesPair, MaterialCardView
-            ) -> Unit = { notes, materialCardView ->
+            Utils.loadAvatar(this@MainActivity, auth.currentUser!!.photoUrl.toString(), this@MainActivity as LifecycleOwner, searchTopBar)
+
+            searchTopBar.menu.findItem(R.id.profile).setOnMenuItemClickListener {
+                startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
+                true
+            }
+
+             listener = { notes, materialCardView ->
                 val intent = Intent(this@MainActivity, NoteActivity::class.java)
                 intent.putExtra("noteData", notes)
                 Intent.FLAG_ACTIVITY_NO_ANIMATION
@@ -147,14 +162,13 @@ class MainActivity : AppCompatActivity() {
             }
 
             rvAdapter = NotesAdapter(
-                listener, mainViewModel.localNotesRepoUseCase, mainViewModel.remoteNotesRepoUseCase, ketch
+                listener, mainViewModel.localNotesRepoUseCase, mainViewModel.remoteNotesRepoUseCase, ketch, this@MainActivity
             )
             rvNotes.adapter = rvAdapter
 
             rvAdapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
                 override fun onChanged() {
                     super.onChanged()
-
                     binding?.apply {
                         rvNotes.post { if (!rvNotes.isComputingLayout) refreshRecyclerView() }
                     }
@@ -210,6 +224,60 @@ class MainActivity : AppCompatActivity() {
                 } else { finish() }
                 refreshRecyclerView()
             }
+
+            rvSearchResult.apply {
+                val searchAdapter = NotesAdapter(
+                    listener, mainViewModel.localNotesRepoUseCase, mainViewModel.remoteNotesRepoUseCase, ketch, this@MainActivity
+                )
+                if (rvSearchResult.itemDecorationCount < 1) {
+                    rvSearchResult.addItemDecoration(
+                        GridSpacingItemDecoration(
+                            Utils.dpToPx(7, this@MainActivity), Utils.dpToPx(20, this@MainActivity),
+                            Utils.dpToPx(20, this@MainActivity)
+                        )
+                    )
+                }
+                adapter = searchAdapter
+                searchAdapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+                    override fun onChanged() {
+                        super.onChanged()
+                        binding?.apply {
+                            rvNotes.post { if (!rvNotes.isComputingLayout) refreshRecyclerView() }
+                        }
+                    }
+                })
+                layoutManager = StaggeredGridLayoutManager(2, LinearLayoutManager.VERTICAL)
+            }
+
+            searchField.editText.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    val query = s.toString().trim()
+
+                    runnable?.let {
+                        handler.removeCallbacks(it)
+                    }
+                    runnable = Runnable {
+                        val filtered: ArrayList<NotesPair> = arrayListOf()
+                        for (i in notDeletedNotes.indices) {
+                            val byTitle = notDeletedNotes[i].notes.notesTitle?.contains(query, true) == true
+                            val byContent = notDeletedNotes[i].notes.notesContent?.contains(query, true) == true
+                            if (byTitle) {
+                                filtered.add(notDeletedNotes[i])
+                            }
+                            else if(byContent) {
+                                filtered.add(notDeletedNotes[i])
+                            }
+                        }
+                        Log.d("test", filtered.toString())
+                        (rvSearchResult.adapter as NotesAdapter).setData(filtered)
+                    }
+                    runnable.let {
+                        handler.postDelayed(it, 500)
+                    }
+                }
+                override fun afterTextChanged(s: Editable?) {}
+            })
 
             activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == RESULT_OK) {
@@ -285,10 +353,7 @@ class MainActivity : AppCompatActivity() {
                     it.data?.let { notes ->
                         firstRun = false
 
-                        val sync = NoteSync.syncNotes(
-                            localNotes.notes,
-                            notes
-                        )
+                        val sync = NoteSync.syncNotes(localNotes.notes, notes)
 
                         mainViewModel.syncToLocal(sync)
                         mainViewModel.syncToRemote(sync)
@@ -312,7 +377,6 @@ class MainActivity : AppCompatActivity() {
                             localNotes.attachmentList,
                             attachment
                         )
-
                         mainViewModel.syncAttToLocal(sync, this@MainActivity)
                         mainViewModel.syncAttToRemote(sync, this@MainActivity)
                     }
@@ -341,10 +405,10 @@ class MainActivity : AppCompatActivity() {
 
         mainViewModel.getNoteById.observe(this@MainActivity) { notePair ->
             val index = notDeletedNotes.indexOfFirst { local -> local.notes.id == notePair.notes.id }
-            notDeletedNotes[index] = notePair
+            notDeletedNotes[index] = NotesPair(mainViewModel.decrypt(notePair.notes), notePair.attachmentList)
 
             rvAdapter.updateItem(
-                index, NotesPair(mainViewModel.decrypt(notePair.notes), notePair.attachmentList)
+                index, notDeletedNotes[index]
             )
         }
 

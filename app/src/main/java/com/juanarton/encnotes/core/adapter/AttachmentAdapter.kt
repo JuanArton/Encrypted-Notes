@@ -1,5 +1,6 @@
 package com.juanarton.encnotes.core.adapter
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,7 +19,8 @@ class AttachmentAdapter(
     private val onClick: (Attachment, ImageView) -> Unit,
     private val localNotesRepoUseCase: LocalNotesRepoUseCase,
     private val remoteNotesRepoUseCase: RemoteNotesRepoUseCase,
-    private val ketch: Ketch
+    private val ketch: Ketch,
+    private val context: Context
 ) : RecyclerView.Adapter<AttachmentAdapter.ViewHolder>() {
     private var attachmentList: ArrayList<Attachment> = arrayListOf()
 
@@ -44,7 +46,7 @@ class AttachmentAdapter(
         parent: ViewGroup,
         viewType: Int
     ): ViewHolder {
-        val lifeCycleOwner = parent.context as LifecycleOwner
+        val lifeCycleOwner = context as LifecycleOwner
         val view = LayoutInflater.from(parent.context).inflate(R.layout.attachment_item_view, parent, false)
         return ViewHolder(view, lifeCycleOwner)
     }
