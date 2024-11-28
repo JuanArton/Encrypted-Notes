@@ -21,6 +21,7 @@ class DatabaseModule {
     companion object {
         const val FILE_NAME = "DB_KEY"
         const val KEY_NAME = "DB_KEY"
+        const val DB_NAME = "notesapp.db"
     }
 
     @Provides
@@ -52,7 +53,7 @@ class DatabaseModule {
 
         return Room.databaseBuilder(
             context,
-            NotesAppDatabase::class.java, "notesapp.db"
+            NotesAppDatabase::class.java, DB_NAME
         ).fallbackToDestructiveMigration().openHelperFactory(factory).build()
     }
 

@@ -62,14 +62,13 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/custom_font"
                     android:hint="@string/notes_title"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:textSize="18sp" />
 
                 <TextView
                     android:id="@+id/tvNotesContent"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="10dp"
                     android:fontFamily="@font/custom_font"
                     android:hint="@string/notes_content"
                     android:maxLines="10"

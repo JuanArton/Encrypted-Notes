@@ -178,4 +178,10 @@ class LocalNotesRepository @Inject constructor(
 
     override fun deleteFileFromDisk(file: File): Boolean =
         attachmentLocalDataSource.deleteFileFromDisk(file)
+
+    override fun clearSharedPreference() {
+        CoroutineScope(Dispatchers.IO).launch {
+            sharedPrefDataSource.clearSharedPreference()
+        }
+    }
 }

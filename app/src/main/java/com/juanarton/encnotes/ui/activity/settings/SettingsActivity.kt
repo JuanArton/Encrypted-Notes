@@ -1,5 +1,6 @@
 package com.juanarton.encnotes.ui.activity.settings
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.activity.enableEdgeToEdge
@@ -10,7 +11,10 @@ import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.juanarton.encnotes.R
+import com.juanarton.encnotes.core.data.source.local.SharedPrefDataSource.Companion.FILE_NAME
 import com.juanarton.encnotes.databinding.ActivitySettingsBinding
+import com.juanarton.encnotes.di.DatabaseModule.Companion.DB_NAME
+import com.juanarton.encnotes.ui.activity.login.LoginActivity
 import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.DARK
 import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.LIGHT
 import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.SYSTEM
@@ -70,6 +74,17 @@ class SettingsActivity : AppCompatActivity() {
                         settingsViewModel.setTheme(sharedPreferences.edit(), DARK)
                     }
                 }
+            }
+
+            btLogout.setOnClickListener {
+                settingsViewModel.clearSharedPreferences()
+                this@SettingsActivity.deleteSharedPreferences(FILE_NAME)
+                this@SettingsActivity.deleteDatabase(DB_NAME)
+                this@SettingsActivity.filesDir.deleteRecursively()
+                this@SettingsActivity.cacheDir.deleteRecursively()
+                val intent = Intent(this@SettingsActivity, LoginActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(intent)
             }
         }
     }
