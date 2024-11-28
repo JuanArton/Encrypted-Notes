@@ -73,7 +73,7 @@ class AttachmentAdapter(
                     val imageLoader = ImageLoader()
                     imageLoader.loadImage(
                         context, attachment.url, ivAttachmentImg, ivAttachmentImgBg, localNotesRepoUseCase,
-                        remoteNotesRepoUseCase, lifecycleOwner, ketch, cpiLoading, tvProgress
+                        remoteNotesRepoUseCase, lifecycleOwner, ketch, cpiLoading, tvProgress, true
                     )
 
                     ivAttachmentImg.setOnClickListener {

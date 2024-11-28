@@ -12,9 +12,7 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.ViewGroup
 import android.view.Window
-import android.view.inputmethod.EditorInfo
 import android.widget.FrameLayout
-import android.widget.SearchView
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.enableEdgeToEdge
@@ -22,6 +20,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -113,9 +112,16 @@ class MainActivity : AppCompatActivity() {
 
         mainViewModel.getNotes()
 
-        val typedValue = TypedValue()
-        theme.resolveAttribute(com.google.android.material.R.attr.colorPrimarySurface, typedValue, true)
-        window.statusBarColor = typedValue.data and 0x00FFFFFF or (178 shl 24)
+        val isDarkTheme: Boolean = when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+            Configuration.UI_MODE_NIGHT_YES -> true
+            Configuration.UI_MODE_NIGHT_NO -> false
+            else -> false
+        }
+
+        val color: Int = Utils.setStatusbarColor(this, isDarkTheme)
+
+        window.statusBarColor = color and 0x00FFFFFF or (178 shl 24)
+
 
         binding?.apply {
             Utils.loadAvatar(this@MainActivity, auth.currentUser!!.photoUrl.toString(), this@MainActivity as LifecycleOwner, searchTopBar)
@@ -250,32 +256,23 @@ class MainActivity : AppCompatActivity() {
             }
 
             searchField.editText.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    val query = s.toString().trim()
-
-                    runnable?.let {
-                        handler.removeCallbacks(it)
-                    }
+                    runnable?.let(handler::removeCallbacks)
                     runnable = Runnable {
-                        val filtered: ArrayList<NotesPair> = arrayListOf()
-                        for (i in notDeletedNotes.indices) {
-                            val byTitle = notDeletedNotes[i].notes.notesTitle?.contains(query, true) == true
-                            val byContent = notDeletedNotes[i].notes.notesContent?.contains(query, true) == true
-                            if (byTitle) {
-                                filtered.add(notDeletedNotes[i])
-                            }
-                            else if(byContent) {
-                                filtered.add(notDeletedNotes[i])
-                            }
+                        val query = s.toString().trim()
+                        val filtered = notDeletedNotes.filter {
+                            it.notes.notesTitle?.contains(query, true) == true ||
+                            it.notes.notesContent?.contains(query, true) == true
                         }
-                        Log.d("test", filtered.toString())
-                        (rvSearchResult.adapter as NotesAdapter).setData(filtered)
+                        if (query == "") {
+                            (rvSearchResult.adapter as NotesAdapter).setData(ArrayList(emptyList<NotesPair>()))
+                        } else {
+                            (rvSearchResult.adapter as NotesAdapter).setData(ArrayList(filtered))
+                        }
                     }
-                    runnable.let {
-                        handler.postDelayed(it, 500)
-                    }
+                    handler.postDelayed(runnable, 500)
                 }
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun afterTextChanged(s: Editable?) {}
             })
 
@@ -294,7 +291,7 @@ class MainActivity : AppCompatActivity() {
                             when (act) {
                                 "add" -> {
                                     val decrypted = mainViewModel.decrypt(note.notes)
-                                    notDeletedNotes.add(0, note)
+                                    notDeletedNotes.add(0, NotesPair(decrypted, note.attachmentList))
                                     rvAdapter.prependItem(NotesPair(decrypted, note.attachmentList))
                                     note.attachmentList.let { attachment ->
                                         mainViewModel.uploadAttachment(this@MainActivity, attachment)
@@ -310,7 +307,6 @@ class MainActivity : AppCompatActivity() {
                                     mainViewModel.uploadAttachment(this@MainActivity, upload)
                                     note.notes.let {enc -> mainViewModel.updateNoteRemote(enc)}
                                     binding?.rvNotes?.smoothScrollToPosition(index)
-                                    refreshRecyclerView()
                                 }
                                 "delete" -> {
                                     mainViewModel.deleteNote(notDeletedNotes[index].notes)
@@ -410,6 +406,7 @@ class MainActivity : AppCompatActivity() {
             rvAdapter.updateItem(
                 index, notDeletedNotes[index]
             )
+            refreshRecyclerView()
         }
 
         mainViewModel.notDeleted.observe(this@MainActivity) { notes ->
@@ -460,7 +457,7 @@ class MainActivity : AppCompatActivity() {
             val layoutManager = binding?.rvNotes?.layoutManager as StaggeredGridLayoutManager
             binding?.rvNotes?.smoothScrollToPosition(0)
             layoutManager.invalidateSpanAssignments()
-        }, 500)
+        }, 700)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

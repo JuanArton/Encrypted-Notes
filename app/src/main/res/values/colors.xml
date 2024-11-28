@@ -10,6 +10,7 @@
     <color name="outlineColor">#e1d3cb</color>
     <color name="textColor">#000000</color>
     <color name="signatureColor">#000625</color>
+    <color name="imageBackground">#FFFFFF</color>
 
     <color name="yellow">#ffc857</color>
     <color name="blue">#79beee</color>

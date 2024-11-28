@@ -35,7 +35,8 @@ class ImageLoader {
     fun loadImage(
         context: Context, url: String, imageView: ImageView, background: ImageView?,
         localNotesRepoUseCase: LocalNotesRepoUseCase, remoteNotesRepoUseCase: RemoteNotesRepoUseCase,
-        lifecycleOwner: LifecycleOwner, ketch: Ketch, cpiLoading: CircularProgressIndicator?, tvProgress: TextView?
+        lifecycleOwner: LifecycleOwner, ketch: Ketch, cpiLoading: CircularProgressIndicator?, tvProgress: TextView?,
+        forceDimension: Boolean
     ) {
         val key = localNotesRepoUseCase.getCipherKey()
         if (!key.isNullOrEmpty()) {
@@ -43,7 +44,7 @@ class ImageLoader {
 
             try {
                 val decryptedImage = Cryptography.decrypt(readImage(url, context), deserializedKey)
-                showImage(context, imageView, decryptedImage, imageView.width)
+                showImage(context, imageView, decryptedImage, imageView.width, forceDimension)
                 if (background != null) {
                     blurBackground(background, context, decryptedImage, background.width)
                 }
@@ -70,7 +71,7 @@ class ImageLoader {
                                 }
                                 if (downloadModel.status.name == "SUCCESS") {
                                     val decryptedImage = Cryptography.decrypt(readImage(url, context), deserializedKey)
-                                    showImage(context, imageView, decryptedImage, imageView.width)
+                                    showImage(context, imageView, decryptedImage, imageView.width, forceDimension)
                                     if (background != null) {
                                         blurBackground(background, context, decryptedImage, background.width)
                                     }
@@ -86,13 +87,15 @@ class ImageLoader {
     }
 
     private fun showImage(
-        context: Context, imageView: ImageView, decryptedImage: ByteArray, width: Int
+        context: Context, imageView: ImageView, decryptedImage: ByteArray, width: Int, forceDimension: Boolean
     ) {
-        val ivParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.MATCH_PARENT
-        )
-        imageView.layoutParams = ivParams
+        if (forceDimension) {
+            val ivParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT
+            )
+            imageView.layoutParams = ivParams
+        }
 
         val widthHeight = calculateWidthHeight(decryptedImage, width)
         Glide.with(context)
@@ -104,7 +107,6 @@ class ImageLoader {
     private fun blurBackground(
         imageView: ImageView, context: Context, byteArray: ByteArray, width: Int
     ) {
-
         val ivParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.MATCH_PARENT

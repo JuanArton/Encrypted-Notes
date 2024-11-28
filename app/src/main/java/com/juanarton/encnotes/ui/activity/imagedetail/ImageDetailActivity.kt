@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -50,7 +51,15 @@ class ImageDetailActivity : AppCompatActivity() {
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+
+            binding?.apply {
+                val tbParams = toolbar.layoutParams as ViewGroup.MarginLayoutParams
+                tbParams.topMargin = systemBars.top
+
+                bottomMenu.setPadding(0, 0, 0, systemBars.bottom)
+            }
+
+            v.setPadding(systemBars.left, 0, systemBars.right, 0)
             insets
         }
 
@@ -71,7 +80,7 @@ class ImageDetailActivity : AppCompatActivity() {
                     this@ImageDetailActivity, it.url, ivAttachment, null,
                     imageDetailViewModel.localNotesRepoUseCase, imageDetailViewModel.remoteNotesRepoUseCase,
                     this@ImageDetailActivity as LifecycleOwner,
-                    Ketch.builder().build(this@ImageDetailActivity), null, null
+                    Ketch.builder().build(this@ImageDetailActivity), null, null, false
                 )
 
                 ibDeleteAtt.setOnClickListener {

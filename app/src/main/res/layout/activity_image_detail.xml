@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
+    android:background="@color/imageBackground"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.activity.imagedetail.ImageDetailActivity">
@@ -11,7 +12,6 @@
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@null"
         android:elevation="1dp"
         app:elevation="1dp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -36,11 +36,12 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:contentDescription="@string/attachment_image"
-        android:scaleType="centerInside"
-        app:layout_constraintBottom_toTopOf="@+id/bottomMenu"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
+        app:layout_constraintBottom_toTopOf="@id/bottomMenu"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/appBarLayout" />
+        app:layout_constraintTop_toBottomOf="@id/appBarLayout" />
 
     <LinearLayout
         android:id="@+id/bottomMenu"
@@ -48,6 +49,7 @@
         android:layout_height="60dp"
         android:orientation="horizontal"
         android:gravity="center"
+        android:background="?android:windowBackground"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" >
@@ -61,5 +63,4 @@
             android:scaleX="1.2"
             android:backgroundTint="@android:color/transparent"/>
     </LinearLayout>
-
 </androidx.constraintlayout.widget.ConstraintLayout>

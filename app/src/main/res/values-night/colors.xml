@@ -2,4 +2,5 @@
 <resources>
     <color name="outlineColor">#43372f</color>
     <color name="textColor">#d0c1b9</color>
+    <color name="imageBackground">#000000</color>
 </resources>

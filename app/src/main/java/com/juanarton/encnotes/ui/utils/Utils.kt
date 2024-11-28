@@ -149,13 +149,24 @@ object Utils {
         return when {
             currentCalendar.get(Calendar.YEAR) == targetCalendar.get(Calendar.YEAR) &&
                     currentCalendar.get(Calendar.DAY_OF_YEAR) == targetCalendar.get(Calendar.DAY_OF_YEAR) -> {
-                val minutes = TimeUnit.MILLISECONDS.toMinutes(currentTime - timeMillis)
+                val differenceInMinutes = TimeUnit.MILLISECONDS.toMinutes(currentTime - timeMillis)
+                val hours = differenceInMinutes / 60
+                val minutes = differenceInMinutes % 60
+
                 buildString {
                     append(context.getString(R.string.edited))
                     append(" ")
-                    append(minutes)
-                    append(" ")
-                    append(context.getString(R.string.minutes_ago))
+                    if (hours > 0) {
+                        append(hours)
+                        append(" ")
+                        append(context.getString(R.string.hours_ago))
+                    } else if (minutes <= 1){
+                        append(context.getString(R.string.just_now))
+                    } else {
+                        append(minutes)
+                        append(" ")
+                        append(context.getString(R.string.minutes_ago))
+                    }
                 }
             }
             currentCalendar.get(Calendar.YEAR) == targetCalendar.get(Calendar.YEAR) &&
@@ -179,7 +190,6 @@ object Utils {
             }
         }
     }
-
 
     fun loadAvatar(context: Context, url: String, lifecycleOwner: LifecycleOwner, searchBar: SearchBar) {
         try {
@@ -217,5 +227,17 @@ object Utils {
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Main){
             searchView.menu.findItem(R.id.profile).icon = resource
         }
+    }
+
+    fun setStatusbarColor(context: Context, isDarkTheme: Boolean): Int {
+        val typedValue = TypedValue()
+
+        if (isDarkTheme) {
+            context.theme.resolveAttribute(com.google.android.material.R.attr.colorPrimarySurface, typedValue, true)
+        } else {
+            context.theme.resolveAttribute(com.google.android.material.R.attr.colorSurface, typedValue, true)
+        }
+
+        return typedValue.data
     }
 }

@@ -5,14 +5,14 @@
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryVariant">@color/primaryVariant</item>
         <item name="android:textColor">@color/textColor</item>
-        <item name="android:windowBackground">?attr/colorSurfaceBright</item>
+        <item name="android:windowBackground">?attr/colorSurface</item>
         <item name="cardBackgroundColor">?attr/colorSurfaceContainer</item>
         <item name="liftOnScrollColor">?attr/colorSurfaceBright</item>
         <item name="android:fontFamily">@font/default_font</item>
         <item name="android:textSize">16sp</item>
 
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
 
     </style>
 

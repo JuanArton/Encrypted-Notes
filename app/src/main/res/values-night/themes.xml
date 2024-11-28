@@ -21,7 +21,7 @@
         duration. -->
         <item name="windowSplashScreenBackground">@color/darkSurface</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/encnotestransparent</item>
-        <item name="windowSplashScreenAnimationDuration">200</item>
+        <item name="windowSplashScreenAnimationDuration">2000</item>
 
         <!-- Set the theme of the Activity that directly follows your splash
         screen. This is required. -->
