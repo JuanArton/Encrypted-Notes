@@ -40,4 +40,6 @@ interface IRemoteNoteRepository {
     suspend fun downloadAttachment(url: String, ketch: Ketch): Int
 
     fun deleteAttById(id: String): Flow<Resource<String>>
+
+    fun logoutUser(refreshToken: String): Flow<Resource<String>>
 }

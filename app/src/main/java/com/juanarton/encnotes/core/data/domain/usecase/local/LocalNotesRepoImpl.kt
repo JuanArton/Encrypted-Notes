@@ -73,7 +73,4 @@ class LocalNotesRepoImpl @Inject constructor(
 
     override fun deleteFileFromDisk(file: File): Boolean =
         iLocalNotesRepository.deleteFileFromDisk(file)
-
-    override fun clearSharedPreference() =
-        iLocalNotesRepository.clearSharedPreference()
 }

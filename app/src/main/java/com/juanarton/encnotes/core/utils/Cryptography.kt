@@ -34,7 +34,7 @@ class Cryptography {
         }
 
         fun generateKeySet(): KeysetHandle {
-            return KeysetHandle.generateNew(PredefinedAeadParameters.AES256_GCM)
+            return KeysetHandle.generateNew(PredefinedAeadParameters.XCHACHA20_POLY1305)
         }
 
         fun serializeKeySet(keysetHandle: KeysetHandle): String {

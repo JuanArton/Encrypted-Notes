@@ -8,6 +8,8 @@ import com.juanarton.encnotes.core.data.api.APIResponse
 import com.juanarton.encnotes.core.data.api.authentications.login.LoginData
 import com.juanarton.encnotes.core.data.api.authentications.login.LoginResponse
 import com.juanarton.encnotes.core.data.api.authentications.login.PostLogin
+import com.juanarton.encnotes.core.data.api.authentications.logout.DeleteLogout
+import com.juanarton.encnotes.core.data.api.authentications.logout.LogoutResponse
 import com.juanarton.encnotes.core.data.api.authentications.updatekey.PutUpdateKey
 import com.juanarton.encnotes.core.data.api.note.addnote.PostNote
 import com.juanarton.encnotes.core.data.api.note.addnote.PostNoteData
@@ -229,6 +231,28 @@ class NoteRemoteDataSource @Inject constructor(
         val accessKey = sharedPrefDataSource.getAccessKey()!!
         return API.services.deleteNote(id, accessKey)
     }
+
+    fun logoutUser(refreshToken: String): Flow<APIResponse<String>> =
+        flow {
+            try {
+                val response = API.services.logout(DeleteLogout(refreshToken))
+
+                if (response.body() != null) {
+                    val logoutResponse = Gson().fromJson(response.body()!!.string(), LogoutResponse::class.java)
+                    emit(APIResponse.Success(logoutResponse.message))
+                } else {
+                    val logoutResponse = Gson().fromJson(response.errorBody()!!.string(), LogoutResponse::class.java)
+                    emit(APIResponse.Error(logoutResponse.message))
+                }
+            } catch (e: Exception) {
+                emit(APIResponse.Error(
+                    buildString {
+                        append(context.getString(R.string.login_failed))
+                        append(e.toString())
+                    }
+                ))
+            }
+        }.flowOn(Dispatchers.IO)
 
     private suspend fun refreshAccessKey() {
         val refreshKey = sharedPrefDataSource.getRefreshKey()!!

@@ -25,6 +25,7 @@ import com.ketch.Ketch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -195,6 +196,18 @@ class RemoteNoteRepository @Inject constructor(
 
             override suspend fun createCall(): Flow<APIResponse<String>> {
                 return attachmentRemoteDataSource.deleteAttById(id)
+            }
+        }.asFlow()
+    }
+
+    override fun logoutUser(refreshToken: String): Flow<Resource<String>> {
+        return object: NetworkBoundRes<String, String>() {
+            override fun loadFromNetwork(data: String): Flow<String> {
+                return flowOf(data)
+            }
+
+            override suspend fun createCall(): Flow<APIResponse<String>> {
+                return noteRemoteDataSource.logoutUser(refreshToken)
             }
         }.asFlow()
     }

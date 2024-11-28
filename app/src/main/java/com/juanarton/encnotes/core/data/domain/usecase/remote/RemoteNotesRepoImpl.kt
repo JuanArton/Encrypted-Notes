@@ -59,4 +59,7 @@ class RemoteNotesRepoImpl @Inject constructor(
 
     override fun deleteAttById(id: String): Flow<Resource<String>> =
         iRemoteNoteRepository.deleteAttById(id)
+
+    override fun logoutUser(refreshToken: String): Flow<Resource<String>> =
+        iRemoteNoteRepository.logoutUser(refreshToken)
 }

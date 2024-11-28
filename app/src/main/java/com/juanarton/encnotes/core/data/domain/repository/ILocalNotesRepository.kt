@@ -50,6 +50,4 @@ interface ILocalNotesRepository {
     fun writeFileToDisk(file: File, byteArray: ByteArray): Flow<Pair<Boolean, String>>
 
     fun deleteFileFromDisk(file: File): Boolean
-
-    fun clearSharedPreference()
 }

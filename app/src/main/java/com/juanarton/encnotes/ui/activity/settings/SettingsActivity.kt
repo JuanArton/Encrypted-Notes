@@ -2,7 +2,9 @@ package com.juanarton.encnotes.ui.activity.settings
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -12,12 +14,16 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.source.local.SharedPrefDataSource.Companion.FILE_NAME
+import com.juanarton.encnotes.core.data.source.remote.Resource
+import com.juanarton.encnotes.core.utils.NoteSync
 import com.juanarton.encnotes.databinding.ActivitySettingsBinding
 import com.juanarton.encnotes.di.DatabaseModule.Companion.DB_NAME
 import com.juanarton.encnotes.ui.activity.login.LoginActivity
+import com.juanarton.encnotes.ui.activity.main.MainActivity
 import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.DARK
 import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.LIGHT
 import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.SYSTEM
+import com.juanarton.encnotes.ui.utils.Utils
 import dagger.hilt.android.AndroidEntryPoint
 import kotlin.getValue
 
@@ -48,6 +54,28 @@ class SettingsActivity : AppCompatActivity() {
         val sharedPreferences = getSharedPreferences("AppSettings", MODE_PRIVATE)
 
         binding?.apply {
+            settingsViewModel.logout.observe(this@SettingsActivity) {
+                this@SettingsActivity.deleteSharedPreferences(FILE_NAME)
+                this@SettingsActivity.deleteDatabase(DB_NAME)
+                this@SettingsActivity.filesDir.deleteRecursively()
+                this@SettingsActivity.cacheDir.deleteRecursively()
+
+                when(it){
+                    is Resource.Success -> {
+                        Log.d("Test", it.data.toString())
+                        val intent = Intent(this@SettingsActivity, LoginActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+                        startActivity(intent)
+                    }
+                    is Resource.Loading -> {}
+                    is Resource.Error -> {
+                        val intent = Intent(this@SettingsActivity, LoginActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+                        startActivity(intent)
+                    }
+                }
+            }
+
             settingsViewModel.getTheme(sharedPreferences).let {
                 cgThemeSelector.check(
                     when (it) {
@@ -77,14 +105,7 @@ class SettingsActivity : AppCompatActivity() {
             }
 
             btLogout.setOnClickListener {
-                settingsViewModel.clearSharedPreferences()
-                this@SettingsActivity.deleteSharedPreferences(FILE_NAME)
-                this@SettingsActivity.deleteDatabase(DB_NAME)
-                this@SettingsActivity.filesDir.deleteRecursively()
-                this@SettingsActivity.cacheDir.deleteRecursively()
-                val intent = Intent(this@SettingsActivity, LoginActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-                startActivity(intent)
+                settingsViewModel.logout()
             }
         }
     }

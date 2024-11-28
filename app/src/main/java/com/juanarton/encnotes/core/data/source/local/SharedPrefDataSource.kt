@@ -60,6 +60,4 @@ class SharedPrefDataSource @Inject constructor(
         sharedPreferences.edit().putString(CIPHER_KEY, cipherKey).commit()
 
     fun getCipherKey() = sharedPreferences.getString(CIPHER_KEY, null)
-
-    fun clearSharedPreference() = sharedPreferences.edit().clear().apply()
 }
