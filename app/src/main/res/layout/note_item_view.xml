@@ -61,6 +61,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/custom_font"
+                    android:textStyle="bold"
                     android:hint="@string/notes_title"
                     android:textSize="18sp" />
 
@@ -71,8 +72,7 @@
                     android:layout_marginTop="10dp"
                     android:fontFamily="@font/custom_font"
                     android:hint="@string/notes_content"
-                    android:maxLines="10"
-                    android:textSize="15sp" />
+                    android:maxLines="10" />
 
             </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>

@@ -18,6 +18,6 @@
     <font
         app:font="@font/robotobold"
         app:fontStyle="normal"
-        app:fontWeight="700" />
+        app:fontWeight="100" />
 
 </font-family>

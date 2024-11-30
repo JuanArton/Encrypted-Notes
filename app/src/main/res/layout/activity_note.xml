@@ -64,12 +64,13 @@
                 android:autofillHints="false"
                 android:background="@null"
                 android:fontFamily="@font/custom_font"
+                android:textStyle="bold"
                 android:hint="@string/title"
                 android:layout_marginEnd="20dp"
                 android:layout_marginStart="20dp"
                 android:inputType="textCapSentences|textMultiLine"
                 android:nestedScrollingEnabled="true"
-                android:textSize="24sp" />
+                android:textSize="22sp" />
 
             <EditText
                 android:id="@+id/etContent"

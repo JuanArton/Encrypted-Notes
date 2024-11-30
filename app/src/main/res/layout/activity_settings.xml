@@ -74,7 +74,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:text="@string/theme"
-                    android:textSize="20sp"
+                    android:textSize="18sp"
                     android:textStyle="bold"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -86,7 +86,6 @@
                     android:layout_alignParentStart="true"
                     android:layout_marginTop="5dp"
                     android:text="@string/change_app_theme"
-                    android:textSize="14sp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tvTheme" />
 
@@ -143,7 +142,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:text="@string/app_protection"
-                    android:textSize="20sp"
+                    android:textSize="18sp"
                     android:textStyle="bold"
                     android:layout_marginTop="30dp"
                     app:layout_constraintStart_toStartOf="parent"
@@ -156,7 +155,6 @@
                     android:layout_alignParentStart="true"
                     android:layout_marginTop="5dp"
                     android:text="@string/use_biometric_to_decrypt_notes"
-                    android:textSize="14sp"
                     app:layout_constraintEnd_toStartOf="@+id/swBiometric"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/tvBiometric" />

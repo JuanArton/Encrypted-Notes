@@ -10,7 +10,7 @@
         <item name="cardBackgroundColor">@color/brightCardBackground</item>
         <item name="liftOnScrollColor">@color/brightSurface</item>
         <item name="android:fontFamily">@font/default_font</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">15sp</item>
 
         <item name="android:windowLightStatusBar">true</item>
     </style>
