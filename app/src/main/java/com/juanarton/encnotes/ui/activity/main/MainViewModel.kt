@@ -1,6 +1,7 @@
 package com.juanarton.encnotes.ui.activity.main
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -16,6 +17,8 @@ import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.core.utils.SyncAttachment
 import com.juanarton.encnotes.core.utils.SyncNotes
+import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.APP_PIN
+import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.BIOMETRIC
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -28,6 +31,9 @@ class MainViewModel @Inject constructor(
     val localNotesRepoUseCase: LocalNotesRepoUseCase,
     val remoteNotesRepoUseCase: RemoteNotesRepoUseCase
 ): ViewModel() {
+    lateinit var sPref: SharedPreferences
+    lateinit var editor: SharedPreferences.Editor
+
     var _getNotesPair: MutableLiveData<NotesPairRaw> = MutableLiveData()
     var getNotesPair: LiveData<NotesPairRaw> = _getNotesPair
 
@@ -205,6 +211,24 @@ class MainViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun getBiometric(): Boolean? {
+        return sPref.getBoolean(BIOMETRIC, false)
+    }
+
+    fun setBiometric(value: Boolean) {
+        editor.putBoolean(BIOMETRIC, value)
+        editor.apply()
+    }
+
+    fun setAppPin(value: Int) {
+        editor.putInt(APP_PIN, value)
+        editor.apply()
+    }
+
+    fun getAppPin(): Int? {
+        return sPref.getInt(APP_PIN, 0)
     }
 
     fun syncToLocal(syncNotes: SyncNotes) {

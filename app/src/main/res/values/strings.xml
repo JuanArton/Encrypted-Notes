@@ -76,4 +76,13 @@
     <string name="log_out">Log out</string>
     <string name="change_app_theme">Change app theme</string>
     <string name="account">Account</string>
+    <string name="app_protection">App Protection</string>
+    <string name="use_biometric_to_decrypt_notes">Use biometric to decrypt notes</string>
+    <string name="please_set_new_pin">Please set new pin</string>
+    <string name="please_reenter_pin">Please re-enter pin</string>
+    <string name="please_enter_pin">Please enter pin</string>
+    <string name="you_are_not_authorized">You are not authorized</string>
+    <string name="retry">Retry</string>
+    <string name="biometric_authentication">Biometric Authentication</string>
+    <string name="cancel">Cancel</string>
 </resources>

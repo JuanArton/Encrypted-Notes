@@ -140,5 +140,10 @@ class LoginActivity : AppCompatActivity() {
         val digest: ByteArray = md.digest(bytes)
         return digest.fold("") { str, it -> str + "%02x".format(it) }
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
+    }
 }
 

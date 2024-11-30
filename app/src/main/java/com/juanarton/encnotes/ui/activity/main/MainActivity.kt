@@ -48,12 +48,17 @@ import com.juanarton.encnotes.databinding.ActivityMainBinding
 import com.juanarton.encnotes.ui.activity.login.LoginActivity
 import com.juanarton.encnotes.ui.activity.note.NoteActivity
 import com.juanarton.encnotes.ui.activity.settings.SettingsActivity
+import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.APP_SETTINGS
+import com.juanarton.encnotes.ui.fragment.apppin.AppPinFragment
+import com.juanarton.encnotes.ui.fragment.apppin.PinListener
+import com.juanarton.encnotes.ui.utils.BiometricHelper
+import com.juanarton.encnotes.ui.utils.FragmentBuilder
 import com.juanarton.encnotes.ui.utils.Utils
 import com.ketch.Ketch
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), PinListener {
 
     private val mainViewModel: MainViewModel by viewModels()
     private var _binding: ActivityMainBinding? = null
@@ -67,6 +72,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var localNotes: NotesPairRaw
     private var notDeletedNotes: ArrayList<NotesPair> = arrayListOf()
     private lateinit var listener: (NotesPair, MaterialCardView) -> Unit
+    private var authAttempt = 1
 
     companion object {
         init {
@@ -84,18 +90,101 @@ class MainActivity : AppCompatActivity() {
 
         auth = Firebase.auth
 
+        val isDarkTheme: Boolean = when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+            Configuration.UI_MODE_NIGHT_YES -> true
+            Configuration.UI_MODE_NIGHT_NO -> false
+            else -> false
+        }
+
+        val color: Int = Utils.getSurfaceColor(this, isDarkTheme)
+
+        window.statusBarColor = color and 0x00FFFFFF or (178 shl 24)
+        window.navigationBarColor = color and 0x00FFFFFF or (0 shl 24)
+
+        mainViewModel.sPref = getSharedPreferences(APP_SETTINGS, MODE_PRIVATE)
+        mainViewModel.editor = mainViewModel.sPref.edit()
+
         val currentUser = auth.currentUser
         if (currentUser != null && mainViewModel.getIsLoggedIn()) {
-            initView()
+            if (mainViewModel.getBiometric() == true) {
+                val biometricHelper = BiometricHelper(
+                    activity = this,
+                    onSuccess = {
+                        initView()
+                    },
+                    onError = {
+                        FragmentBuilder.build(
+                            this, AppPinFragment(getString(R.string.please_enter_pin), false), android.R.id.content
+                        )
+                    },
+                    onFailed = {
+                        FragmentBuilder.build(
+                            this, AppPinFragment(getString(R.string.please_enter_pin), false), android.R.id.content
+                        )
+                    }
+                )
+                biometricHelper.showBiometricPrompt(this)
+            } else {
+                initView()
+            }
         } else {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
+        }
+
+        activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val action = result.data?.getStringExtra("action")
+                val note = if (Build.VERSION.SDK_INT >= 33) {
+                    result.data?.getParcelableExtra("notesEncrypted", NotesPair::class.java)
+                } else {
+                    result.data?.getParcelableExtra("notesEncrypted")
+                }
+
+                action?.let { act ->
+                    note?.let {
+                        val index = notDeletedNotes.indexOfFirst { it.notes.id == note.notes.id }
+                        when (act) {
+                            "add" -> {
+                                val decrypted = mainViewModel.decrypt(note.notes)
+                                notDeletedNotes.add(0, NotesPair(decrypted, note.attachmentList))
+                                rvAdapter.prependItem(NotesPair(decrypted, note.attachmentList))
+                                note.attachmentList.let { attachment ->
+                                    mainViewModel.uploadAttachment(this@MainActivity, attachment)
+                                }
+                                note.notes.let { enc -> mainViewModel.insertNoteRemote(enc)}
+                                refreshRecyclerView()
+                            }
+                            "update" -> {
+                                mainViewModel.getNotesBydId(note.notes.id)
+                                val upload = note.attachmentList.filterNot {
+                                    it in notDeletedNotes[index].attachmentList
+                                }
+                                mainViewModel.uploadAttachment(this@MainActivity, upload)
+                                note.notes.let {enc -> mainViewModel.updateNoteRemote(enc)}
+                                binding?.rvNotes?.smoothScrollToPosition(index)
+                            }
+                            "delete" -> {
+                                mainViewModel.deleteNote(notDeletedNotes[index].notes)
+                                mainViewModel.deleteNoteRemote(notDeletedNotes[index].notes)
+                                mainViewModel.deleteAtt(notDeletedNotes[index].attachmentList)
+                                mainViewModel.deleteAttRemote(notDeletedNotes[index].attachmentList)
+                                rvAdapter.deleteItem(index)
+                                notDeletedNotes.removeAt(index)
+                                refreshRecyclerView()
+                            }
+                            else -> {}
+                        }
+                    }
+                }
+            }
         }
     }
 
     private fun initView() {
         enableEdgeToEdge()
         _binding = ActivityMainBinding.inflate(layoutInflater)
+
         val handler = Handler(Looper.getMainLooper())
         var runnable: Runnable? = null
 
@@ -108,17 +197,6 @@ class MainActivity : AppCompatActivity() {
         ketch = Ketch.builder().build(this)
 
         mainViewModel.getNotes()
-
-        val isDarkTheme: Boolean = when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
-            Configuration.UI_MODE_NIGHT_YES -> true
-            Configuration.UI_MODE_NIGHT_NO -> false
-            else -> false
-        }
-
-        val color: Int = Utils.getSurfaceColor(this, isDarkTheme)
-
-        window.statusBarColor = color and 0x00FFFFFF or (178 shl 24)
-        window.navigationBarColor = color and 0x00FFFFFF or (0 shl 24)
 
         binding?.apply {
             Utils.loadAvatar(this@MainActivity, auth.currentUser!!.photoUrl.toString(), this@MainActivity as LifecycleOwner, searchTopBar)
@@ -272,54 +350,6 @@ class MainActivity : AppCompatActivity() {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun afterTextChanged(s: Editable?) {}
             })
-
-            activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (result.resultCode == RESULT_OK) {
-                    val action = result.data?.getStringExtra("action")
-                    val note = if (Build.VERSION.SDK_INT >= 33) {
-                        result.data?.getParcelableExtra("notesEncrypted", NotesPair::class.java)
-                    } else {
-                        result.data?.getParcelableExtra("notesEncrypted")
-                    }
-
-                    action?.let { act ->
-                        note?.let {
-                            val index = notDeletedNotes.indexOfFirst { it.notes.id == note.notes.id }
-                            when (act) {
-                                "add" -> {
-                                    val decrypted = mainViewModel.decrypt(note.notes)
-                                    notDeletedNotes.add(0, NotesPair(decrypted, note.attachmentList))
-                                    rvAdapter.prependItem(NotesPair(decrypted, note.attachmentList))
-                                    note.attachmentList.let { attachment ->
-                                        mainViewModel.uploadAttachment(this@MainActivity, attachment)
-                                    }
-                                    note.notes.let { enc -> mainViewModel.insertNoteRemote(enc)}
-                                    refreshRecyclerView()
-                                }
-                                "update" -> {
-                                    mainViewModel.getNotesBydId(note.notes.id)
-                                    val upload = note.attachmentList.filterNot {
-                                        it in notDeletedNotes[index].attachmentList
-                                    }
-                                    mainViewModel.uploadAttachment(this@MainActivity, upload)
-                                    note.notes.let {enc -> mainViewModel.updateNoteRemote(enc)}
-                                    binding?.rvNotes?.smoothScrollToPosition(index)
-                                }
-                                "delete" -> {
-                                    mainViewModel.deleteNote(notDeletedNotes[index].notes)
-                                    mainViewModel.deleteNoteRemote(notDeletedNotes[index].notes)
-                                    mainViewModel.deleteAtt(notDeletedNotes[index].attachmentList)
-                                    mainViewModel.deleteAttRemote(notDeletedNotes[index].attachmentList)
-                                    rvAdapter.deleteItem(index)
-                                    notDeletedNotes.removeAt(index)
-                                    refreshRecyclerView()
-                                }
-                                else -> {}
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
 
@@ -459,12 +489,29 @@ class MainActivity : AppCompatActivity() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+        val layoutManager = binding?.rvNotes?.layoutManager as? StaggeredGridLayoutManager
         val spanCount = if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) 3 else 2
-        binding?.rvNotes?.layoutManager = StaggeredGridLayoutManager(spanCount, LinearLayoutManager.VERTICAL)
+        layoutManager?.spanCount = spanCount
     }
 
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
+    }
+
+    override fun onPinSubmit(pin: Int) {
+        if (authAttempt <=  5) {
+            if (pin == mainViewModel.getAppPin()) {
+                initView()
+            } else {
+                FragmentBuilder.build(
+                    this, AppPinFragment(getString(R.string.retry), false), android.R.id.content
+                )
+            }
+        } else {
+            Toast.makeText(this, getString(R.string.you_are_not_authorized), Toast.LENGTH_SHORT).show()
+            finish()
+        }
+        authAttempt += 1
     }
 }

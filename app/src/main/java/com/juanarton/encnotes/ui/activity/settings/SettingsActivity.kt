@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -15,20 +14,21 @@ import androidx.core.view.WindowInsetsCompat
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.source.local.SharedPrefDataSource.Companion.FILE_NAME
 import com.juanarton.encnotes.core.data.source.remote.Resource
-import com.juanarton.encnotes.core.utils.NoteSync
 import com.juanarton.encnotes.databinding.ActivitySettingsBinding
 import com.juanarton.encnotes.di.DatabaseModule.Companion.DB_NAME
 import com.juanarton.encnotes.ui.activity.login.LoginActivity
-import com.juanarton.encnotes.ui.activity.main.MainActivity
+import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.APP_SETTINGS
 import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.DARK
 import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.LIGHT
 import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.SYSTEM
-import com.juanarton.encnotes.ui.utils.Utils
+import com.juanarton.encnotes.ui.fragment.apppin.AppPinFragment
+import com.juanarton.encnotes.ui.fragment.apppin.PinListener
+import com.juanarton.encnotes.ui.utils.FragmentBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlin.getValue
 
 @AndroidEntryPoint
-class SettingsActivity : AppCompatActivity() {
+class SettingsActivity : AppCompatActivity(), PinListener {
 
     private var _binding: ActivitySettingsBinding? = null
     private val binding get() = _binding
@@ -51,32 +51,79 @@ class SettingsActivity : AppCompatActivity() {
             insets
         }
 
-        val sharedPreferences = getSharedPreferences("AppSettings", MODE_PRIVATE)
+        settingsViewModel.sPref = getSharedPreferences(APP_SETTINGS, MODE_PRIVATE)
+        settingsViewModel.editor = settingsViewModel.sPref.edit()
+
+        setUiState()
+        stateObserver()
 
         binding?.apply {
-            settingsViewModel.logout.observe(this@SettingsActivity) {
-                this@SettingsActivity.deleteSharedPreferences(FILE_NAME)
-                this@SettingsActivity.deleteDatabase(DB_NAME)
-                this@SettingsActivity.filesDir.deleteRecursively()
-                this@SettingsActivity.cacheDir.deleteRecursively()
+            btLogout.setOnClickListener {
+                settingsViewModel.logout()
+            }
 
-                when(it){
-                    is Resource.Success -> {
-                        Log.d("Test", it.data.toString())
-                        val intent = Intent(this@SettingsActivity, LoginActivity::class.java)
-                        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-                        startActivity(intent)
+            swBiometric.setOnCheckedChangeListener { _, isChecked ->
+                when (isChecked) {
+                    true -> {
+                        if (settingsViewModel.getAppPin() == 0) {
+                            FragmentBuilder.build(
+                                this@SettingsActivity, AppPinFragment(getString(R.string.please_set_new_pin), true), android.R.id.content
+                            )
+                        } else {
+                            settingsViewModel.setBiometric(true)
+                        }
                     }
-                    is Resource.Loading -> {}
-                    is Resource.Error -> {
-                        val intent = Intent(this@SettingsActivity, LoginActivity::class.java)
-                        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-                        startActivity(intent)
+                    false -> {
+                        settingsViewModel.setBiometric(false)
                     }
                 }
             }
 
-            settingsViewModel.getTheme(sharedPreferences).let {
+            cgThemeSelector.setOnCheckedStateChangeListener { group, _ ->
+                when (group.checkedChipId) {
+                    chipSystem.id -> {
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                        settingsViewModel.setTheme(SYSTEM)
+                    }
+                    chipLight.id -> {
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                        settingsViewModel.setTheme(LIGHT)
+                    }
+                    chipDark.id -> {
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                        settingsViewModel.setTheme(DARK)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun stateObserver() {
+        settingsViewModel.logout.observe(this@SettingsActivity) {
+            this@SettingsActivity.deleteSharedPreferences(FILE_NAME)
+            this@SettingsActivity.deleteDatabase(DB_NAME)
+            this@SettingsActivity.filesDir.deleteRecursively()
+            this@SettingsActivity.cacheDir.deleteRecursively()
+
+            when(it){
+                is Resource.Success -> {
+                    val intent = Intent(this@SettingsActivity, LoginActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+                    startActivity(intent)
+                }
+                is Resource.Loading -> {}
+                is Resource.Error -> {
+                    val intent = Intent(this@SettingsActivity, LoginActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+                    startActivity(intent)
+                }
+            }
+        }
+    }
+
+    private fun setUiState() {
+        binding?.apply {
+            settingsViewModel.getTheme().let {
                 cgThemeSelector.check(
                     when (it) {
                         SYSTEM -> R.id.chipSystem
@@ -87,25 +134,8 @@ class SettingsActivity : AppCompatActivity() {
                 )
             }
 
-            cgThemeSelector.setOnCheckedStateChangeListener { group, _ ->
-                when (group.checkedChipId) {
-                    chipSystem.id -> {
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-                        settingsViewModel.setTheme(sharedPreferences.edit(), SYSTEM)
-                    }
-                    chipLight.id -> {
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                        settingsViewModel.setTheme(sharedPreferences.edit(), LIGHT)
-                    }
-                    chipDark.id -> {
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                        settingsViewModel.setTheme(sharedPreferences.edit(), DARK)
-                    }
-                }
-            }
-
-            btLogout.setOnClickListener {
-                settingsViewModel.logout()
+            settingsViewModel.getBiometric().let {
+                swBiometric.isChecked = it == true
             }
         }
     }
@@ -117,6 +147,21 @@ class SettingsActivity : AppCompatActivity() {
                 true
             }
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
+    }
+
+    override fun onPinSubmit(pin: Int) {
+        Log.d("test", "work4")
+        settingsViewModel.setAppPin(pin)
+        if (settingsViewModel.getAppPin() != 0) {
+            settingsViewModel.setBiometric(true)
+        } else {
+            binding?.swBiometric?.isChecked = false
         }
     }
 }

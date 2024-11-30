@@ -136,6 +136,38 @@
                         app:chipCornerRadius="20dp"
                         app:chipStrokeColor="?attr/colorPrimary" />
                 </com.google.android.material.chip.ChipGroup>
+
+                <TextView
+                    android:id="@+id/tvBiometric"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:text="@string/app_protection"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="30dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/cgThemeSelector" />
+
+                <TextView
+                    android:id="@+id/tvBiometricDesc"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginTop="5dp"
+                    android:text="@string/use_biometric_to_decrypt_notes"
+                    android:textSize="14sp"
+                    app:layout_constraintEnd_toStartOf="@+id/swBiometric"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/tvBiometric" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/swBiometric"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/tvBiometric" />
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -144,7 +176,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="40dp"
             android:text="@string/account"
             android:textSize="18sp"
             app:layout_constraintStart_toStartOf="parent"
@@ -156,6 +188,7 @@
             android:layout_weight="1"
             android:clickable="true"
             android:focusable="true"
+            android:layout_marginTop="20dp"
             app:cardBackgroundColor="?attr/cardBackgroundColor"
             app:cardCornerRadius="20dp"
             app:contentPadding="20dp"

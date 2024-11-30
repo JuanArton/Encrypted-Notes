@@ -21,20 +21,44 @@ class SettingsViewModel @Inject constructor(
     private val _logout: MutableLiveData<Resource<String>> = MutableLiveData()
     val logout: LiveData<Resource<String>> = _logout
 
+    lateinit var sPref: SharedPreferences
+    lateinit var editor: SharedPreferences.Editor
+
     companion object {
+        const val APP_SETTINGS = "AppSettings"
         const val THEME = "THEME"
         const val DARK = "DARK"
         const val LIGHT = "LIGHT"
         const val SYSTEM = "SYSTEM"
+        const val BIOMETRIC = "BIOMETRIC"
+        const val APP_PIN = "AppPin"
     }
 
-    fun setTheme(editor: SharedPreferences.Editor, value: String) {
+    fun setTheme(value: String) {
         editor.putString(THEME, value)
         editor.apply()
     }
 
-    fun getTheme(sPref: SharedPreferences): String? {
+    fun getTheme(): String? {
         return sPref.getString(THEME, SYSTEM)
+    }
+
+    fun getBiometric(): Boolean? {
+        return sPref.getBoolean(BIOMETRIC, false)
+    }
+
+    fun setBiometric(value: Boolean) {
+        editor.putBoolean(BIOMETRIC, value)
+        editor.apply()
+    }
+
+    fun setAppPin(value: Int) {
+        editor.putInt(APP_PIN, value)
+        editor.apply()
+    }
+
+    fun getAppPin(): Int? {
+        return sPref.getInt(APP_PIN, 0)
     }
 
     fun getRefreshToken() = localNotesRepoUseCase.getRefreshKey()!!
