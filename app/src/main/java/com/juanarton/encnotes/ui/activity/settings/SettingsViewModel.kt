@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.juanarton.encnotes.core.data.domain.model.TwoFactor
 import com.juanarton.encnotes.core.data.domain.usecase.local.LocalNotesRepoUseCase
 import com.juanarton.encnotes.core.data.domain.usecase.remote.RemoteNotesRepoUseCase
 import com.juanarton.encnotes.core.data.source.remote.Resource
@@ -20,6 +21,15 @@ class SettingsViewModel @Inject constructor(
 
     private val _logout: MutableLiveData<Resource<String>> = MutableLiveData()
     val logout: LiveData<Resource<String>> = _logout
+
+    private val _enableTwoFactor: MutableLiveData<Resource<TwoFactor>> = MutableLiveData()
+    val enableTwoFactor: LiveData<Resource<TwoFactor>> = _enableTwoFactor
+
+    private val _disableTwoFactor: MutableLiveData<Resource<String>> = MutableLiveData()
+    val disableTwoFactor: LiveData<Resource<String>> = _disableTwoFactor
+
+    private val _checkTwoFactor: MutableLiveData<Resource<Boolean>> = MutableLiveData()
+    val checkTwoFactor: LiveData<Resource<Boolean>> = _checkTwoFactor
 
     lateinit var sPref: SharedPreferences
     lateinit var editor: SharedPreferences.Editor
@@ -59,6 +69,30 @@ class SettingsViewModel @Inject constructor(
 
     fun getAppPin(): Int? {
         return sPref.getInt(APP_PIN, 0)
+    }
+
+    fun enableTwoFactor(id: String, pin: String) {
+        viewModelScope.launch {
+            remoteNotesRepoUseCase.setTwoFactorAuth(id, pin).collect {
+                _enableTwoFactor.value = it
+            }
+        }
+    }
+
+    fun disableTwoFactor(id: String, pin: String) {
+        viewModelScope.launch {
+            remoteNotesRepoUseCase.disableTwoFactorAuth(id, pin).collect {
+                _disableTwoFactor.value = it
+            }
+        }
+    }
+
+    fun checkTwoFactor(id: String) {
+        viewModelScope.launch {
+            remoteNotesRepoUseCase.checkTwoFactorSet(id).collect {
+                _checkTwoFactor.value = it
+            }
+        }
     }
 
     fun getRefreshToken() = localNotesRepoUseCase.getRefreshKey()!!

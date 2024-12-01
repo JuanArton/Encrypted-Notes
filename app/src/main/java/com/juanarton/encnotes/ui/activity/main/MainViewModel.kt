@@ -306,24 +306,29 @@ class MainViewModel @Inject constructor(
     }
 
     fun decrypt() {
-        val key = getCipherKey()
-        if (!key.isNullOrEmpty()) {
-            val deserializedKey = Cryptography.deserializeKeySet(key)
+        try {
+            val key = getCipherKey()
+            if (!key.isNullOrEmpty()) {
+                val deserializedKey = Cryptography.deserializeKeySet(key)
 
-            _notDeleted.value = _notDeleted.value?.map {
-                val note = Notes(
-                    it.notes.id,
-                    Cryptography.decrypt(it.notes.notesTitle ?: "", deserializedKey),
-                    Cryptography.decrypt(it.notes.notesContent ?: "", deserializedKey),
-                    it.notes.isDelete,
-                    it.notes.lastModified
-                )
+                _notDeleted.value?.let {
+                    _notDeleted.value = _notDeleted.value?.map {
+                        val note = Notes(
+                            it.notes.id,
+                            Cryptography.decrypt(it.notes.notesTitle ?: "", deserializedKey),
+                            Cryptography.decrypt(it.notes.notesContent ?: "", deserializedKey),
+                            it.notes.isDelete,
+                            it.notes.lastModified
+                        )
 
-                NotesPair(note, it.attachmentList)
+                        NotesPair(note, it.attachmentList)
+                    }
+                }
+            } else {
+                _notDeleted.value = emptyList()
             }
-        } else {
-            _notDeleted.value = emptyList()
-        }
+        } catch (e: Exception) { }
+
     }
 
     fun decrypt(notes: Notes): Notes {

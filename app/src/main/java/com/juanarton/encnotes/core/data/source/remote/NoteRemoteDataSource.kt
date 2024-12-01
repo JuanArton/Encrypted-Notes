@@ -1,6 +1,7 @@
 package com.juanarton.encnotes.core.data.source.remote
 
 import android.content.Context
+import android.util.Log
 import com.google.gson.Gson
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.api.API
@@ -10,6 +11,9 @@ import com.juanarton.encnotes.core.data.api.authentications.login.LoginResponse
 import com.juanarton.encnotes.core.data.api.authentications.login.PostLogin
 import com.juanarton.encnotes.core.data.api.authentications.logout.DeleteLogout
 import com.juanarton.encnotes.core.data.api.authentications.logout.LogoutResponse
+import com.juanarton.encnotes.core.data.api.authentications.twofacor.CheckTwoFAResponse
+import com.juanarton.encnotes.core.data.api.authentications.twofacor.TwoFactorData
+import com.juanarton.encnotes.core.data.api.authentications.twofacor.TwoFactorResponse
 import com.juanarton.encnotes.core.data.api.authentications.updatekey.PutUpdateKey
 import com.juanarton.encnotes.core.data.api.note.addnote.PostNote
 import com.juanarton.encnotes.core.data.api.note.addnote.PostNoteData
@@ -19,6 +23,7 @@ import com.juanarton.encnotes.core.data.api.note.getallnote.GetAllNotesRes
 import com.juanarton.encnotes.core.data.api.note.getallnote.NoteData
 import com.juanarton.encnotes.core.data.api.note.updateNote.PutNote
 import com.juanarton.encnotes.core.data.api.note.updateNote.PutNoteResponse
+import com.juanarton.encnotes.core.data.api.user.check.PostCheck
 import com.juanarton.encnotes.core.data.api.user.register.PostRegister
 import com.juanarton.encnotes.core.data.api.user.register.RegisterData
 import com.juanarton.encnotes.core.data.api.user.register.RegisterResponse
@@ -61,10 +66,10 @@ class NoteRemoteDataSource @Inject constructor(
         }.flowOn(Dispatchers.IO)
 
 
-    fun loginUser(id: String, pin: String): Flow<APIResponse<LoginData>> =
+    fun loginUser(id: String, pin: String, otp: String): Flow<APIResponse<LoginData>> =
         flow {
             try {
-                val response = API.services.login(PostLogin(id, pin))
+                val response = API.services.login(PostLogin(id, pin, otp))
 
                 if (response.body() != null) {
                     val loginResponse = Gson().fromJson(response.body()!!.string(), LoginResponse::class.java)
@@ -252,6 +257,124 @@ class NoteRemoteDataSource @Inject constructor(
                     }
                 ))
             }
+        }.flowOn(Dispatchers.IO)
+
+    fun setTwoFactorAuth(id: String, pin: String): Flow<APIResponse<TwoFactorData>> =
+        flow {
+            try {
+                val response = makeSetTwoFactorRequest(id, pin)
+
+                if (response.isSuccessful) {
+                    val twoFactorResponse = Gson().fromJson(response.body()?.string(), TwoFactorResponse::class.java)
+                    emit(APIResponse.Success(twoFactorResponse.twoFactorData!!))
+                } else {
+                    val errorResponse = Gson().fromJson(response.errorBody()?.string(), TwoFactorResponse::class.java)
+
+                    if (errorResponse.message == "Token maximum age exceeded") {
+                        refreshAccessKey()
+                        val retryResponse = makeSetTwoFactorRequest(id, pin)
+
+                        if (retryResponse.isSuccessful) {
+                            val retryTwoFactorResponse = Gson().fromJson(retryResponse.body()?.string(), TwoFactorResponse::class.java)
+                            emit(APIResponse.Success(retryTwoFactorResponse.twoFactorData!!))
+                        } else {
+                            val retryErrorResponse = Gson().fromJson(retryResponse.errorBody()?.string(), TwoFactorResponse::class.java)
+                            emit(APIResponse.Error(retryErrorResponse.message))
+                        }
+                    } else {
+                        emit(APIResponse.Error(errorResponse.message))
+                    }
+                }
+            } catch (e: Exception) {
+                emit(APIResponse.Error("${context.getString(R.string.set_two_factor_failed)}: $e"))
+            }
+        }.flowOn(Dispatchers.IO)
+
+    private suspend fun makeSetTwoFactorRequest(id: String, pin: String): Response<ResponseBody> {
+        val accessKey = sharedPrefDataSource.getAccessKey()!!
+        return API.services.setTwoFactorAuth(PostLogin(id, pin, ""), accessKey)
+    }
+
+    fun disableTwoFactorAuth(id: String, pin: String): Flow<APIResponse<String>> =
+        flow {
+            try {
+                val response = makeDisableTwoFactorRequest(id, pin)
+
+                if (response.isSuccessful) {
+                    val twoFactorResponse = Gson().fromJson(response.body()?.string(), TwoFactorResponse::class.java)
+                    emit(APIResponse.Success(twoFactorResponse.message))
+                } else {
+                    val errorResponse = Gson().fromJson(response.errorBody()?.string(), TwoFactorResponse::class.java)
+
+                    if (errorResponse.message == "Token maximum age exceeded") {
+                        refreshAccessKey()
+                        val retryResponse = makeDisableTwoFactorRequest(id, pin)
+
+                        if (retryResponse.isSuccessful) {
+                            val retryTwoFactorResponse = Gson().fromJson(retryResponse.body()?.string(), TwoFactorResponse::class.java)
+                            emit(APIResponse.Success(retryTwoFactorResponse.message))
+                        } else {
+                            val retryErrorResponse = Gson().fromJson(retryResponse.errorBody()?.string(), TwoFactorResponse::class.java)
+                            emit(APIResponse.Error(retryErrorResponse.message))
+                        }
+                    } else {
+                        emit(APIResponse.Error(errorResponse.message))
+                    }
+                }
+            } catch (e: Exception) {
+                emit(APIResponse.Error("${context.getString(R.string.disable_two_factor_failed)}: $e"))
+            }
+        }.flowOn(Dispatchers.IO)
+
+    private suspend fun makeDisableTwoFactorRequest(id: String, pin: String): Response<ResponseBody> {
+        val accessKey = sharedPrefDataSource.getAccessKey()!!
+        return API.services.disableTwoFactorAuth(PostLogin(id, pin, ""), accessKey)
+    }
+
+    fun checkTwoFactorSet(id: String): Flow<APIResponse<Boolean>> =
+        flow {
+            try {
+                val response = makeCheckTwoFactorRequest(id)
+
+                if (response.isSuccessful) {
+                    val twoFactorResponse = Gson().fromJson(response.body()?.string(), CheckTwoFAResponse::class.java)
+                    emit(APIResponse.Success(twoFactorResponse.isEnabled!!))
+                } else {
+                    val errorResponse = Gson().fromJson(response.errorBody()?.string(), CheckTwoFAResponse::class.java)
+
+                    if (errorResponse.message == "Token maximum age exceeded") {
+                        refreshAccessKey()
+                        val retryResponse = makeCheckTwoFactorRequest(id)
+
+                        if (retryResponse.isSuccessful) {
+                            val retryTwoFactorResponse = Gson().fromJson(retryResponse.body()?.string(), CheckTwoFAResponse::class.java)
+                            emit(APIResponse.Success(retryTwoFactorResponse.isEnabled!!))
+                        } else {
+                            val retryErrorResponse = Gson().fromJson(retryResponse.errorBody()?.string(), CheckTwoFAResponse::class.java)
+                            emit(APIResponse.Error(retryErrorResponse.message))
+                        }
+                    } else {
+                        emit(APIResponse.Error(errorResponse.message))
+                    }
+                }
+            } catch (e: Exception) {
+                emit(APIResponse.Error("${context.getString(R.string.check_two_factor_failed)}: $e"))
+            }
+        }.flowOn(Dispatchers.IO)
+
+    private suspend fun makeCheckTwoFactorRequest(id: String): Response<ResponseBody> {
+        return API.services.checkTwoFactorSet(PostLogin(id, "", ""), "")
+    }
+
+    fun checkIsRegistered(id: String): Flow<APIResponse<Boolean>> =
+        flow {
+            try {
+                val response = API.services.checkRegistered(PostCheck(id))
+                emit(APIResponse.Success(response.isRegistered))
+            } catch (e: Exception) {
+                emit(APIResponse.Error("${context.getString(R.string.check_two_factor_failed)}: $e"))
+            }
+
         }.flowOn(Dispatchers.IO)
 
     private suspend fun refreshAccessKey() {

@@ -138,13 +138,15 @@
 
                 <TextView
                     android:id="@+id/tvBiometric"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
+                    android:layout_marginTop="30dp"
                     android:text="@string/app_protection"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:layout_marginTop="30dp"
+                    android:layout_marginEnd="20dp"
+                    app:layout_constraintEnd_toStartOf="@+id/swBiometric"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/cgThemeSelector" />
 
@@ -155,6 +157,7 @@
                     android:layout_alignParentStart="true"
                     android:layout_marginTop="5dp"
                     android:text="@string/use_biometric_to_decrypt_notes"
+                    android:layout_marginEnd="20dp"
                     app:layout_constraintEnd_toStartOf="@+id/swBiometric"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/tvBiometric" />
@@ -198,19 +201,53 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
+                <TextView
+                    android:id="@+id/tvTwoFactor"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:text="@string/two_factor_authentication"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginEnd="20dp"
+                    app:layout_constraintEnd_toStartOf="@+id/swTwoFactor"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tvTwoFactorDesc"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginTop="5dp"
+                    android:text="@string/enable_disable_two_factor_authentication"
+                    android:layout_marginEnd="20dp"
+                    app:layout_constraintEnd_toStartOf="@+id/swTwoFactor"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/tvTwoFactor" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/swTwoFactor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintBottom_toBottomOf="@+id/tvTwoFactorDesc"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/tvTwoFactor" />
+
                 <Button
                     android:id="@+id/btLogout"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:backgroundTint="@android:color/transparent"
                     android:drawableEnd="@drawable/logout"
+                    android:gravity="center"
+                    android:padding="0dp"
                     android:text="@string/log_out"
                     android:textColor="@color/design_default_color_error"
-                    android:padding="0dp"
-                    android:gravity="center"
+                    android:layout_marginTop="30dp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toBottomOf="@id/tvTwoFactorDesc" />
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
     </androidx.constraintlayout.widget.ConstraintLayout>

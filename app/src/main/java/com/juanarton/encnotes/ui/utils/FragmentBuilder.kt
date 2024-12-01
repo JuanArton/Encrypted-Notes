@@ -8,8 +8,18 @@ object FragmentBuilder {
     fun build(activity: FragmentActivity, fragment: Fragment, holder: Int) {
         activity.supportFragmentManager
             .beginTransaction()
-            .replace(holder, fragment)
+            .add(holder, fragment)
             .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
             .commit()
+    }
+
+    fun destroyFragment(activity: FragmentActivity, fragment: Fragment) {
+        val fragmentManager = activity.supportFragmentManager
+        val transaction = fragmentManager.beginTransaction()
+
+        if (fragment.isAdded) {
+            transaction.remove(fragment)
+                .commit()
+        }
     }
 }

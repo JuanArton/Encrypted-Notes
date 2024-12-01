@@ -6,6 +6,7 @@ import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.LoggedUser
 import com.juanarton.encnotes.core.data.domain.model.Login
 import com.juanarton.encnotes.core.data.domain.model.Notes
+import com.juanarton.encnotes.core.data.domain.model.TwoFactor
 import com.juanarton.encnotes.core.data.domain.repository.IRemoteNoteRepository
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.ketch.Ketch
@@ -30,8 +31,8 @@ class RemoteNotesRepoImpl @Inject constructor(
     override fun registerUser(id: String, pin: String, username: String): Flow<Resource<String>> =
         iRemoteNoteRepository.registerUser(id, pin, username)
 
-    override fun loginUser(id: String, pin: String): Flow<Resource<Login>> =
-        iRemoteNoteRepository.loginUser(id, pin)
+    override fun loginUser(id: String, pin: String, otp: String): Flow<Resource<Login>> =
+        iRemoteNoteRepository.loginUser(id, pin, otp)
 
     override fun insertNoteRemote(notes: Notes): Flow<Resource<String>> =
         iRemoteNoteRepository.insertNoteRemote(notes)
@@ -62,4 +63,16 @@ class RemoteNotesRepoImpl @Inject constructor(
 
     override fun logoutUser(refreshToken: String): Flow<Resource<String>> =
         iRemoteNoteRepository.logoutUser(refreshToken)
+
+    override fun setTwoFactorAuth(id: String, pin: String): Flow<Resource<TwoFactor>> =
+        iRemoteNoteRepository.setTwoFactorAuth(id, pin)
+
+    override fun disableTwoFactorAuth(id: String, pin: String): Flow<Resource<String>> =
+        iRemoteNoteRepository.disableTwoFactorAuth(id, pin)
+
+    override fun checkTwoFactorSet(id: String): Flow<Resource<Boolean>> =
+        iRemoteNoteRepository.checkTwoFactorSet(id)
+
+    override fun checkIsRegistered(id: String): Flow<Resource<Boolean>> =
+        iRemoteNoteRepository.checkIsRegistered(id)
 }

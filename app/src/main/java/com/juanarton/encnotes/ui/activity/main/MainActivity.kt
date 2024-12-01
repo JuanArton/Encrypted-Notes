@@ -114,12 +114,12 @@ class MainActivity : AppCompatActivity(), PinListener {
                     },
                     onError = {
                         FragmentBuilder.build(
-                            this, AppPinFragment(getString(R.string.please_enter_pin), false), android.R.id.content
+                            this, AppPinFragment(getString(R.string.please_enter_pin), false, 0), android.R.id.content
                         )
                     },
                     onFailed = {
                         FragmentBuilder.build(
-                            this, AppPinFragment(getString(R.string.please_enter_pin), false), android.R.id.content
+                            this, AppPinFragment(getString(R.string.please_enter_pin), false, 0), android.R.id.content
                         )
                     }
                 )
@@ -499,13 +499,13 @@ class MainActivity : AppCompatActivity(), PinListener {
         _binding = null
     }
 
-    override fun onPinSubmit(pin: Int) {
+    override fun onPinSubmit(pin: Int, action: Int) {
         if (authAttempt <=  5) {
             if (pin == mainViewModel.getAppPin()) {
                 initView()
             } else {
                 FragmentBuilder.build(
-                    this, AppPinFragment(getString(R.string.retry), false), android.R.id.content
+                    this, AppPinFragment(getString(R.string.retry), false, 0), android.R.id.content
                 )
             }
         } else {

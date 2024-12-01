@@ -2,10 +2,13 @@ package com.juanarton.encnotes.core.data.api
 
 import com.juanarton.encnotes.core.data.api.authentications.login.PostLogin
 import com.juanarton.encnotes.core.data.api.authentications.logout.DeleteLogout
+import com.juanarton.encnotes.core.data.api.authentications.twofacor.TwoFactorResponse
 import com.juanarton.encnotes.core.data.api.authentications.updatekey.PutUpdateKey
 import com.juanarton.encnotes.core.data.api.authentications.updatekey.UpdateKeyResponse
 import com.juanarton.encnotes.core.data.api.note.addnote.PostNote
 import com.juanarton.encnotes.core.data.api.note.updateNote.PutNote
+import com.juanarton.encnotes.core.data.api.user.check.CheckRegistered
+import com.juanarton.encnotes.core.data.api.user.check.PostCheck
 import com.juanarton.encnotes.core.data.api.user.register.PostRegister
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -95,4 +98,26 @@ interface APIService {
         @Body deleteLogout: DeleteLogout,
     ): Response<ResponseBody>
 
+    @POST("authentications/2FA/enable")
+    suspend fun setTwoFactorAuth(
+        @Body postLogin: PostLogin,
+        @Header("Authorization") accessToken: String,
+    ): Response<ResponseBody>
+
+    @POST("authentications/2FA/disable")
+    suspend fun disableTwoFactorAuth(
+        @Body postLogin: PostLogin,
+        @Header("Authorization") accessToken: String,
+    ): Response<ResponseBody>
+
+    @POST("authentications/2FA/check")
+    suspend fun checkTwoFactorSet(
+        @Body postLogin: PostLogin,
+        @Header("Authorization") accessToken: String,
+    ): Response<ResponseBody>
+
+    @POST("users/check")
+    suspend fun checkRegistered(
+        @Body postCheck: PostCheck
+    ): CheckRegistered
 }

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -11,6 +12,8 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.source.local.SharedPrefDataSource.Companion.FILE_NAME
 import com.juanarton.encnotes.core.data.source.remote.Resource
@@ -23,17 +26,27 @@ import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.L
 import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.SYSTEM
 import com.juanarton.encnotes.ui.fragment.apppin.AppPinFragment
 import com.juanarton.encnotes.ui.fragment.apppin.PinListener
+import com.juanarton.encnotes.ui.fragment.loading.LoadingFragment
+import com.juanarton.encnotes.ui.fragment.qrimage.QrSecretFragment
 import com.juanarton.encnotes.ui.utils.FragmentBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlin.getValue
+import android.os.Process
 
 @AndroidEntryPoint
 class SettingsActivity : AppCompatActivity(), PinListener {
 
     private var _binding: ActivitySettingsBinding? = null
     private val binding get() = _binding
-
     private val settingsViewModel: SettingsViewModel by viewModels()
+    private var isUserAction = true
+    private val loadingDialog = LoadingFragment()
+    val auth = Firebase.auth
+
+    companion object {
+        const val APP_PROTECTION = 1
+        const val TWO_FACTOR = 2
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,6 +69,7 @@ class SettingsActivity : AppCompatActivity(), PinListener {
 
         setUiState()
         stateObserver()
+        settingsViewModel.checkTwoFactor(auth.uid.toString())
 
         binding?.apply {
             btLogout.setOnClickListener {
@@ -67,7 +81,9 @@ class SettingsActivity : AppCompatActivity(), PinListener {
                     true -> {
                         if (settingsViewModel.getAppPin() == 0) {
                             FragmentBuilder.build(
-                                this@SettingsActivity, AppPinFragment(getString(R.string.please_set_new_pin), true), android.R.id.content
+                                this@SettingsActivity,
+                                AppPinFragment(getString(R.string.please_set_new_pin), true, APP_PROTECTION),
+                                android.R.id.content
                             )
                         } else {
                             settingsViewModel.setBiometric(true)
@@ -76,6 +92,13 @@ class SettingsActivity : AppCompatActivity(), PinListener {
                     false -> {
                         settingsViewModel.setBiometric(false)
                     }
+                }
+            }
+
+            swTwoFactor.setOnCheckedChangeListener { _, isChecked ->
+                if (isUserAction) {
+                    val pinFragment = AppPinFragment(getString(R.string.please_enter_pin), false, TWO_FACTOR)
+                    FragmentBuilder.build(this@SettingsActivity, pinFragment, android.R.id.content)
                 }
             }
 
@@ -107,15 +130,69 @@ class SettingsActivity : AppCompatActivity(), PinListener {
 
             when(it){
                 is Resource.Success -> {
-                    val intent = Intent(this@SettingsActivity, LoginActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-                    startActivity(intent)
+                    val intent = this@SettingsActivity.packageManager.getLaunchIntentForPackage(this@SettingsActivity.packageName)
+                    intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    this@SettingsActivity.startActivity(intent)
+                    Process.killProcess(Process.myPid())
                 }
                 is Resource.Loading -> {}
                 is Resource.Error -> {
-                    val intent = Intent(this@SettingsActivity, LoginActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-                    startActivity(intent)
+                    val intent = this@SettingsActivity.packageManager.getLaunchIntentForPackage(this@SettingsActivity.packageName)
+                    intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    this@SettingsActivity.startActivity(intent)
+                    Process.killProcess(Process.myPid())
+                }
+            }
+        }
+
+        settingsViewModel.checkTwoFactor.observe(this) {
+            when(it){
+                is Resource.Success -> {
+                    it.data?.let { isEnabled ->
+                        setSwitchChecked(isEnabled)
+                    }
+                }
+                is Resource.Loading -> {}
+                is Resource.Error -> {
+                    Toast.makeText(this@SettingsActivity, it.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        settingsViewModel.enableTwoFactor.observe(this) {
+            when(it){
+                is Resource.Success -> {
+                    it.data?.let { twoFactor ->
+                        FragmentBuilder.destroyFragment(this, loadingDialog)
+                        FragmentBuilder.build(
+                            this@SettingsActivity, QrSecretFragment(twoFactor.qrImage, twoFactor.secret),
+                            android.R.id.content
+                        )
+                    }
+                }
+                is Resource.Loading -> {
+                    FragmentBuilder.build(this, loadingDialog, android.R.id.content)
+                }
+                is Resource.Error -> {
+                    FragmentBuilder.destroyFragment(this, loadingDialog)
+                    binding?.swTwoFactor?.isChecked = false
+                    Toast.makeText(this@SettingsActivity, it.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        settingsViewModel.disableTwoFactor.observe(this) {
+            when(it){
+                is Resource.Success -> {
+                    FragmentBuilder.destroyFragment(this, loadingDialog)
+                }
+                is Resource.Loading -> {
+                    FragmentBuilder.build(this, loadingDialog, android.R.id.content)
+                }
+                is Resource.Error -> {
+                    FragmentBuilder.destroyFragment(this, loadingDialog)
+                    binding?.swTwoFactor?.isChecked = true
+                    Toast.makeText(this@SettingsActivity, it.message, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -140,6 +217,12 @@ class SettingsActivity : AppCompatActivity(), PinListener {
         }
     }
 
+    fun setSwitchChecked(checked: Boolean) {
+        isUserAction = false
+        binding?.swTwoFactor?.isChecked = checked
+        isUserAction = true
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
@@ -155,13 +238,28 @@ class SettingsActivity : AppCompatActivity(), PinListener {
         _binding = null
     }
 
-    override fun onPinSubmit(pin: Int) {
-        Log.d("test", "work4")
-        settingsViewModel.setAppPin(pin)
-        if (settingsViewModel.getAppPin() != 0) {
-            settingsViewModel.setBiometric(true)
-        } else {
-            binding?.swBiometric?.isChecked = false
+    override fun onPinSubmit(pin: Int, action: Int) {
+        if (action == APP_PROTECTION) {
+            settingsViewModel.setAppPin(pin)
+            if (settingsViewModel.getAppPin() != 0) {
+                settingsViewModel.setBiometric(true)
+            } else {
+                binding?.swBiometric?.isChecked = false
+            }
+        } else if (action == TWO_FACTOR) {
+            binding?.apply {
+                if (swTwoFactor.isChecked) {
+                    settingsViewModel.enableTwoFactor(
+                        auth.uid.toString(),
+                        pin.toString()
+                    )
+                } else {
+                    settingsViewModel.disableTwoFactor(
+                        auth.uid.toString(),
+                        pin.toString()
+                    )
+                }
+            }
         }
     }
 }

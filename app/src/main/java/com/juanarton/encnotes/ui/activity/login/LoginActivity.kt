@@ -2,6 +2,7 @@ package com.juanarton.encnotes.ui.activity.login
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -14,8 +15,9 @@ import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.domain.model.LoggedUser
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.databinding.ActivityLoginBinding
-import com.juanarton.encnotes.ui.LoadingDialog
 import com.juanarton.encnotes.ui.activity.pin.PinActivity
+import com.juanarton.encnotes.ui.fragment.loading.LoadingFragment
+import com.juanarton.encnotes.ui.utils.FragmentBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import java.security.MessageDigest
 import java.util.UUID
@@ -26,7 +28,9 @@ class LoginActivity : AppCompatActivity() {
     private val loginViewModel: LoginViewModel by viewModels()
     private var _binding: ActivityLoginBinding? = null
     private val binding get() = _binding
-    private lateinit var loadingDialog: LoadingDialog
+    private val loadingDialog = LoadingFragment()
+    private var uid = ""
+    private var username: String? = ""
 
     private external fun webKey(): String
 
@@ -46,7 +50,8 @@ class LoginActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        loadingDialog = LoadingDialog(this)
+
+        val intent = Intent(this, PinActivity::class.java)
 
         loginViewModel.signInByGoogle.observe(this) { loggedUser ->
             handleLoginResult(loggedUser)
@@ -65,18 +70,34 @@ class LoginActivity : AppCompatActivity() {
                             tvRegisterMessage.text = getString(R.string.register_success)
                         }
                     }
-                    loadingDialog.dismiss()
+                    FragmentBuilder.destroyFragment(this, loadingDialog)
                 }
                 is Resource.Loading -> {
-                    loadingDialog.show()
+                    FragmentBuilder.build(this, loadingDialog, android.R.id.content)
                 }
                 is Resource.Error -> {
-                    loadingDialog.dismiss()
-                    Toast.makeText(
-                        this,
-                        loggedUser.message,
-                        Toast.LENGTH_LONG
-                    ).show()
+                    FragmentBuilder.destroyFragment(this, loadingDialog)
+                    Toast.makeText(this, loggedUser.message, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+
+        loginViewModel.checkRegistered.observe(this) {
+            when(it){
+                is Resource.Success -> {
+                    it.data?.let { isRegistered ->
+                        intent.putExtra("uid", uid)
+                        intent.putExtra("username", username)
+                        intent.putExtra("isRegistered", isRegistered)
+                        startActivity(intent)
+                        finish()
+                    }
+                    FragmentBuilder.destroyFragment(this, loadingDialog)
+                }
+                is Resource.Loading -> {}
+                is Resource.Error -> {
+                    FragmentBuilder.destroyFragment(this, loadingDialog)
+                    Toast.makeText(this, it.message, Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -106,29 +127,17 @@ class LoginActivity : AppCompatActivity() {
         when(loggedUser){
             is Resource.Success -> {
                 loggedUser.data?.let {
-                    Toast.makeText(
-                        this,
-                        getString(R.string.login_success),
-                        Toast.LENGTH_LONG
-                    ).show()
-                    val intent = Intent(this, PinActivity::class.java)
-                    intent.putExtra("uid", it.uid)
-                    intent.putExtra("username", it.displayName)
-                    startActivity(intent)
-                    finish()
+                    uid = it.uid
+                    username = it.displayName
+                    loginViewModel.checkRegistered(it.uid)
                 }
-                loadingDialog.dismiss()
             }
             is Resource.Loading -> {
-                loadingDialog.show()
+                FragmentBuilder.build(this, loadingDialog, android.R.id.content)
             }
             is Resource.Error -> {
-                loadingDialog.dismiss()
-                Toast.makeText(
-                    this,
-                    loggedUser.message,
-                    Toast.LENGTH_LONG
-                ).show()
+                FragmentBuilder.destroyFragment(this, loadingDialog)
+                Toast.makeText(this, loggedUser.message, Toast.LENGTH_LONG).show()
             }
         }
     }

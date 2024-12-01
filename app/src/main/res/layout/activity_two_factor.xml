@@ -5,28 +5,41 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.activity.pin.PinActivity">
+    tools:context=".ui.activity.twofactor.TwoFactorActivity">
 
     <TextView
-        android:id="@+id/tvPinHead"
+        android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/insert_your_pin"
-        android:textStyle="bold"
+        android:layout_marginTop="50dp"
+        android:text="@string/two_factor_authentication"
         android:textSize="20sp"
-        app:layout_constraintBottom_toTopOf="@+id/otp_view"
-        app:layout_constraintEnd_toEndOf="@+id/otp_view"
-        app:layout_constraintStart_toStartOf="@+id/otp_view"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvOtpGuide"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="20dp"
+        android:gravity="center"
+        android:text="@string/otp_guide"
+        android:textStyle="italic"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView" />
 
     <com.mukeshsolanki.OtpView
         android:id="@+id/otp_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:inputType="number"
-        android:layout_marginTop="150dp"
         android:background="@null"
         android:focusableInTouchMode="true"
+        android:inputType="number"
+        android:layout_marginTop="20dp"
         app:OtpHideLineWhenFilled="true"
         app:OtpItemCount="6"
         app:OtpItemSpacing="10dp"
@@ -34,14 +47,14 @@
         app:OtpViewType="line"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/tvOtpGuide" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btSubmit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
         android:text="@string/submit"
+        android:layout_marginTop="20dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/otp_view" />

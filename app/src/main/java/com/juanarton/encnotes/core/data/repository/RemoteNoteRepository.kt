@@ -6,6 +6,7 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.juanarton.encnotes.core.data.api.APIResponse
 import com.juanarton.encnotes.core.data.api.attachments.getattachment.AttachmentData
 import com.juanarton.encnotes.core.data.api.authentications.login.LoginData
+import com.juanarton.encnotes.core.data.api.authentications.twofacor.TwoFactorData
 import com.juanarton.encnotes.core.data.api.note.addnote.PostNoteData
 import com.juanarton.encnotes.core.data.api.note.getallnote.NoteData
 import com.juanarton.encnotes.core.data.api.note.postAttachment.PostAttachmentData
@@ -14,6 +15,7 @@ import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.LoggedUser
 import com.juanarton.encnotes.core.data.domain.model.Login
 import com.juanarton.encnotes.core.data.domain.model.Notes
+import com.juanarton.encnotes.core.data.domain.model.TwoFactor
 import com.juanarton.encnotes.core.data.domain.repository.IRemoteNoteRepository
 import com.juanarton.encnotes.core.data.source.remote.AttachmentRemoteDataSource
 import com.juanarton.encnotes.core.data.source.remote.FirebaseDataSource
@@ -86,14 +88,14 @@ class RemoteNoteRepository @Inject constructor(
         }.asFlow()
     }
 
-    override fun loginUser(id: String, pin: String): Flow<Resource<Login>> {
+    override fun loginUser(id: String, pin: String, otp: String): Flow<Resource<Login>> {
         return object : NetworkBoundRes<Login, LoginData>() {
             override fun loadFromNetwork(data: LoginData): Flow<Login> {
                 return flowOf(Login(data.accessToken, data.refreshToken))
             }
 
             override suspend fun createCall(): Flow<APIResponse<LoginData>> {
-                return noteRemoteDataSource.loginUser(id, pin)
+                return noteRemoteDataSource.loginUser(id, pin, otp)
             }
         }.asFlow()
     }
@@ -208,6 +210,59 @@ class RemoteNoteRepository @Inject constructor(
 
             override suspend fun createCall(): Flow<APIResponse<String>> {
                 return noteRemoteDataSource.logoutUser(refreshToken)
+            }
+        }.asFlow()
+    }
+
+    override fun setTwoFactorAuth(id: String, pin: String): Flow<Resource<TwoFactor>> {
+        return object : NetworkBoundRes<TwoFactor, TwoFactorData>() {
+            override fun loadFromNetwork(data: TwoFactorData): Flow<TwoFactor> {
+                return flowOf(
+                    TwoFactor(
+                        data.qrImage,
+                        data.secret
+                    )
+                )
+            }
+
+            override suspend fun createCall(): Flow<APIResponse<TwoFactorData>> {
+                return noteRemoteDataSource.setTwoFactorAuth(id, pin)
+            }
+        }.asFlow()
+    }
+
+    override fun disableTwoFactorAuth(id: String, pin: String): Flow<Resource<String>> {
+        return object : NetworkBoundRes<String, String>() {
+            override fun loadFromNetwork(data: String): Flow<String> {
+                return flowOf(data)
+            }
+
+            override suspend fun createCall(): Flow<APIResponse<String>> {
+                return noteRemoteDataSource.disableTwoFactorAuth(id, pin)
+            }
+        }.asFlow()
+    }
+
+    override fun checkTwoFactorSet(id: String): Flow<Resource<Boolean>> {
+        return object : NetworkBoundRes<Boolean, Boolean>() {
+            override fun loadFromNetwork(data: Boolean): Flow<Boolean> {
+                return flowOf(data)
+            }
+
+            override suspend fun createCall(): Flow<APIResponse<Boolean>> {
+                return noteRemoteDataSource.checkTwoFactorSet(id)
+            }
+        }.asFlow()
+    }
+
+    override fun checkIsRegistered(id: String): Flow<Resource<Boolean>> {
+        return object : NetworkBoundRes<Boolean, Boolean>() {
+            override fun loadFromNetwork(data: Boolean): Flow<Boolean> {
+                return flowOf(data)
+            }
+
+            override suspend fun createCall(): Flow<APIResponse<Boolean>> {
+                return noteRemoteDataSource.checkIsRegistered(id)
             }
         }.asFlow()
     }

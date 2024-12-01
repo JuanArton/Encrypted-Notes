@@ -3,17 +3,18 @@ package com.juanarton.encnotes.ui.fragment.apppin
 import android.content.Context
 import android.os.Bundle
 import android.text.Editable
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.juanarton.encnotes.databinding.FragmentAppPinBinding
 import com.juanarton.encnotes.R
+import com.juanarton.encnotes.databinding.FragmentAppPinBinding
+import com.juanarton.encnotes.ui.activity.settings.SettingsActivity.Companion.TWO_FACTOR
 
 class AppPinFragment(
     private val pinMessage: String,
-    private val isSetPassword: Boolean
+    private val isSetPassword: Boolean,
+    private val action: Int,
 ) : Fragment() {
 
     private var _binding: FragmentAppPinBinding? = null
@@ -44,6 +45,10 @@ class AppPinFragment(
         binding?.apply {
             tvPinMessage.text = pinMessage
 
+            if (action == TWO_FACTOR) {
+                otpView.itemCount = 6
+            }
+
             otpView.setOtpCompletionListener {
                 if (isSetPassword) {
                     if (firstPassword == 0) {
@@ -51,11 +56,11 @@ class AppPinFragment(
                         otpView.text = Editable.Factory.getInstance().newEditable("")
                         tvPinMessage.text = getString(R.string.please_reenter_pin)
                     } else if (firstPassword == it.toInt()) {
-                        listener?.onPinSubmit(it.toInt())
+                        listener?.onPinSubmit(it.toInt(), action)
                         destroySelf()
                     }
                 } else {
-                    listener?.onPinSubmit(it.toInt())
+                    listener?.onPinSubmit(it.toInt(), action)
                     destroySelf()
                 }
             }

@@ -13,19 +13,22 @@ import androidx.lifecycle.lifecycleScope
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.databinding.FragmentInsertKeyBinding
-import com.juanarton.encnotes.ui.LoadingDialog
 import com.juanarton.encnotes.ui.activity.main.MainActivity
 import com.juanarton.encnotes.ui.fragment.SharedViewModel
+import com.juanarton.encnotes.ui.fragment.loading.LoadingFragment
+import com.juanarton.encnotes.ui.utils.FragmentBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class InsertKeyFragment : Fragment() {
+class InsertKeyFragment(
+    private val login: Boolean
+) : Fragment() {
 
     private val sharedViewModel: SharedViewModel by viewModels()
     private var _binding: FragmentInsertKeyBinding? = null
     private val binding get() = _binding
-    private lateinit var loadingDialog: LoadingDialog
+    private var loadingDialog = LoadingFragment()
     private lateinit var key: String
 
     override fun onCreateView(
@@ -38,20 +41,21 @@ class InsertKeyFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadingDialog = LoadingDialog(requireContext())
 
         val uid = arguments?.getString("uid")
         val pin = arguments?.getString("pin")
 
-        if (!uid.isNullOrEmpty() && !pin.isNullOrEmpty()) {
+        Log.d("status", uid.toString())
+        Log.d("status", pin.toString())
+
+        if (!uid.isNullOrEmpty() && !pin.isNullOrEmpty() && login) {
             binding?.apply {
                 btDone.setOnClickListener {
                     key = etCipherKey.text.toString()
                     if (key.isNotEmpty()) {
-                        sharedViewModel.loginUser(uid, pin)
+                        sharedViewModel.loginUser(uid, pin, "")
                     } else {
-                        Toast.makeText(
-                            requireContext(), getString(R.string.please_insert_cipher_key
+                        Toast.makeText(requireContext(), getString(R.string.please_insert_cipher_key
                         ), Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -70,7 +74,7 @@ class InsertKeyFragment : Fragment() {
                                 } else { false }
 
                                 if (setAccKey && setRefKey && setLoggedIn && setCipherKey) {
-                                    loadingDialog.dismiss()
+                                    FragmentBuilder.destroyFragment(requireActivity(), loadingDialog)
                                     startActivity(Intent(requireContext(), MainActivity::class.java))
                                     requireActivity().finish()
                                 } else {
@@ -79,14 +83,13 @@ class InsertKeyFragment : Fragment() {
                                         getString(R.string.login_failed),
                                         Toast.LENGTH_SHORT
                                     ).show()
-                                    loadingDialog.dismiss()
+                                    FragmentBuilder.destroyFragment(requireActivity(), loadingDialog)
                                 }
                             }
                         }
                     }
                     is Resource.Loading -> {
-                        Log.d("Copy Key Fragment", "Loading")
-                        loadingDialog.show()
+                        FragmentBuilder.build(requireActivity(), loadingDialog, android.R.id.content)
                     }
                     is Resource.Error -> {
                         Toast.makeText(
@@ -94,7 +97,29 @@ class InsertKeyFragment : Fragment() {
                             result.message,
                             Toast.LENGTH_SHORT
                         ).show()
-                        loadingDialog.dismiss()
+                        FragmentBuilder.destroyFragment(requireActivity(), loadingDialog)
+                    }
+                }
+            }
+        } else {
+            binding?.apply {
+                btDone.setOnClickListener {
+                    key = etCipherKey.text.toString()
+                    if (key.isNotEmpty()) {
+                        lifecycleScope.launch {
+                            val setCipherKey = if (::key.isInitialized){
+                                sharedViewModel.setCipherKey(key)
+                            } else { false }
+
+                            if (setCipherKey) {
+                                FragmentBuilder.destroyFragment(requireActivity(), loadingDialog)
+                                startActivity(Intent(requireContext(), MainActivity::class.java))
+                                requireActivity().finish()
+                            }
+                        }
+                    } else {
+                        Toast.makeText(requireContext(), getString(R.string.please_insert_cipher_key
+                        ), Toast.LENGTH_SHORT).show()
                     }
                 }
             }

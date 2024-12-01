@@ -1,4 +1,4 @@
-package com.juanarton.encnotes.ui.fragment
+package com.juanarton.encnotes.ui.activity.twofactor
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SharedViewModel @Inject constructor(
+class TwoFactorViewModel @Inject constructor(
     private val localNotesRepoUseCase: LocalNotesRepoUseCase,
     private val remoteNotesRepoUseCase: RemoteNotesRepoUseCase
 ): ViewModel() {

@@ -19,6 +19,11 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="34">
         <activity
+            android:name=".ui.activity.twofactor.TwoFactorActivity"
+            android:exported="false"
+            android:theme="@style/Theme.EncryptedNotes"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".ui.activity.settings.SettingsActivity"
             android:exported="false"
             android:theme="@style/Theme.EncryptedNotes" />
@@ -28,9 +33,9 @@
             android:theme="@style/Theme.EncryptedNotes" />
         <activity
             android:name=".ui.activity.note.NoteActivity"
+            android:configChanges="orientation|screenSize|uiMode|colorMode"
             android:exported="false"
             android:theme="@style/Theme.EncryptedNotes"
-            android:configChanges="orientation|screenSize|uiMode|colorMode"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ui.activity.pin.PinActivity"
