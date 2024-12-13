@@ -3,6 +3,7 @@ package com.juanarton.encnotes.core.data.repository
 import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
 import android.util.Log
+import com.google.crypto.tink.KeysetHandle
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.Notes
@@ -178,4 +179,10 @@ class LocalNotesRepository @Inject constructor(
 
     override fun deleteFileFromDisk(file: File): Boolean =
         attachmentLocalDataSource.deleteFileFromDisk(file)
+
+    override fun backUpNotes(context: Context, keysetHandle: KeysetHandle): Flow<Boolean> =
+        noteLocalDataSource.backUpNotes(context, keysetHandle)
+
+    override fun restoreNotes(context: Context, keysetHandle: KeysetHandle, backupFile: ByteArray): Flow<Boolean> =
+        noteLocalDataSource.restoreNotes(context, keysetHandle, backupFile)
 }

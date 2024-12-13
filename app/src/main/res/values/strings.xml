@@ -52,6 +52,7 @@
     <string name="get_notes_failed">Get notes failed</string>
     <string name="update_notes_failed">Update notes failed</string>
     <string name="delete_notes_failed">Delete notes failed</string>
+    <string name="restore_backup_failed">Restore backup to cloud failed</string>
     <string name="set_two_factor_failed">Failed to set two factor authentication</string>
     <string name="disable_two_factor_failed">Failed to disable two factor authentication</string>
     <string name="check_two_factor_failed">Failed to get two factor status</string>
@@ -94,4 +95,13 @@
     <string name="two_factor_secret_qr_code">Two factor secret qr code</string>
     <string name="two_fa_guide">Scan above QR Code to you authenticator app like Google Authenticator, Authy. Or copy code below manually</string>
     <string name="otp_guide">You have enabled two-factor authentication. Open the authenticator app you are using and enter the 6-digit code displayed</string>
+    <string name="data">Data</string>
+    <string name="backup_current_local_notes">Backup current local notes</string>
+    <string name="backup">Backup</string>
+    <string name="restore">Restore</string>
+    <string name="restore_desc">Force restore notes to backed up state. This action will overwrite remote backup too</string>
+    <string name="backup_msg">Back up stored at /Internal Storage/Documents/PrivyNotes</string>
+    <string name="backup_failed_msg">Back up failed</string>
+    <string name="restore_msg">Restore notes success</string>
+    <string name="restore_failed_msg">Restore notes failed</string>
 </resources>

@@ -266,4 +266,28 @@ class RemoteNoteRepository @Inject constructor(
             }
         }.asFlow()
     }
+
+    override fun deleteAllNote(): Flow<Resource<String>> {
+        return object : NetworkBoundRes<String, String>() {
+            override fun loadFromNetwork(data: String): Flow<String> {
+                return flowOf(data)
+            }
+
+            override suspend fun createCall(): Flow<APIResponse<String>> {
+                return noteRemoteDataSource.deleteAllNote()
+            }
+        }.asFlow()
+    }
+
+    override fun twoFactorAuth(id: String, pin: String, otp: String): Flow<Resource<Login>> {
+        return object : NetworkBoundRes<Login, LoginData>() {
+            override fun loadFromNetwork(data: LoginData): Flow<Login> {
+                return flowOf(Login(data.accessToken, data.refreshToken))
+            }
+
+            override suspend fun createCall(): Flow<APIResponse<LoginData>> {
+                return noteRemoteDataSource.twoFactorAuth(id, pin, otp)
+            }
+        }.asFlow()
+    }
 }

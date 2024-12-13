@@ -42,85 +42,23 @@ class InsertKeyFragment(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val uid = arguments?.getString("uid")
-        val pin = arguments?.getString("pin")
+        binding?.apply {
+            btDone.setOnClickListener {
+                key = etCipherKey.text.toString()
+                if (key.isNotEmpty()) {
+                    lifecycleScope.launch {
+                        val setCipherKey = if (::key.isInitialized){
+                            sharedViewModel.setCipherKey(key)
+                        } else { false }
 
-        Log.d("status", uid.toString())
-        Log.d("status", pin.toString())
-
-        if (!uid.isNullOrEmpty() && !pin.isNullOrEmpty() && login) {
-            binding?.apply {
-                btDone.setOnClickListener {
-                    key = etCipherKey.text.toString()
-                    if (key.isNotEmpty()) {
-                        sharedViewModel.loginUser(uid, pin, "")
-                    } else {
-                        Toast.makeText(requireContext(), getString(R.string.please_insert_cipher_key
-                        ), Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-
-            sharedViewModel.loginUser.observe(viewLifecycleOwner) { result ->
-                when(result){
-                    is Resource.Success -> {
-                        result.data?.let { login ->
-                            lifecycleScope.launch {
-                                val setAccKey = sharedViewModel.setAccessKey(login.accessToken)
-                                val setRefKey = sharedViewModel.setRefreshKey(login.refreshToken)
-                                val setLoggedIn = sharedViewModel.setIsLoggedIn(true)
-                                val setCipherKey = if (::key.isInitialized){
-                                    sharedViewModel.setCipherKey(key)
-                                } else { false }
-
-                                if (setAccKey && setRefKey && setLoggedIn && setCipherKey) {
-                                    FragmentBuilder.destroyFragment(requireActivity(), loadingDialog)
-                                    startActivity(Intent(requireContext(), MainActivity::class.java))
-                                    requireActivity().finish()
-                                } else {
-                                    Toast.makeText(
-                                        requireContext(),
-                                        getString(R.string.login_failed),
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    FragmentBuilder.destroyFragment(requireActivity(), loadingDialog)
-                                }
-                            }
+                        if (setCipherKey) {
+                            startActivity(Intent(requireContext(), MainActivity::class.java))
+                            requireActivity().finish()
                         }
                     }
-                    is Resource.Loading -> {
-                        FragmentBuilder.build(requireActivity(), loadingDialog, android.R.id.content)
-                    }
-                    is Resource.Error -> {
-                        Toast.makeText(
-                            requireContext(),
-                            result.message,
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        FragmentBuilder.destroyFragment(requireActivity(), loadingDialog)
-                    }
-                }
-            }
-        } else {
-            binding?.apply {
-                btDone.setOnClickListener {
-                    key = etCipherKey.text.toString()
-                    if (key.isNotEmpty()) {
-                        lifecycleScope.launch {
-                            val setCipherKey = if (::key.isInitialized){
-                                sharedViewModel.setCipherKey(key)
-                            } else { false }
-
-                            if (setCipherKey) {
-                                FragmentBuilder.destroyFragment(requireActivity(), loadingDialog)
-                                startActivity(Intent(requireContext(), MainActivity::class.java))
-                                requireActivity().finish()
-                            }
-                        }
-                    } else {
-                        Toast.makeText(requireContext(), getString(R.string.please_insert_cipher_key
-                        ), Toast.LENGTH_SHORT).show()
-                    }
+                } else {
+                    Toast.makeText(requireContext(), getString(R.string.please_insert_cipher_key
+                    ), Toast.LENGTH_SHORT).show()
                 }
             }
         }

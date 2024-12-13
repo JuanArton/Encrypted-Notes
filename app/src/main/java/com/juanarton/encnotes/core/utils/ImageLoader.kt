@@ -155,7 +155,11 @@ class ImageLoader {
 
 
     private fun readImage(url: String, context: Context): ByteArray {
-        val file = File(context.filesDir, url)
+        val imagesDir = File(context.filesDir, "images")
+        if (!imagesDir.exists()) {
+            imagesDir.mkdirs()
+        }
+        val file = File("${context.filesDir}"+"/images", url)
         return file.inputStream().use { inputStream ->
             BufferedInputStream(inputStream).readBytes()
         }

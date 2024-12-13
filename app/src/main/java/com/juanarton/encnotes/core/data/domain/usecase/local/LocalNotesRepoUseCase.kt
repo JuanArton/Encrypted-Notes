@@ -1,7 +1,9 @@
 package com.juanarton.encnotes.core.data.domain.usecase.local
 
 import android.app.Activity
+import android.content.Context
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.google.crypto.tink.KeysetHandle
 import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.LoggedUser
 import com.juanarton.encnotes.core.data.domain.model.Login
@@ -54,4 +56,8 @@ interface LocalNotesRepoUseCase {
     fun writeFileToDisk(file: File, byteArray: ByteArray): Flow<Pair<Boolean, String>>
 
     fun deleteFileFromDisk(file: File): Boolean
+
+    fun backUpNotes(context: Context, keysetHandle: KeysetHandle): Flow<Boolean>
+
+    fun restoreNotes(context: Context, keysetHandle: KeysetHandle, backupFile: ByteArray): Flow<Boolean>
 }

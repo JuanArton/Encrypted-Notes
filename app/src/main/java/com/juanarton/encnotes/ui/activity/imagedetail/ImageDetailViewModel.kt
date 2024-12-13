@@ -26,7 +26,7 @@ class ImageDetailViewModel @Inject constructor(
     val deleteAtt: LiveData<Resource<Attachment>> = _deleteAtt
 
     fun deleteAttFromDisk(attachment: Attachment, context: Context) {
-        val file = File(context.filesDir, attachment.url)
+        val file = File(context.filesDir.absolutePath + "/images", attachment.url)
         viewModelScope.launch {
             _deleteAttFromDisk.value = localNotesRepoUseCase.deleteFileFromDisk(file)
         }

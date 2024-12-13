@@ -43,65 +43,35 @@ class CopyKeyFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val uid = arguments?.getString("uid")
-        val pin = arguments?.getString("pin")
+        val key = Cryptography.serializeKeySet(Cryptography.generateKeySet())
 
-        if (!uid.isNullOrEmpty() && !pin.isNullOrEmpty()) {
-            val key = Cryptography.serializeKeySet(Cryptography.generateKeySet())
+        binding?.apply {
+            tvKey.text = key
 
-            binding?.apply {
-                tvKey.text = key
+            btDone.setOnClickListener {
+                lifecycleScope.launch {
+                    val setCipherKey = sharedViewModel.setCipherKey(key)
 
-                btDone.setOnClickListener {
-                    sharedViewModel.loginUser(uid, pin, "")
-                }
-
-                ibCopy.setOnClickListener {
-                    val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    val clip = ClipData.newPlainText("Copied Text", tvKey.text)
-                    clipboard.setPrimaryClip(clip)
-
-                    Toast.makeText(requireContext(), "Text copied to clipboard", Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            sharedViewModel.loginUser.observe(viewLifecycleOwner) { result ->
-                when(result){
-                    is Resource.Success -> {
-                        result.data?.let { login ->
-                            lifecycleScope.launch {
-                                val setAccKey = sharedViewModel.setAccessKey(login.accessToken)
-                                val setRefKey = sharedViewModel.setRefreshKey(login.refreshToken)
-                                val setLoggedIn = sharedViewModel.setIsLoggedIn(true)
-                                val setCipherKey = sharedViewModel.setCipherKey(key)
-
-                                if (setAccKey && setRefKey && setLoggedIn && setCipherKey) {
-                                    FragmentBuilder.destroyFragment(requireActivity(), loadingDialog)
-                                    startActivity(Intent(requireContext(), MainActivity::class.java))
-                                    requireActivity().finish()
-                                } else {
-                                    Toast.makeText(
-                                        requireContext(),
-                                        getString(R.string.login_failed),
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    FragmentBuilder.destroyFragment(requireActivity(), loadingDialog)
-                                }
-                            }
-                        }
-                    }
-                    is Resource.Loading -> {
-                        FragmentBuilder.build(requireActivity(), loadingDialog, android.R.id.content)
-                    }
-                    is Resource.Error -> {
+                    if (setCipherKey) {
+                        startActivity(Intent(requireContext(), MainActivity::class.java))
+                        requireActivity().finish()
+                    } else {
                         Toast.makeText(
                             requireContext(),
-                            result.message,
+                            getString(R.string.login_failed),
                             Toast.LENGTH_SHORT
                         ).show()
                         FragmentBuilder.destroyFragment(requireActivity(), loadingDialog)
                     }
                 }
+            }
+
+            ibCopy.setOnClickListener {
+                val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clip = ClipData.newPlainText("Copied Text", tvKey.text)
+                clipboard.setPrimaryClip(clip)
+
+                Toast.makeText(requireContext(), "Text copied to clipboard", Toast.LENGTH_SHORT).show()
             }
         }
     }

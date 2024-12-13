@@ -25,6 +25,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
 import org.json.JSONObject
 import retrofit2.Response
+import java.io.File
 import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -79,6 +80,7 @@ class AttachmentRemoteDataSource @Inject constructor(
             .apply {
                 put("id", attachment.id)
                 put("lastModified", attachment.lastModified)
+                put("isDelete", attachment.isDelete)
                 put("type", attachment.type)
             }.toString().toRequestBody("application/json".toMediaType())
 
@@ -159,7 +161,7 @@ class AttachmentRemoteDataSource @Inject constructor(
 
     suspend fun downloadAttachment(url: String, ketch: Ketch): Int {
         val fileName = "/" + url.substringAfterLast("/")
-        val path = context.filesDir.toString()
+        val path = context.filesDir.toString()+"/images"
         val downloads = ketch.observeDownloads().first()
         val index = downloads.indexOfFirst { it.url == url }
 

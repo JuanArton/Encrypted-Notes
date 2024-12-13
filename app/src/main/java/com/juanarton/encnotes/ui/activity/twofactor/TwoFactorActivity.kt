@@ -42,7 +42,7 @@ class TwoFactorActivity : AppCompatActivity() {
         val pin = intent.getStringExtra("pin")
 
         if (!uid.isNullOrEmpty() && !pin.isNullOrEmpty()) {
-            twoFactorViewModel.loginUser.observe(this) { result ->
+            twoFactorViewModel.twoFactorAuth.observe(this) { result ->
                 when(result){
                     is Resource.Success -> {
                         result.data?.let { login ->
@@ -90,12 +90,12 @@ class TwoFactorActivity : AppCompatActivity() {
 
                 otpView.setOtpCompletionListener {
                     otp = it
-                    twoFactorViewModel.loginUser(uid, pin, it)
+                    twoFactorViewModel.twoFactorAuth(uid, pin, it)
                     btSubmit.visibility = View.VISIBLE
                 }
 
                 btSubmit.setOnClickListener {
-                    twoFactorViewModel.loginUser(uid, pin, otp)
+                    twoFactorViewModel.twoFactorAuth(uid, pin, otp)
                 }
             }
         }

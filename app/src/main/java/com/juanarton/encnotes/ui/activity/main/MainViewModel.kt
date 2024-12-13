@@ -174,7 +174,7 @@ class MainViewModel @Inject constructor(
 
     fun uploadAttachment(context: Context, attachments: List<Attachment>) {
         attachments.forEach { attachment ->
-            val file = File(context.filesDir, attachment.url)
+            val file = File(context.filesDir.absolutePath + "/images", attachment.url)
             val byteArray = file.inputStream().use { inputStream ->
                 BufferedInputStream(inputStream).readBytes()
             }
@@ -261,6 +261,8 @@ class MainViewModel @Inject constructor(
             }
 
             syncNotes.toAddToServer.forEach { notes ->
+
+                Log.d("test", notes.toString())
                 remoteNotesRepoUseCase.insertNoteRemote(notes).collect{}
             }
 
@@ -294,9 +296,14 @@ class MainViewModel @Inject constructor(
             }
 
             syncAttachment.toAddToServer.forEach { attachment ->
-                val file = File(context.filesDir, attachment.url)
-                val byteArray = file.inputStream().use { inputStream ->
-                    BufferedInputStream(inputStream).readBytes()
+                Log.d("test", attachment.toString())
+                val file = File(context.filesDir.absolutePath + "/images", attachment.url)
+                val byteArray = try {
+                    file.inputStream().use { inputStream ->
+                        BufferedInputStream(inputStream).readBytes()
+                    }
+                } catch (e: Exception) {
+                    byteArrayOf()
                 }
                 remoteNotesRepoUseCase.uploadImageAtt(byteArray, attachment).collect{
                     _uploadAttachment.value = it

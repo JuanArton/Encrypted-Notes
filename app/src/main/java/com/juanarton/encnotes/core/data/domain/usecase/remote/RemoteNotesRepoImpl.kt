@@ -75,4 +75,10 @@ class RemoteNotesRepoImpl @Inject constructor(
 
     override fun checkIsRegistered(id: String): Flow<Resource<Boolean>> =
         iRemoteNoteRepository.checkIsRegistered(id)
+
+    override fun deleteAllNote(): Flow<Resource<String>> =
+        iRemoteNoteRepository.deleteAllNote()
+
+    override fun twoFactorAuth(id: String, pin: String, otp: String): Flow<Resource<Login>> =
+        iRemoteNoteRepository.twoFactorAuth(id, pin, otp)
 }

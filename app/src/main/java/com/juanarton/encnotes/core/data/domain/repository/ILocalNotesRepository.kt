@@ -1,5 +1,9 @@
 package com.juanarton.encnotes.core.data.domain.repository
 
+import android.content.Context
+import com.google.crypto.tink.KeysetHandle
+import com.juanarton.encnotes.core.data.api.APIResponse
+import com.juanarton.encnotes.core.data.api.authentications.login.LoginData
 import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.source.remote.Resource
@@ -50,4 +54,8 @@ interface ILocalNotesRepository {
     fun writeFileToDisk(file: File, byteArray: ByteArray): Flow<Pair<Boolean, String>>
 
     fun deleteFileFromDisk(file: File): Boolean
+
+    fun backUpNotes(context: Context, keysetHandle: KeysetHandle): Flow<Boolean>
+
+    fun restoreNotes(context: Context, keysetHandle: KeysetHandle, backupFile: ByteArray): Flow<Boolean>
 }

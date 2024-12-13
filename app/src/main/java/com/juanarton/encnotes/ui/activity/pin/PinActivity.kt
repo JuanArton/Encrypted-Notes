@@ -11,6 +11,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.juanarton.encnotes.R
@@ -23,6 +24,7 @@ import com.juanarton.encnotes.ui.fragment.loading.LoadingFragment
 import com.juanarton.encnotes.ui.utils.FragmentBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import io.viascom.nanoid.NanoId
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class PinActivity : AppCompatActivity() {
@@ -33,7 +35,6 @@ class PinActivity : AppCompatActivity() {
     private val loadingDialog = LoadingFragment()
     private lateinit var pin: String
     private var firstPin = 0
-    val auth = Firebase.auth
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,9 +53,6 @@ class PinActivity : AppCompatActivity() {
             append(NanoId.generate(7))
         }
         val isRegistered = intent.getBooleanExtra("isRegistered", false)
-        Log.d("status", isRegistered.toString())
-        Log.d("status4", uid.toString())
-        Log.d("status5", username.toString())
 
         if (!uid.isNullOrEmpty() && username.isNotEmpty()) {
             pinViewModel.registerUser.observe(this) { result ->
@@ -62,15 +60,7 @@ class PinActivity : AppCompatActivity() {
                     is Resource.Success -> {
                         if (::pin.isInitialized && !result.data.isNullOrEmpty()) {
                             FragmentBuilder.destroyFragment(this, loadingDialog)
-                            val fragment = CopyKeyFragment()
-
-                            val bundle = Bundle()
-                            bundle.putString("uid", uid)
-                            bundle.putString("pin", pin)
-
-                            fragment.arguments = bundle
-
-                            FragmentBuilder.build(this, fragment, android.R.id.content)
+                            pinViewModel.loginUser(uid, pin, "")
                         } else {
                             Toast.makeText(this, getString(R.string.pin_empty), Toast.LENGTH_SHORT).show()
                         }
@@ -84,34 +74,61 @@ class PinActivity : AppCompatActivity() {
                 }
             }
 
-            pinViewModel.checkTwoFactor.observe(this) { result ->
+            pinViewModel.loginUser.observe(this) { result ->
                 when(result){
                     is Resource.Success -> {
-                        FragmentBuilder.destroyFragment(this, loadingDialog)
-                        if (result.data == true) {
+                        result.data?.let { login ->
+                            lifecycleScope.launch {
+                                val setAccKey = pinViewModel.setAccessKey(login.accessToken)
+                                val setRefKey = pinViewModel.setRefreshKey(login.refreshToken)
+                                val setLoggedIn = pinViewModel.setIsLoggedIn(true)
+
+                                if (setAccKey && setRefKey && setLoggedIn) {
+                                    FragmentBuilder.destroyFragment(this@PinActivity, loadingDialog)
+
+                                    FragmentBuilder.build(
+                                        this@PinActivity,
+                                        InsertKeyFragment(false),
+                                        android.R.id.content
+                                    )
+
+                                    if (isRegistered) {
+                                        val fragment = InsertKeyFragment(true)
+                                        FragmentBuilder.build(this@PinActivity, fragment, android.R.id.content)
+                                    } else {
+                                        FragmentBuilder.destroyFragment(this@PinActivity, loadingDialog)
+                                        val fragment = CopyKeyFragment()
+                                        FragmentBuilder.build(this@PinActivity, fragment, android.R.id.content)
+                                    }
+                                } else {
+                                    Toast.makeText(
+                                        this@PinActivity,
+                                        getString(R.string.login_failed),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    FragmentBuilder.destroyFragment(this@PinActivity, loadingDialog)
+                                }
+                            }
+                        }
+                    }
+                    is Resource.Loading -> {
+                        FragmentBuilder.build(this@PinActivity, loadingDialog, android.R.id.content)
+                    }
+                    is Resource.Error -> {
+                        if (result.message == "Proceed to OTP") {
                             val intent = Intent(this, TwoFactorActivity::class.java)
                             intent.putExtra("uid", uid)
                             intent.putExtra("pin", pin)
                             startActivity(intent)
                             finish()
                         } else {
-                            val fragment = InsertKeyFragment(true)
-
-                            val bundle = Bundle()
-                            bundle.putString("uid", uid)
-                            bundle.putString("pin", pin)
-
-                            fragment.arguments = bundle
-
-                            FragmentBuilder.build(this, fragment, android.R.id.content)
+                            Toast.makeText(
+                                this@PinActivity,
+                                result.message,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            FragmentBuilder.destroyFragment(this@PinActivity, loadingDialog)
                         }
-                    }
-                    is Resource.Loading -> {
-                        FragmentBuilder.build(this, loadingDialog, android.R.id.content)
-                    }
-                    is Resource.Error -> {
-                        FragmentBuilder.destroyFragment(this, loadingDialog)
-                        Toast.makeText(this, result.message, Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -133,7 +150,7 @@ class PinActivity : AppCompatActivity() {
                     } else {
                         pin = it
                         btSubmit.visibility = View.VISIBLE
-                        pinViewModel.checkTwoFactor(auth.uid.toString())
+                        pinViewModel.loginUser(uid, pin, "")
                     }
                 }
 
@@ -141,7 +158,7 @@ class PinActivity : AppCompatActivity() {
                     if (!isRegistered) {
                         pinViewModel.registerUser(uid, pin, username)
                     } else {
-                        pinViewModel.checkTwoFactor(auth.uid.toString())
+                        pinViewModel.loginUser(uid, pin, "")
                     }
                 }
             }

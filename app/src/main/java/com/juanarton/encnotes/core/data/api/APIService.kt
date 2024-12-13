@@ -120,4 +120,14 @@ interface APIService {
     suspend fun checkRegistered(
         @Body postCheck: PostCheck
     ): CheckRegistered
+
+    @DELETE("note/force")
+    suspend fun deleteAllNotes(
+        @Header("Authorization") accessToken: String,
+    ): Response<ResponseBody>
+
+    @POST("/authentications/2FA/auth")
+    suspend fun twoFactorAuth(
+        @Body postLogin: PostLogin
+    ): Response<ResponseBody>
 }

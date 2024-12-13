@@ -73,10 +73,36 @@ class NoteRemoteDataSource @Inject constructor(
 
                 if (response.body() != null) {
                     val loginResponse = Gson().fromJson(response.body()!!.string(), LoginResponse::class.java)
-                    emit(APIResponse.Success(loginResponse.loginData))
+                    if (loginResponse.message == "Proceed to OTP") {
+                        emit(APIResponse.Error(loginResponse.message))
+                    } else {
+                        emit(APIResponse.Success(loginResponse.loginData!!))
+                    }
                 } else {
                     val loginResponse = Gson().fromJson(response.errorBody()!!.string(), LoginResponse::class.java)
                     emit(APIResponse.Error(loginResponse.message))
+                }
+            } catch (e: Exception) {
+                emit(APIResponse.Error(
+                    buildString {
+                        append(context.getString(R.string.login_failed))
+                        append(e.toString())
+                    }
+                ))
+            }
+        }.flowOn(Dispatchers.IO)
+
+    fun twoFactorAuth(id: String, pin: String, otp: String): Flow<APIResponse<LoginData>> =
+        flow {
+            try {
+                val twoFA = API.services.twoFactorAuth(PostLogin(id, pin, otp))
+
+                if (twoFA.body() != null) {
+                    val twoFAResponse = Gson().fromJson(twoFA.body()!!.string(), LoginResponse::class.java)
+                    emit(APIResponse.Success(twoFAResponse.loginData!!))
+                } else {
+                    val twoFAResponse = Gson().fromJson(twoFA.errorBody()!!.string(), LoginResponse::class.java)
+                    emit(APIResponse.Error(twoFAResponse.message))
                 }
             } catch (e: Exception) {
                 emit(APIResponse.Error(
@@ -376,6 +402,42 @@ class NoteRemoteDataSource @Inject constructor(
             }
 
         }.flowOn(Dispatchers.IO)
+
+    fun deleteAllNote(): Flow<APIResponse<String>> =
+        flow {
+            try {
+                val response = makeDeleteAllNoteRequest()
+
+                if (response.isSuccessful) {
+                    val deleteResponse = Gson().fromJson(response.body()?.string(), DeleteResponse::class.java)
+                    emit(APIResponse.Success(deleteResponse.message))
+                } else {
+                    val errorResponse = Gson().fromJson(response.errorBody()?.string(), DeleteResponse::class.java)
+
+                    if (errorResponse.message == "Token maximum age exceeded") {
+                        refreshAccessKey()
+                        val retryResponse = makeDeleteAllNoteRequest()
+
+                        if (retryResponse.isSuccessful) {
+                            val retryDeleteResponse = Gson().fromJson(retryResponse.body()?.string(), DeleteResponse::class.java)
+                            emit(APIResponse.Success(retryDeleteResponse.message))
+                        } else {
+                            val retryErrorResponse = Gson().fromJson(retryResponse.errorBody()?.string(), DeleteResponse::class.java)
+                            emit(APIResponse.Error(retryErrorResponse.message))
+                        }
+                    } else {
+                        emit(APIResponse.Error(errorResponse.message))
+                    }
+                }
+            } catch (e: Exception) {
+                emit(APIResponse.Error("${context.getString(R.string.restore_backup_failed)}: $e"))
+            }
+        }.flowOn(Dispatchers.IO)
+
+    private suspend fun makeDeleteAllNoteRequest(): Response<ResponseBody> {
+        val accessKey = sharedPrefDataSource.getAccessKey()!!
+        return API.services.deleteAllNotes(accessKey)
+    }
 
     private suspend fun refreshAccessKey() {
         val refreshKey = sharedPrefDataSource.getRefreshKey()!!

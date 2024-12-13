@@ -16,8 +16,8 @@ object API {
             level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else
                 HttpLoggingInterceptor.Level.NONE
         })
-        .readTimeout(5, TimeUnit.SECONDS)
-        .writeTimeout(5, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
         .addNetworkInterceptor { chain ->
             val originalResponse = chain.proceed(chain.request())
             originalResponse.newBuilder()

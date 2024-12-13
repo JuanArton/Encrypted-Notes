@@ -1,10 +1,12 @@
 package com.juanarton.encnotes.ui.activity.settings
 
+import android.content.Context
 import android.content.SharedPreferences
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.crypto.tink.KeysetHandle
 import com.juanarton.encnotes.core.data.domain.model.TwoFactor
 import com.juanarton.encnotes.core.data.domain.usecase.local.LocalNotesRepoUseCase
 import com.juanarton.encnotes.core.data.domain.usecase.remote.RemoteNotesRepoUseCase
@@ -31,6 +33,15 @@ class SettingsViewModel @Inject constructor(
     private val _checkTwoFactor: MutableLiveData<Resource<Boolean>> = MutableLiveData()
     val checkTwoFactor: LiveData<Resource<Boolean>> = _checkTwoFactor
 
+    private val _backupNotes: MutableLiveData<Boolean> = MutableLiveData()
+    val backupNotes: LiveData<Boolean> = _backupNotes
+
+    private val _restoreNotes: MutableLiveData<Boolean> = MutableLiveData()
+    val restoreNotes: LiveData<Boolean> = _restoreNotes
+
+    private val _deleteAllNote: MutableLiveData<Resource<String>> = MutableLiveData()
+    val deleteAllNote: LiveData<Resource<String>> = _deleteAllNote
+
     lateinit var sPref: SharedPreferences
     lateinit var editor: SharedPreferences.Editor
 
@@ -43,6 +54,8 @@ class SettingsViewModel @Inject constructor(
         const val BIOMETRIC = "BIOMETRIC"
         const val APP_PIN = "AppPin"
     }
+
+    fun getCipherKey() = localNotesRepoUseCase.getCipherKey()
 
     fun setTheme(value: String) {
         editor.putString(THEME, value)
@@ -101,6 +114,30 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             remoteNotesRepoUseCase.logoutUser(getRefreshToken()).collect {
                 _logout.value = it
+            }
+        }
+    }
+
+    fun backupNotes(context: Context, keysetHandle: KeysetHandle) {
+        viewModelScope.launch {
+            localNotesRepoUseCase.backUpNotes(context, keysetHandle).collect {
+                _backupNotes.value = it
+            }
+        }
+    }
+
+    fun restoreBackup(context: Context, keysetHandle: KeysetHandle, backupFile: ByteArray) {
+        viewModelScope.launch {
+            localNotesRepoUseCase.restoreNotes(context, keysetHandle, backupFile).collect {
+                _restoreNotes.value = it
+            }
+        }
+    }
+
+    fun deleteAllNote() {
+        viewModelScope.launch {
+            remoteNotesRepoUseCase.deleteAllNote().collect {
+                _deleteAllNote.value = it
             }
         }
     }

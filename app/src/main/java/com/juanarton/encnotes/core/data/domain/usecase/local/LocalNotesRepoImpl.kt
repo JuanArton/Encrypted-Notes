@@ -1,5 +1,7 @@
 package com.juanarton.encnotes.core.data.domain.usecase.local
 
+import android.content.Context
+import com.google.crypto.tink.KeysetHandle
 import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.domain.repository.ILocalNotesRepository
@@ -15,9 +17,6 @@ class LocalNotesRepoImpl @Inject constructor(
         iLocalNotesRepository.setIsLoggedIn(isLoggedIn)
 
     override fun getIsLoggedIn(): Boolean = iLocalNotesRepository.getIsLoggedIn()
-
-    /*override fun getNotes(): Flow<PagingData<Notes>> =
-        iNotesAppRepository.getNotes()*/
 
     override fun getNotes(): Flow<List<Notes>> =
         iLocalNotesRepository.getNotes()
@@ -73,4 +72,10 @@ class LocalNotesRepoImpl @Inject constructor(
 
     override fun deleteFileFromDisk(file: File): Boolean =
         iLocalNotesRepository.deleteFileFromDisk(file)
+
+    override fun backUpNotes(context: Context, keysetHandle: KeysetHandle): Flow<Boolean> =
+        iLocalNotesRepository.backUpNotes(context, keysetHandle)
+
+    override fun restoreNotes(context: Context, keysetHandle: KeysetHandle, backupFile: ByteArray): Flow<Boolean> =
+        iLocalNotesRepository.restoreNotes(context, keysetHandle, backupFile)
 }

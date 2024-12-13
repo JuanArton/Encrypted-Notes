@@ -1,10 +1,12 @@
 package com.juanarton.encnotes.ui.utils
 
 import android.animation.ValueAnimator
+import android.content.ContentResolver
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.util.TypedValue
 import android.view.View
 import androidx.core.content.ContextCompat
@@ -22,6 +24,8 @@ import com.google.android.material.transition.platform.MaterialContainerTransfor
 import com.juanarton.encnotes.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.BufferedInputStream
+import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -239,5 +243,22 @@ object Utils {
         }
 
         return typedValue.data
+    }
+
+    fun uriToByteArray(uri: Uri, contentResolver: ContentResolver): ByteArray {
+        contentResolver.openInputStream(uri).use { inputStream ->
+            inputStream?.let {
+                val buffer = ByteArray(8192)
+                val byteArrayOutputStream = ByteArrayOutputStream()
+                var bytesRead: Int
+                val bufferedInputStream = BufferedInputStream(it)
+
+                while (bufferedInputStream.read(buffer).also { bytesRead = it } != -1) {
+                    byteArrayOutputStream.write(buffer, 0, bytesRead)
+                }
+
+                return byteArrayOutputStream.toByteArray()
+            } ?: throw IllegalArgumentException("Unable to open URI: $uri")
+        }
     }
 }

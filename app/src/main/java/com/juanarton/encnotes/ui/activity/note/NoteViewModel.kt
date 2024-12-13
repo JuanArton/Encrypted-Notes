@@ -15,6 +15,7 @@ import com.juanarton.encnotes.core.data.domain.usecase.local.LocalNotesRepoUseCa
 import com.juanarton.encnotes.core.data.domain.usecase.remote.RemoteNotesRepoUseCase
 import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.Cryptography
+import com.juanarton.encnotes.ui.utils.Utils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.viascom.nanoid.NanoId
 import kotlinx.coroutines.launch
@@ -70,11 +71,16 @@ class NoteViewModel @Inject constructor(
         if (!key.isNullOrEmpty()) {
             val deserializedKey = Cryptography.deserializeKeySet(key)
 
-            val originalBytes = uriToByteArray(uri, contentResolver)
+            val originalBytes = Utils.uriToByteArray(uri, contentResolver)
             val encryptedBytes = Cryptography.encrypt(originalBytes, deserializedKey)
 
+            val imagesDir = File(context.filesDir, "images")
+            if (!imagesDir.exists()) {
+                imagesDir.mkdirs()
+            }
+
             val fileName = getFileNameFromUri(uri, contentResolver) ?: "encrypted_file"
-            val file = File(context.filesDir, fileName)
+            val file = File("${context.filesDir}"+"/images" , fileName)
 
             viewModelScope.launch {
                 localNotesRepoUseCase.writeFileToDisk(file, encryptedBytes).collect {
@@ -97,23 +103,6 @@ class NoteViewModel @Inject constructor(
             remoteNotesRepoUseCase.deleteAttById(id).collect {
                 _deleteAttRemote.value = it
             }
-        }
-    }
-
-    private fun uriToByteArray(uri: Uri, contentResolver: ContentResolver): ByteArray {
-        contentResolver.openInputStream(uri).use { inputStream ->
-            inputStream?.let {
-                val buffer = ByteArray(8192)
-                val byteArrayOutputStream = ByteArrayOutputStream()
-                var bytesRead: Int
-                val bufferedInputStream = BufferedInputStream(it)
-
-                while (bufferedInputStream.read(buffer).also { bytesRead = it } != -1) {
-                    byteArrayOutputStream.write(buffer, 0, bytesRead)
-                }
-
-                return byteArrayOutputStream.toByteArray()
-            } ?: throw IllegalArgumentException("Unable to open URI: $uri")
         }
     }
 

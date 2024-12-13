@@ -17,13 +17,13 @@ class TwoFactorViewModel @Inject constructor(
     private val localNotesRepoUseCase: LocalNotesRepoUseCase,
     private val remoteNotesRepoUseCase: RemoteNotesRepoUseCase
 ): ViewModel() {
-    private val _loginUser = MutableLiveData<Resource<Login>>()
-    val loginUser = _loginUser
+    private val _twoFactorAuth = MutableLiveData<Resource<Login>>()
+    val twoFactorAuth = _twoFactorAuth
 
-    fun loginUser(id: String, pin: String, otp: String) {
+    fun twoFactorAuth(id: String, pin: String, otp: String) {
         viewModelScope.launch {
-            remoteNotesRepoUseCase.loginUser(id, pin, otp).collect {
-                _loginUser.value = it
+            remoteNotesRepoUseCase.twoFactorAuth(id, pin, otp).collect {
+                _twoFactorAuth.value = it
             }
         }
     }

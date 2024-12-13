@@ -1,25 +1,32 @@
 package com.juanarton.encnotes.ui.activity.settings
 
 import android.content.Intent
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
-import android.util.Log
+import android.os.Process
 import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.google.crypto.tink.KeysetHandle
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.source.local.SharedPrefDataSource.Companion.FILE_NAME
 import com.juanarton.encnotes.core.data.source.remote.Resource
+import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.databinding.ActivitySettingsBinding
 import com.juanarton.encnotes.di.DatabaseModule.Companion.DB_NAME
-import com.juanarton.encnotes.ui.activity.login.LoginActivity
 import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.APP_SETTINGS
 import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.DARK
 import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.LIGHT
@@ -29,9 +36,9 @@ import com.juanarton.encnotes.ui.fragment.apppin.PinListener
 import com.juanarton.encnotes.ui.fragment.loading.LoadingFragment
 import com.juanarton.encnotes.ui.fragment.qrimage.QrSecretFragment
 import com.juanarton.encnotes.ui.utils.FragmentBuilder
+import com.juanarton.encnotes.ui.utils.Utils
 import dagger.hilt.android.AndroidEntryPoint
 import kotlin.getValue
-import android.os.Process
 
 @AndroidEntryPoint
 class SettingsActivity : AppCompatActivity(), PinListener {
@@ -41,7 +48,10 @@ class SettingsActivity : AppCompatActivity(), PinListener {
     private val settingsViewModel: SettingsViewModel by viewModels()
     private var isUserAction = true
     private val loadingDialog = LoadingFragment()
+    private lateinit var keysetHandle: KeysetHandle
+    private var backupFile: ByteArray? = byteArrayOf()
     val auth = Firebase.auth
+    private lateinit var selectBackUpLauncher: ActivityResultLauncher<Intent>
 
     companion object {
         const val APP_PROTECTION = 1
@@ -74,6 +84,19 @@ class SettingsActivity : AppCompatActivity(), PinListener {
         binding?.apply {
             btLogout.setOnClickListener {
                 settingsViewModel.logout()
+            }
+
+            backUpClickMask.setOnClickListener {
+                val key = settingsViewModel.getCipherKey()
+
+                if (!key.isNullOrEmpty()) {
+                    val deserializedKey = Cryptography.deserializeKeySet(key)
+                    settingsViewModel.backupNotes(this@SettingsActivity, deserializedKey)
+                } else {
+                    Toast.makeText(
+                        this@SettingsActivity, getString(R.string.unable_retrieve_key), Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
 
             swBiometric.setOnCheckedChangeListener { _, isChecked ->
@@ -118,6 +141,38 @@ class SettingsActivity : AppCompatActivity(), PinListener {
                     }
                 }
             }
+
+            restoreClickMask.setOnClickListener {
+                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                    type = "*/*"
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/octet-stream", "application/bin"))
+                }
+                selectBackUpLauncher.launch(intent)
+            }
+
+            selectBackUpLauncher = registerForActivityResult(
+                ActivityResultContracts.StartActivityForResult()
+            ) { result ->
+                if (result.resultCode == RESULT_OK) {
+                    val data: Uri? = result.data?.data
+                    data?.let {
+                        val byteArray = Utils.uriToByteArray(it, contentResolver)
+
+                        val key = settingsViewModel.getCipherKey()
+                        if (!key.isNullOrEmpty()) {
+                            keysetHandle = Cryptography.deserializeKeySet(key)
+                            var inputStream = this@SettingsActivity.contentResolver.openInputStream(it)
+                            backupFile = inputStream?.readBytes()
+                            settingsViewModel.deleteAllNote()
+                        } else {
+                            Toast.makeText(
+                                this@SettingsActivity, getString(R.string.unable_retrieve_key), Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -130,31 +185,37 @@ class SettingsActivity : AppCompatActivity(), PinListener {
 
             when(it){
                 is Resource.Success -> {
-                    val intent = this@SettingsActivity.packageManager.getLaunchIntentForPackage(this@SettingsActivity.packageName)
-                    intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-                    this@SettingsActivity.startActivity(intent)
-                    Process.killProcess(Process.myPid())
+                    restartApp()
                 }
                 is Resource.Loading -> {}
                 is Resource.Error -> {
-                    val intent = this@SettingsActivity.packageManager.getLaunchIntentForPackage(this@SettingsActivity.packageName)
-                    intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-                    this@SettingsActivity.startActivity(intent)
-                    Process.killProcess(Process.myPid())
+                    restartApp()
                 }
             }
         }
 
         settingsViewModel.checkTwoFactor.observe(this) {
-            when(it){
-                is Resource.Success -> {
-                    it.data?.let { isEnabled ->
-                        setSwitchChecked(isEnabled)
+            binding?.apply {
+                when(it){
+                    is Resource.Success -> {
+                        it.data?.let { isEnabled ->
+                            cpiTFALoading.visibility = View.INVISIBLE
+                            swTwoFactor.visibility = View.VISIBLE
+                            setSwitchChecked(isEnabled)
+                        }
                     }
-                }
-                is Resource.Loading -> {}
-                is Resource.Error -> {
-                    Toast.makeText(this@SettingsActivity, it.message, Toast.LENGTH_SHORT).show()
+                    is Resource.Loading -> {
+                        cpiTFALoading.visibility = View.VISIBLE
+                        swTwoFactor.visibility = View.INVISIBLE
+                    }
+                    is Resource.Error -> {
+                        swTwoFactor.isClickable = false
+                        cpiTFALoading.visibility = View.INVISIBLE
+                        swTwoFactor.visibility = View.VISIBLE
+                        swTwoFactor.thumbTintList = ColorStateList.valueOf(Color.DKGRAY).withAlpha(50)
+                        swTwoFactor.trackTintList = ColorStateList.valueOf(Color.DKGRAY).withAlpha(50)
+                        Toast.makeText(this@SettingsActivity, it.message, Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
@@ -196,6 +257,39 @@ class SettingsActivity : AppCompatActivity(), PinListener {
                 }
             }
         }
+
+        settingsViewModel.backupNotes.observe(this) {
+            if (true) {
+                Toast.makeText(this@SettingsActivity, getString(R.string.backup_msg), Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this@SettingsActivity, getString(R.string.backup_failed_msg), Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        settingsViewModel.restoreNotes.observe(this) {
+            if (true) {
+                Toast.makeText(this@SettingsActivity, getString(R.string.restore_msg), Toast.LENGTH_SHORT).show()
+                restartApp()
+            } else {
+                Toast.makeText(this@SettingsActivity, getString(R.string.restore_failed_msg), Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        settingsViewModel.deleteAllNote.observe(this) {
+            when(it){
+                is Resource.Success -> {
+                    settingsViewModel.restoreBackup(this, keysetHandle, backupFile!!)
+                }
+                is Resource.Loading -> {
+                    FragmentBuilder.build(this, loadingDialog, android.R.id.content)
+                }
+                is Resource.Error -> {
+                    FragmentBuilder.destroyFragment(this, loadingDialog)
+                    binding?.swTwoFactor?.isChecked = false
+                    Toast.makeText(this@SettingsActivity, it.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     private fun setUiState() {
@@ -217,7 +311,14 @@ class SettingsActivity : AppCompatActivity(), PinListener {
         }
     }
 
-    fun setSwitchChecked(checked: Boolean) {
+    private fun restartApp() {
+        val intent = this@SettingsActivity.packageManager.getLaunchIntentForPackage(this@SettingsActivity.packageName)
+        intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+        this@SettingsActivity.startActivity(intent)
+        Process.killProcess(Process.myPid())
+    }
+
+    private fun setSwitchChecked(checked: Boolean) {
         isUserAction = false
         binding?.swTwoFactor?.isChecked = checked
         isUserAction = true
