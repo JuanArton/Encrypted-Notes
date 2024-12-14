@@ -17,4 +17,28 @@ JNIEXPORT jstring JNICALL
         const char *web_key = "696494720728-gpfh2n19b19jj8ajpdnt3q1im1sqp9ra.apps.googleusercontent.com";
         return env->NewStringUTF(web_key);
     }
+
+    JNIEXPORT jstring JNICALL
+    Java_com_juanarton_encnotes_ui_activity_register_RegisterActivity_webKey(
+            JNIEnv *env, jobject thiz
+    ) {
+        const char *web_key = "696494720728-gpfh2n19b19jj8ajpdnt3q1im1sqp9ra.apps.googleusercontent.com";
+        return env->NewStringUTF(web_key);
+    }
+
+    JNIEXPORT jstring JNICALL
+    Java_com_juanarton_encnotes_core_data_api_API_getSha256Pin(
+            JNIEnv *env, jobject thiz
+    ) {
+        const char *sha256Pin = "sha256/VD2li3hvVZf41friOwQgMqCa9JlPTtclLOKXwlQPX8Q=";
+        return env->NewStringUTF(sha256Pin);
+    }
+
+    JNIEXPORT jstring JNICALL
+    Java_com_juanarton_encnotes_core_data_api_API_getNakedHost(
+            JNIEnv *env, jobject thiz
+    ) {
+        const char *nakedHost = "privynoteapp.my.id";
+        return env->NewStringUTF(nakedHost);
+    }
 }

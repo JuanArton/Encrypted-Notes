@@ -46,6 +46,7 @@ import com.juanarton.encnotes.core.utils.AttachmentSync
 import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.core.utils.NoteSync
 import com.juanarton.encnotes.databinding.ActivityMainBinding
+import com.juanarton.encnotes.ui.activity.greeting.GreetingActivity
 import com.juanarton.encnotes.ui.activity.login.LoginActivity
 import com.juanarton.encnotes.ui.activity.note.NoteActivity
 import com.juanarton.encnotes.ui.activity.settings.SettingsActivity
@@ -129,7 +130,7 @@ class MainActivity : AppCompatActivity(), PinListener {
                 initView()
             }
         } else {
-            startActivity(Intent(this, LoginActivity::class.java))
+            startActivity(Intent(this, GreetingActivity::class.java))
             finish()
         }
 

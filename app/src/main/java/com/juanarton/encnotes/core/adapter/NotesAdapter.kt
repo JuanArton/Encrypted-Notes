@@ -151,16 +151,10 @@ class NotesAdapter (
                 val typedValue = TypedValue()
                 clickMask.context.theme.resolveAttribute(com.google.android.material.R.attr.colorPrimary, typedValue, true)
                 if (isActive) {
-                    binding.apply {
-                        clickMask.setBackgroundColor(
-                            ContextCompat.getColor(
-                                binding.clickMask.context,
-                                R.color.transparentBlack
-                            )
-                        )
-                        noteItem.strokeColor = typedValue.data
-                    }
+                    noteItem.strokeWidth = Utils.dpToPx(3, context)
+                    noteItem.strokeColor = typedValue.data
                 } else {
+                    noteItem.strokeWidth = Utils.dpToPx(1, context)
                     binding.clickMask.setBackgroundColor(Color.TRANSPARENT)
                     noteItem.strokeColor = ContextCompat.getColor(
                         binding.clickMask.context,

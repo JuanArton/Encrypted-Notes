@@ -153,7 +153,7 @@ class LocalNotesRepository @Inject constructor(
             attachmentLocalDataSource.deleteAttachment(
                 AttachmentEntity(
                     attachment.id,
-                    "",
+                    attachment.noteId,
                     "",
                     true,
                     attachment.type ?: "",

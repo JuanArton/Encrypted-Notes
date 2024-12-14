@@ -72,10 +72,10 @@ class FirebaseDataSource @Inject constructor(
     }.flowOn(Dispatchers.IO)
 
     fun loginByEmail(email: String, password: String): Flow<APIResponse<LoggedUser>> = flow {
-        val auth = FirebaseAuth.getInstance()
-        val result = auth.signInWithEmailAndPassword(email, password).await()
-
         try {
+            val auth = FirebaseAuth.getInstance()
+            val result = auth.signInWithEmailAndPassword(email, password).await()
+
             result?.user?.let {
                 auth.currentUser?.let {
                     if (it.isEmailVerified) {

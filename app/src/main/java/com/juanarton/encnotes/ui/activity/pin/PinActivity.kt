@@ -3,7 +3,6 @@ package com.juanarton.encnotes.ui.activity.pin
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -12,10 +11,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.source.remote.Resource
+import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.databinding.ActivityPinBinding
 import com.juanarton.encnotes.ui.activity.twofactor.TwoFactorActivity
 import com.juanarton.encnotes.ui.fragment.copykey.CopyKeyFragment
@@ -35,6 +33,7 @@ class PinActivity : AppCompatActivity() {
     private val loadingDialog = LoadingFragment()
     private lateinit var pin: String
     private var firstPin = 0
+    val key = Cryptography.serializeKeySet(Cryptography.generateKeySet())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,9 +51,10 @@ class PinActivity : AppCompatActivity() {
             append("User")
             append(NanoId.generate(7))
         }
+        val encryptedUsername = Cryptography.encrypt(username, Cryptography.deserializeKeySet(key))
         val isRegistered = intent.getBooleanExtra("isRegistered", false)
 
-        if (!uid.isNullOrEmpty() && username.isNotEmpty()) {
+        if (!uid.isNullOrEmpty() && encryptedUsername.isNotEmpty()) {
             pinViewModel.registerUser.observe(this) { result ->
                 when(result){
                     is Resource.Success -> {
@@ -85,7 +85,7 @@ class PinActivity : AppCompatActivity() {
 
                                 if (setAccKey && setRefKey && setLoggedIn) {
                                     FragmentBuilder.destroyFragment(this@PinActivity, loadingDialog)
-
+                                    binding?.btSubmit?.isEnabled = false
                                     FragmentBuilder.build(
                                         this@PinActivity,
                                         InsertKeyFragment(false),
@@ -97,7 +97,12 @@ class PinActivity : AppCompatActivity() {
                                         FragmentBuilder.build(this@PinActivity, fragment, android.R.id.content)
                                     } else {
                                         FragmentBuilder.destroyFragment(this@PinActivity, loadingDialog)
-                                        val fragment = CopyKeyFragment()
+                                        binding?.btSubmit?.isEnabled = false
+                                        val fragment = CopyKeyFragment().apply {
+                                            arguments = Bundle().apply {
+                                                putString("KEY_STRING", key)
+                                            }
+                                        }
                                         FragmentBuilder.build(this@PinActivity, fragment, android.R.id.content)
                                     }
                                 } else {
@@ -145,7 +150,7 @@ class PinActivity : AppCompatActivity() {
                             tvPinHead.text = getString(R.string.please_reenter_pin)
                         } else if (firstPin == it.toInt()) {
                             btSubmit.visibility = View.VISIBLE
-                            pinViewModel.registerUser(uid, pin, username)
+                            pinViewModel.registerUser(uid, pin, encryptedUsername)
                         }
                     } else {
                         pin = it
@@ -156,7 +161,7 @@ class PinActivity : AppCompatActivity() {
 
                 btSubmit.setOnClickListener {
                     if (!isRegistered) {
-                        pinViewModel.registerUser(uid, pin, username)
+                        pinViewModel.registerUser(uid, pin, encryptedUsername)
                     } else {
                         pinViewModel.loginUser(uid, pin, "")
                     }

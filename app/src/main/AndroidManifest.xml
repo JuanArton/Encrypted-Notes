@@ -18,6 +18,14 @@
         android:theme="@style/Theme.App.Starting"
         tools:targetApi="34">
         <activity
+            android:name=".ui.activity.register.RegisterActivity"
+            android:theme="@style/Theme.EncryptedNotes"
+            android:exported="false" />
+        <activity
+            android:name=".ui.activity.greeting.GreetingActivity"
+            android:theme="@style/Theme.EncryptedNotes"
+            android:exported="false" />
+        <activity
             android:name=".ui.activity.twofactor.TwoFactorActivity"
             android:exported="false"
             android:theme="@style/Theme.EncryptedNotes"

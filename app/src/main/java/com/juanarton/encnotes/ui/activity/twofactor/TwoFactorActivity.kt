@@ -54,6 +54,7 @@ class TwoFactorActivity : AppCompatActivity() {
                                 if (setAccKey && setRefKey && setLoggedIn) {
                                     FragmentBuilder.destroyFragment(this@TwoFactorActivity, loadingDialog)
 
+                                    binding?.btSubmit?.isEnabled = false
                                     FragmentBuilder.build(
                                         this@TwoFactorActivity,
                                         InsertKeyFragment(false),

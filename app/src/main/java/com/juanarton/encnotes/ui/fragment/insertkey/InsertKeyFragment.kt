@@ -57,7 +57,8 @@ class InsertKeyFragment(
                         }
                     }
                 } else {
-                    Toast.makeText(requireContext(), getString(R.string.please_insert_cipher_key
+                    Toast.makeText(
+                        requireContext(), getString(R.string.please_insert_cipher_key
                     ), Toast.LENGTH_SHORT).show()
                 }
             }

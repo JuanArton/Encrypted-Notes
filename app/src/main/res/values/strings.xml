@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Encrypted Notes</string>
+    <string name="app_name">PrivyNote</string>
     <string name="login_using_google_account">Login using google account</string>
     <string name="login_failed">Login failed</string>
     <string name="unexpected_type_of_credential">Unexpected type of credential</string>
@@ -35,7 +35,7 @@
     <string name="login">Login</string>
     <string name="login_with">Login with :</string>
     <string name="sign_in">Sign In</string>
-    <string name="register_success">Please check your email to verify, and come back here to press login :)</string>
+    <string name="register_success">Please check your email to verify, and come back here to login with the same email you\'ve registered :)</string>
     <string name="account_already_exist">Register failed. Account already exist?</string>
     <string name="failed_to_send_verification_email">Failed to send verification email</string>
     <string name="user_creation_failed">User creation failed</string>
@@ -104,4 +104,27 @@
     <string name="backup_failed_msg">Back up failed</string>
     <string name="restore_msg">Restore notes success</string>
     <string name="restore_failed_msg">Restore notes failed</string>
+    <string name="create_an_account">Create an account</string>
+    <string name="display_name">Display Name</string>
+    <string name="register">Register</string>
+    <string name="falsebt">False</string>
+    <string name="truebt">True</string>
+    <string name="instruction">Instruction</string>
+    <string name="ok">OK</string>
+    <string name="repeat_password">Repeat Password</string>
+    <string name="password_correct">Password correct</string>
+    <string name="password_doesnt_match">Password doesn\'t match</string>
+    <string name="validation_email_success">Email is correct</string>
+    <string name="validation_error_email">Wrong email format</string>
+    <string name="validation_error_password_length">Password should have at least 6 character</string>
+    <string name="weak_password">Weak password</string>
+    <string name="medium_password">Medium password</string>
+    <string name="strong_password">Strong password</string>
+    <string name="validation_username_success">Username is correct</string>
+    <string name="validation_error_username">Username should only contain character and number</string>
+    <string name="empty_field">Field can\'t be empty</string>
+    <string name="not_empty_field">Field is not empty</string>
+    <string name="validation_success">Validation success</string>
+    <string name="empty"> </string>
+    <string name="strong_password_hint">Strong password = has more than one capital letters and special character</string>
 </resources>

@@ -212,8 +212,7 @@ class SettingsActivity : AppCompatActivity(), PinListener {
                         swTwoFactor.isClickable = false
                         cpiTFALoading.visibility = View.INVISIBLE
                         swTwoFactor.visibility = View.VISIBLE
-                        swTwoFactor.thumbTintList = ColorStateList.valueOf(Color.DKGRAY).withAlpha(50)
-                        swTwoFactor.trackTintList = ColorStateList.valueOf(Color.DKGRAY).withAlpha(50)
+                        swTwoFactor.isEnabled = false
                         Toast.makeText(this@SettingsActivity, it.message, Toast.LENGTH_SHORT).show()
                     }
                 }

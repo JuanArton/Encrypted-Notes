@@ -2,7 +2,6 @@ package com.juanarton.encnotes.ui.activity.main
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -217,16 +216,6 @@ class MainViewModel @Inject constructor(
         return sPref.getBoolean(BIOMETRIC, false)
     }
 
-    fun setBiometric(value: Boolean) {
-        editor.putBoolean(BIOMETRIC, value)
-        editor.apply()
-    }
-
-    fun setAppPin(value: Int) {
-        editor.putInt(APP_PIN, value)
-        editor.apply()
-    }
-
     fun getAppPin(): Int? {
         return sPref.getInt(APP_PIN, 0)
     }
@@ -261,8 +250,6 @@ class MainViewModel @Inject constructor(
             }
 
             syncNotes.toAddToServer.forEach { notes ->
-
-                Log.d("test", notes.toString())
                 remoteNotesRepoUseCase.insertNoteRemote(notes).collect{}
             }
 
@@ -296,13 +283,12 @@ class MainViewModel @Inject constructor(
             }
 
             syncAttachment.toAddToServer.forEach { attachment ->
-                Log.d("test", attachment.toString())
                 val file = File(context.filesDir.absolutePath + "/images", attachment.url)
                 val byteArray = try {
                     file.inputStream().use { inputStream ->
                         BufferedInputStream(inputStream).readBytes()
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     byteArrayOf()
                 }
                 remoteNotesRepoUseCase.uploadImageAtt(byteArray, attachment).collect{
@@ -334,7 +320,7 @@ class MainViewModel @Inject constructor(
             } else {
                 _notDeleted.value = emptyList()
             }
-        } catch (e: Exception) { }
+        } catch (_: Exception) { }
 
     }
 

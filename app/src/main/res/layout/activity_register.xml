@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    tools:context=".ui.activity.login.LoginActivity">
+    tools:context=".ui.activity.register.RegisterActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -24,19 +24,19 @@
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
             app:boxStrokeColor="@color/text_input_outline_color"
             app:counterTextColor="?attr/colorPrimary">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etEmail"
+                android:id="@+id/etUsername"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/email"
+                android:hint="@string/display_name"
                 android:textSize="14sp" />
         </com.google.android.material.textfield.TextInputLayout>
+
         <TextView
-            android:id="@+id/tvEmailStatus"
+            android:id="@+id/tvUsernameStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="12sp"/>
@@ -49,26 +49,72 @@
             app:counterTextColor="?attr/colorPrimary">
 
             <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/email"
+                android:textSize="14sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:id="@+id/tvEmailStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"/>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            app:passwordToggleEnabled="true"
+            app:boxStrokeColor="@color/text_input_outline_color"
+            app:counterTextColor="?attr/colorPrimary">
+
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textPassword"
                 android:hint="@string/password"
-                android:textSize="14sp" />
+                android:textSize="14sp"/>
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
             android:id="@+id/tvPasswordStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:hint="@string/strong_password_hint"
             android:textSize="12sp"/>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btLogin"
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="30dp"
-            android:text="@string/login"/>
+            app:passwordToggleEnabled="true"
+            app:boxStrokeColor="@color/text_input_outline_color"
+            app:counterTextColor="?attr/colorPrimary">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etPasswordRepeat"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"
+                android:hint="@string/repeat_password"
+                android:textSize="14sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:id="@+id/tvRePasswordStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btRegister"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/register"
+            android:layout_marginTop="30dp"/>
 
         <TextView
             android:layout_width="wrap_content"

@@ -43,14 +43,14 @@ class CopyKeyFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val key = Cryptography.serializeKeySet(Cryptography.generateKeySet())
+        val key = arguments?.getString("KEY_STRING")
 
         binding?.apply {
             tvKey.text = key
 
             btDone.setOnClickListener {
                 lifecycleScope.launch {
-                    val setCipherKey = sharedViewModel.setCipherKey(key)
+                    val setCipherKey = sharedViewModel.setCipherKey(key!!)
 
                     if (setCipherKey) {
                         startActivity(Intent(requireContext(), MainActivity::class.java))

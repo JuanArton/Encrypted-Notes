@@ -122,7 +122,6 @@ class NoteLocalDataSource @Inject constructor(
     fun restoreNotes(context: Context, keysetHandle: KeysetHandle, backupFile: ByteArray): Flow<Boolean> =
         flow {
             try {
-                Log.d("test", backupFile.toString())
                 val dbPath = File(context.filesDir.parentFile, "databases").absolutePath
                 val filesDirPath = context.filesDir.absolutePath + "/images"
                 val imageDir =  File(filesDirPath)

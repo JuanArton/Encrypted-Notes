@@ -2,18 +2,25 @@ package com.juanarton.encnotes.ui.activity.login
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
-import android.view.View
+import android.os.Handler
+import android.os.Looper
+import android.text.Editable
+import android.text.TextWatcher
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.domain.model.LoggedUser
 import com.juanarton.encnotes.core.data.source.remote.Resource
+import com.juanarton.encnotes.core.validation.BaseValidator
+import com.juanarton.encnotes.core.validation.EmailValidator
+import com.juanarton.encnotes.core.validation.EmptyValidator
 import com.juanarton.encnotes.databinding.ActivityLoginBinding
 import com.juanarton.encnotes.ui.activity.pin.PinActivity
 import com.juanarton.encnotes.ui.fragment.loading.LoadingFragment
@@ -31,6 +38,7 @@ class LoginActivity : AppCompatActivity() {
     private val loadingDialog = LoadingFragment()
     private var uid = ""
     private var username: String? = ""
+    var stateList: MutableList<Boolean> = MutableList(2) { false }
 
     private external fun webKey(): String
 
@@ -51,6 +59,9 @@ class LoginActivity : AppCompatActivity() {
             insets
         }
 
+        val handler = Handler(Looper.getMainLooper())
+        var runnable: Runnable? = null
+
         val intent = Intent(this, PinActivity::class.java)
 
         loginViewModel.signInByGoogle.observe(this) { loggedUser ->
@@ -59,27 +70,6 @@ class LoginActivity : AppCompatActivity() {
 
         loginViewModel.loginByEmail.observe(this) { loggedUser ->
             handleLoginResult(loggedUser)
-        }
-
-        loginViewModel.signInByEmail.observe(this) { loggedUser ->
-            when(loggedUser){
-                is Resource.Success -> {
-                    loggedUser.data?.let {
-                        binding?.apply {
-                            tvRegisterMessage.visibility = View.VISIBLE
-                            tvRegisterMessage.text = getString(R.string.register_success)
-                        }
-                    }
-                    FragmentBuilder.destroyFragment(this, loadingDialog)
-                }
-                is Resource.Loading -> {
-                    FragmentBuilder.build(this, loadingDialog, android.R.id.content)
-                }
-                is Resource.Error -> {
-                    FragmentBuilder.destroyFragment(this, loadingDialog)
-                    Toast.makeText(this, loggedUser.message, Toast.LENGTH_LONG).show()
-                }
-            }
         }
 
         loginViewModel.checkRegistered.observe(this) {
@@ -103,6 +93,7 @@ class LoginActivity : AppCompatActivity() {
         }
 
         binding?.apply {
+            btLogin.isEnabled = false
             ibGLogin.setOnClickListener {
                 val signInWithGoogleOption = GetSignInWithGoogleOption.Builder(
                     webKey()
@@ -113,13 +104,77 @@ class LoginActivity : AppCompatActivity() {
                 loginViewModel.singWithGoogleAcc(signInWithGoogleOption, this@LoginActivity)
             }
 
-            btSignIn.setOnClickListener {
-                loginViewModel.signInByEmail(etEmail.text.toString(), etPassword.text.toString())
-            }
-
             btLogin.setOnClickListener {
                 loginViewModel.loginByEmail(etEmail.text.toString(), etPassword.text.toString())
             }
+
+            etEmail.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    runnable?.let { handler.removeCallbacks(it) }
+
+                    runnable = Runnable {
+                        s?.let { email ->
+                            val emailValidation = BaseValidator.validate(
+                                EmptyValidator(email.toString()),
+                                EmailValidator(email.toString())
+                            )
+
+                            stateList[0] = emailValidation.isSuccess
+                            tvEmailStatus.text = getString(emailValidation.message)
+                            if (emailValidation.isSuccess) {
+                                tvEmailStatus.text = getString(R.string.empty)
+                            }
+                            setTextColor(tvEmailStatus, emailValidation.isSuccess)
+                            checkState()
+                        }
+                    }
+
+                    runnable?.let { handler.postDelayed(it, 50) }
+                }
+                override fun afterTextChanged(s: Editable?) {}
+            })
+
+            etPassword.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    runnable?.let { handler.removeCallbacks(it) }
+
+                    runnable = Runnable {
+                        s?.let { password ->
+                            val passwordValidation = EmptyValidator(password.toString()).validate()
+
+                            stateList[1] = passwordValidation.isSuccess
+                            tvPasswordStatus.text = getString(passwordValidation.message)
+                            if (passwordValidation.isSuccess) {
+                                tvPasswordStatus.text = getString(R.string.empty)
+                            }
+                            setTextColor(tvPasswordStatus, passwordValidation.isSuccess)
+                            checkState()
+                        }
+                    }
+
+                    runnable.let { handler.postDelayed(it, 50) }
+                }
+                override fun afterTextChanged(s: Editable?) {}
+            })
+        }
+    }
+
+    private fun setTextColor(textView: TextView, state: Boolean) {
+        if (state) {
+            val correctColor = ContextCompat.getColor(this@LoginActivity, android.R.color.holo_green_light)
+            textView.setTextColor(correctColor)
+        } else {
+            val errorColor = ContextCompat.getColor(this@LoginActivity, android.R.color.holo_red_dark)
+            textView.setTextColor(errorColor)
+        }
+    }
+
+    private fun checkState() {
+        val allTrue = stateList.all { it }
+        binding?.apply {
+            btLogin.isEnabled = allTrue
         }
     }
 
