@@ -1,5 +1,6 @@
 package com.juanarton.encnotes.core.data.source.remote
 
+import android.util.Log
 import com.juanarton.encnotes.core.data.api.APIResponse
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll

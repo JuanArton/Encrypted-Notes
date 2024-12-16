@@ -129,4 +129,8 @@
     <string name="strong_password_hint">Strong password = has more than one capital letters and special character</string>
     <string name="app_logo">App logo</string>
     <string name="welcome">Welcome :)</string>
+    <string name="unexpected_error">Unexpected error</string>
+    <string name="cant_reach_server">Can\'t reach server. Maybe check your connection?</string>
+    <string name="request_timeout">Request timed out. Please try again later</string>
+    <string name="network_error">Network error occurred. Please try again</string>
 </resources>

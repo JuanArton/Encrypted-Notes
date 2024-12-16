@@ -1,6 +1,7 @@
 package com.juanarton.encnotes.core.data.source.remote
 
 import android.content.Context
+import android.net.Network
 import com.google.gson.Gson
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.api.API
@@ -13,6 +14,7 @@ import com.juanarton.encnotes.core.data.api.note.postAttachment.PostAttachmentDa
 import com.juanarton.encnotes.core.data.api.note.postAttachment.PostAttachmentResponse
 import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.source.local.SharedPrefDataSource
+import com.juanarton.encnotes.core.data.source.remote.NoteRemoteDataSource.Companion.TOKEN_EXPIRED_MESSAGE
 import com.ketch.Ketch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -34,39 +36,35 @@ import javax.inject.Singleton
 class AttachmentRemoteDataSource @Inject constructor(
     private val context: Context,
     private val sharedPrefDataSource: SharedPrefDataSource
-){
+): NetworkCallTool(context){
     fun uploadImageAtt(
         image: ByteArray, attachment: Attachment
     ): Flow<APIResponse<PostAttachmentData>> =
-        flow {
-            try {
-                val response = makeUploadImageAttRequest(image, attachment)
+        handleNetworkCall {
+            val response = makeUploadImageAttRequest(image, attachment)
 
-                if (response.isSuccessful) {
-                    val postImgAttResponse = Gson().fromJson(response.body()?.string(), PostAttachmentResponse::class.java)
-                    emit(APIResponse.Success(postImgAttResponse.postAttachmentData!!))
-                } else {
-                    val errorResponse = Gson().fromJson(response.errorBody()?.string(), PostAttachmentResponse::class.java)
+            if (response.isSuccessful) {
+                val postImgAttResponse = Gson().fromJson(response.body()?.string(), PostAttachmentResponse::class.java)
+                postImgAttResponse.postAttachmentData!!
+            } else {
+                val errorResponse = Gson().fromJson(response.errorBody()?.string(), PostAttachmentResponse::class.java)
 
-                    if (errorResponse.message == "Token maximum age exceeded") {
-                        refreshAccessKey()
-                        val retryResponse = makeUploadImageAttRequest(image, attachment)
+                if (errorResponse.message == TOKEN_EXPIRED_MESSAGE) {
+                    refreshAccessKey()
+                    val retryResponse = makeUploadImageAttRequest(image, attachment)
 
-                        if (retryResponse.isSuccessful) {
-                            val retryAttResponse = Gson().fromJson(retryResponse.body()?.string(), PostAttachmentResponse::class.java)
-                            emit(APIResponse.Success(retryAttResponse.postAttachmentData!!))
-                        } else {
-                            val retryErrorResponse = Gson().fromJson(retryResponse.errorBody()?.string(), PostAttachmentResponse::class.java)
-                            emit(APIResponse.Error(retryErrorResponse.message))
-                        }
+                    if (retryResponse.isSuccessful) {
+                        val retryAttResponse = Gson().fromJson(retryResponse.body()?.string(), PostAttachmentResponse::class.java)
+                        retryAttResponse.postAttachmentData!!
                     } else {
-                        emit(APIResponse.Error(errorResponse.message))
+                        val retryErrorResponse = Gson().fromJson(retryResponse.errorBody()?.string(), PostAttachmentResponse::class.java)
+                        throw Exception(retryErrorResponse.message)
                     }
+                } else {
+                    throw Exception(errorResponse.message)
                 }
-            } catch (e: Exception) {
-                emit(APIResponse.Error("${context.getString(R.string.unable_add_attachment)}: $e"))
             }
-        }.flowOn(Dispatchers.IO)
+        }
 
     private suspend fun makeUploadImageAttRequest(
         image: ByteArray, attachment: Attachment
@@ -88,35 +86,31 @@ class AttachmentRemoteDataSource @Inject constructor(
     }
 
     fun getAttById(id: String): Flow<APIResponse<List<AttachmentData>>> =
-        flow {
-            try {
-                val response = makeGetAttRequest(id)
+        handleNetworkCall {
+            val response = makeGetAttRequest(id)
 
-                if (response.isSuccessful) {
-                    val getAttResponse = Gson().fromJson(response.body()?.string(), GetAttachmentResponse::class.java)
-                    emit(APIResponse.Success(getAttResponse.getAttachmentArray!!.attachmentData))
-                } else {
-                    val errorResponse = Gson().fromJson(response.errorBody()?.string(), GetAttachmentResponse::class.java)
+            if (response.isSuccessful) {
+                val getAttResponse = Gson().fromJson(response.body()?.string(), GetAttachmentResponse::class.java)
+                getAttResponse.getAttachmentArray!!.attachmentData
+            } else {
+                val errorResponse = Gson().fromJson(response.errorBody()?.string(), GetAttachmentResponse::class.java)
 
-                    if (errorResponse.message == "Token maximum age exceeded") {
-                        refreshAccessKey()
-                        val retryResponse = makeGetAttRequest(id)
+                if (errorResponse.message == TOKEN_EXPIRED_MESSAGE) {
+                    refreshAccessKey()
+                    val retryResponse = makeGetAttRequest(id)
 
-                        if (retryResponse.isSuccessful) {
-                            val retryAttResponse = Gson().fromJson(retryResponse.body()?.string(), GetAttachmentResponse::class.java)
-                            emit(APIResponse.Success(retryAttResponse!!.getAttachmentArray!!.attachmentData))
-                        } else {
-                            val retryErrorResponse = Gson().fromJson(retryResponse.errorBody()?.string(), GetAttachmentResponse::class.java)
-                            emit(APIResponse.Error(retryErrorResponse.message))
-                        }
+                    if (retryResponse.isSuccessful) {
+                        val retryAttResponse = Gson().fromJson(retryResponse.body()?.string(), GetAttachmentResponse::class.java)
+                        retryAttResponse!!.getAttachmentArray!!.attachmentData
                     } else {
-                        emit(APIResponse.Error(errorResponse.message))
+                        val retryErrorResponse = Gson().fromJson(retryResponse.errorBody()?.string(), GetAttachmentResponse::class.java)
+                        throw Exception(retryErrorResponse.message)
                     }
+                } else {
+                    throw Exception(errorResponse.message)
                 }
-            } catch (e: Exception) {
-                emit(APIResponse.Error("${context.getString(R.string.unable_get_attachment)}: $e"))
             }
-        }.flowOn(Dispatchers.IO)
+        }
 
     private suspend fun makeGetAttRequest(id: String): Response<ResponseBody> {
         val accessKey = sharedPrefDataSource.getAccessKey()!!
@@ -124,35 +118,31 @@ class AttachmentRemoteDataSource @Inject constructor(
     }
 
     fun getAllAtt(): Flow<APIResponse<List<AttachmentData>>> =
-        flow {
-            try {
-                val response = makeGetAllAttRequest()
+        handleNetworkCall {
+            val response = makeGetAllAttRequest()
 
-                if (response.isSuccessful) {
-                    val getAttResponse = Gson().fromJson(response.body()?.string(), GetAttachmentResponse::class.java)
-                    emit(APIResponse.Success(getAttResponse.getAttachmentArray!!.attachmentData))
-                } else {
-                    val errorResponse = Gson().fromJson(response.errorBody()?.string(), GetAttachmentResponse::class.java)
+            if (response.isSuccessful) {
+                val getAttResponse = Gson().fromJson(response.body()?.string(), GetAttachmentResponse::class.java)
+                getAttResponse.getAttachmentArray!!.attachmentData
+            } else {
+                val errorResponse = Gson().fromJson(response.errorBody()?.string(), GetAttachmentResponse::class.java)
 
-                    if (errorResponse.message == "Token maximum age exceeded") {
-                        refreshAccessKey()
-                        val retryResponse = makeGetAllAttRequest()
+                if (errorResponse.message == TOKEN_EXPIRED_MESSAGE) {
+                    refreshAccessKey()
+                    val retryResponse = makeGetAllAttRequest()
 
-                        if (retryResponse.isSuccessful) {
-                            val retryAttResponse = Gson().fromJson(retryResponse.body()?.string(), GetAttachmentResponse::class.java)
-                            emit(APIResponse.Success(retryAttResponse!!.getAttachmentArray!!.attachmentData))
-                        } else {
-                            val retryErrorResponse = Gson().fromJson(retryResponse.errorBody()?.string(), GetAttachmentResponse::class.java)
-                            emit(APIResponse.Error(retryErrorResponse.message))
-                        }
+                    if (retryResponse.isSuccessful) {
+                        val retryAttResponse = Gson().fromJson(retryResponse.body()?.string(), GetAttachmentResponse::class.java)
+                        retryAttResponse!!.getAttachmentArray!!.attachmentData
                     } else {
-                        emit(APIResponse.Error(errorResponse.message))
+                        val retryErrorResponse = Gson().fromJson(retryResponse.errorBody()?.string(), GetAttachmentResponse::class.java)
+                        throw Exception(retryErrorResponse.message)
                     }
+                } else {
+                    throw Exception(errorResponse.message)
                 }
-            } catch (e: Exception) {
-                emit(APIResponse.Error("${context.getString(R.string.unable_get_attachment)}: $e"))
             }
-        }.flowOn(Dispatchers.IO)
+        }
 
     private suspend fun makeGetAllAttRequest(): Response<ResponseBody> {
         val accessKey = sharedPrefDataSource.getAccessKey()!!
@@ -177,35 +167,31 @@ class AttachmentRemoteDataSource @Inject constructor(
     }
 
     fun deleteAttById(id: String): Flow<APIResponse<String>> =
-        flow {
-            try {
-                val response = makeDeleteAttById(id)
+        handleNetworkCall {
+            val response = makeDeleteAttById(id)
 
-                if (response.isSuccessful) {
-                    val deleteAttResponse = Gson().fromJson(response.body()?.string(), DeleteResponse::class.java)
-                    emit(APIResponse.Success(deleteAttResponse.message))
-                } else {
-                    val errorResponse = Gson().fromJson(response.errorBody()?.string(), DeleteResponse::class.java)
+            if (response.isSuccessful) {
+                val deleteAttResponse = Gson().fromJson(response.body()?.string(), DeleteResponse::class.java)
+                deleteAttResponse.message
+            } else {
+                val errorResponse = Gson().fromJson(response.errorBody()?.string(), DeleteResponse::class.java)
 
-                    if (errorResponse.message == "Token maximum age exceeded") {
-                        refreshAccessKey()
-                        val retryResponse = makeDeleteAttById(id)
+                if (errorResponse.message == TOKEN_EXPIRED_MESSAGE) {
+                    refreshAccessKey()
+                    val retryResponse = makeDeleteAttById(id)
 
-                        if (retryResponse.isSuccessful) {
-                            val retryDeleteResponse = Gson().fromJson(retryResponse.body()?.string(), DeleteResponse::class.java)
-                            emit(APIResponse.Success(retryDeleteResponse.message))
-                        } else {
-                            val retryErrorResponse = Gson().fromJson(retryResponse.errorBody()?.string(), DeleteResponse::class.java)
-                            emit(APIResponse.Error(retryErrorResponse.message))
-                        }
+                    if (retryResponse.isSuccessful) {
+                        val retryDeleteResponse = Gson().fromJson(retryResponse.body()?.string(), DeleteResponse::class.java)
+                        retryDeleteResponse.message
                     } else {
-                        emit(APIResponse.Error(errorResponse.message))
+                        val retryErrorResponse = Gson().fromJson(retryResponse.errorBody()?.string(), DeleteResponse::class.java)
+                        throw Exception(retryErrorResponse.message)
                     }
+                } else {
+                    throw Exception(errorResponse.message)
                 }
-            } catch (e: Exception) {
-                emit(APIResponse.Error("${context.getString(R.string.unable_delete_attachment)}: $e"))
             }
-        }.flowOn(Dispatchers.IO)
+        }
 
     private suspend fun makeDeleteAttById(id: String): Response<ResponseBody> {
         val accessKey = sharedPrefDataSource.getAccessKey()!!

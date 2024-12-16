@@ -2,6 +2,7 @@ package com.juanarton.encnotes.core.data.repository
 
 import android.app.Activity
 import android.content.Context
+import android.util.Log
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.juanarton.encnotes.core.data.api.APIResponse
 import com.juanarton.encnotes.core.data.api.attachments.getattachment.AttachmentData

@@ -25,7 +25,7 @@ import javax.inject.Singleton
 @Singleton
 class FirebaseDataSource @Inject constructor(
     private val context: Context
-) {
+): NetworkCallTool(context) {
     fun signInWithGoogle(option: GetSignInWithGoogleOption, activity: Activity): Flow<APIResponse<LoggedUser>> = flow {
         val credentialManager = CredentialManager.create(activity)
         val request = GetCredentialRequest.Builder()
@@ -71,69 +71,51 @@ class FirebaseDataSource @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    fun loginByEmail(email: String, password: String): Flow<APIResponse<LoggedUser>> = flow {
-        try {
+    fun loginByEmail(email: String, password: String): Flow<APIResponse<LoggedUser>> =
+        handleNetworkCall {
             val auth = FirebaseAuth.getInstance()
             val result = auth.signInWithEmailAndPassword(email, password).await()
 
             result?.user?.let {
                 auth.currentUser?.let {
                     if (it.isEmailVerified) {
-                        emit(APIResponse.Success(
-                            LoggedUser(
-                                it.uid,
-                                it.displayName,
-                                it.photoUrl.toString()
-                            )
-                        ))
+                        LoggedUser(
+                            it.uid,
+                            it.displayName,
+                            it.photoUrl.toString()
+                        )
                     } else {
-                        emit(APIResponse.Error(context.getString(R.string.please_verify_email)))
+                        throw Exception(context.getString(R.string.please_verify_email))
                     }
                 }
             } ?: run {
-                emit(APIResponse.Error(context.getString(R.string.login_failed)))
+                throw Exception(context.getString(R.string.login_failed))
             }
-        } catch (e: Exception) {
-            val message = buildString {
-                append(context.getString(R.string.login_failed))
-                append(" : $e")
-            }
-            emit(APIResponse.Error(message))
         }
-    }.flowOn(Dispatchers.IO)
 
-    fun signInByEmail(email: String, password: String): Flow<APIResponse<LoggedUser>> = flow {
-        val auth = FirebaseAuth.getInstance()
+    fun signInByEmail(email: String, password: String): Flow<APIResponse<LoggedUser>> =
+        handleNetworkCall {
+            val auth = FirebaseAuth.getInstance()
 
-        try {
             val result = auth.createUserWithEmailAndPassword(email, password).await()
 
             result.user?.let { user ->
                 try {
                     user.sendEmailVerification().await()
-                    emit(APIResponse.Success(
-                        LoggedUser(
-                            user.uid,
-                            user.displayName,
-                            user.photoUrl.toString()
-                        )
-                    ))
+                    LoggedUser(
+                        user.uid,
+                        user.displayName,
+                        user.photoUrl.toString()
+                    )
                 } catch (verificationException: Exception) {
                     val message = buildString {
                         append(context.getString(R.string.failed_to_send_verification_email))
                         append(verificationException.message)
                     }
-                    emit(APIResponse.Error(message))
+                    throw Exception(message)
                 }
             } ?: run {
-                emit(APIResponse.Error(context.getString(R.string.user_creation_failed)))
+                throw Exception(context.getString(R.string.user_creation_failed))
             }
-        } catch (e: Exception) {
-            val message = buildString {
-                append(context.getString(R.string.register_failed))
-                append(" : $e")
-            }
-            emit(APIResponse.Error(message))
         }
-    }.flowOn(Dispatchers.IO)
 }
