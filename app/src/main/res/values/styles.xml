@@ -4,4 +4,10 @@
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">8dp</item>
     </style>
+
+    <style name="ShapeAppearanceOverlay.App.CornerSize20Percent" parent="">
+        <item name="strokeColor">#ffffff</item>
+        <item name="strokeWidth">2dp</item>
+        <item name="cornerSize">25%</item>
+    </style>
 </resources>

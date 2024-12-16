@@ -1,49 +1,82 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
+    android:fillViewport="true"
+    android:layout_gravity="center_horizontal"
     tools:context=".ui.activity.pin.PinActivity">
 
-    <TextView
-        android:id="@+id/tvPinHead"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/llMain"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/insert_your_pin"
-        android:textStyle="bold"
-        android:textSize="20sp"
-        app:layout_constraintBottom_toTopOf="@+id/otp_view"
-        app:layout_constraintEnd_toEndOf="@+id/otp_view"
-        app:layout_constraintStart_toStartOf="@+id/otp_view"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <com.mukeshsolanki.OtpView
-        android:id="@+id/otp_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="150dp"
-        android:background="@null"
-        android:focusableInTouchMode="true"
-        android:inputType="numberPassword"
-        app:OtpHideLineWhenFilled="true"
-        app:OtpItemCount="6"
-        app:OtpItemSpacing="10dp"
-        app:OtpLineColor="?attr/colorPrimary"
-        app:OtpViewType="line"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:layout_marginTop="40dp"
+        android:fitsSystemWindows="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btSubmit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
-        android:text="@string/submit"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/otp_view" />
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="?attr/cardBackgroundColor"
+            android:layout_marginTop="20dp"
+            app:cardElevation="8dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorPrimary"
+            app:cardCornerRadius="19dp">
+            <ImageView
+                android:id="@+id/ivLogo"
+                android:layout_width="75dp"
+                android:layout_height="75dp"
+                android:contentDescription="@string/app_logo"
+                android:src="@drawable/encnotes_update_transparent"
+                app:layout_constraintEnd_toStartOf="@+id/tvPrivyNote"
+                app:layout_constraintStart_toStartOf="parent"/>
+        </com.google.android.material.card.MaterialCardView>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/tvPinHead"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/insert_your_pin"
+            android:textSize="26sp"
+            android:layout_marginTop="10dp"
+            app:layout_constraintBottom_toTopOf="@+id/otp_view"
+            app:layout_constraintEnd_toEndOf="@+id/otp_view"
+            app:layout_constraintStart_toStartOf="@+id/otp_view"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.mukeshsolanki.OtpView
+            android:id="@+id/otp_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:focusableInTouchMode="true"
+            android:inputType="numberPassword"
+            android:layout_marginTop="50dp"
+            app:OtpHideLineWhenFilled="true"
+            app:OtpItemCount="6"
+            app:OtpItemSpacing="10dp"
+            app:OtpLineColor="?attr/colorPrimary"
+            app:OtpViewType="line"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/llLogo" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btSubmit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp"
+            android:text="@string/submit"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/otp_view" />
+    </LinearLayout>
+</ScrollView>

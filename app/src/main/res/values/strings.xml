@@ -127,4 +127,6 @@
     <string name="validation_success">Validation success</string>
     <string name="empty"> </string>
     <string name="strong_password_hint">Strong password = has more than one capital letters and special character</string>
+    <string name="app_logo">App logo</string>
+    <string name="welcome">Welcome :)</string>
 </resources>

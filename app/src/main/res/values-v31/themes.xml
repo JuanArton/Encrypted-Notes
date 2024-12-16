@@ -19,7 +19,7 @@
 
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">?attr/colorSurfaceBright</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/encnotestransparent</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/encnotes_update_transparent</item>
         <item name="windowSplashScreenAnimationDuration">2000</item>
 
         <!-- Set the theme of the Activity that directly follows your splash
