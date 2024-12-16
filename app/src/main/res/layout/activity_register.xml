@@ -34,18 +34,19 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:backgroundTint="?attr/cardBackgroundColor"
                 android:layout_marginTop="20dp"
-                app:cardElevation="16dp"
-                app:strokeWidth="1dp"
+                android:backgroundTint="@android:color/transparent"
+                app:strokeWidth="0dp"
                 app:strokeColor="?attr/colorPrimary"
                 app:cardCornerRadius="19dp">
                 <ImageView
                     android:id="@+id/ivLogo"
-                    android:layout_width="75dp"
-                    android:layout_height="75dp"
+                    android:layout_width="95dp"
+                    android:layout_height="95dp"
+                    android:scaleX="1.7"
+                    android:scaleY="1.7"
                     android:contentDescription="@string/app_logo"
-                    android:src="@drawable/encnotes_update_transparent"
+                    android:src="@drawable/encnotes_final_transparent"
                     app:layout_constraintEnd_toStartOf="@+id/tvPrivyNote"
                     app:layout_constraintStart_toStartOf="parent"/>
             </com.google.android.material.card.MaterialCardView>

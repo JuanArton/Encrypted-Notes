@@ -201,7 +201,13 @@ class MainActivity : AppCompatActivity(), PinListener {
         mainViewModel.getNotes()
 
         binding?.apply {
-            Utils.loadAvatar(this@MainActivity, auth.currentUser!!.photoUrl.toString(), this@MainActivity as LifecycleOwner, searchTopBar)
+            val photo = auth.currentUser?.photoUrl ?: R.drawable.person
+            Utils.loadAvatar(
+                this@MainActivity,
+                photo,
+                this@MainActivity as LifecycleOwner,
+                searchTopBar
+            )
 
             searchTopBar.menu.findItem(R.id.profile).setOnMenuItemClickListener {
                 startActivity(Intent(this@MainActivity, SettingsActivity::class.java))

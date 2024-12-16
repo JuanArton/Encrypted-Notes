@@ -195,7 +195,7 @@ object Utils {
         }
     }
 
-    fun loadAvatar(context: Context, url: String, lifecycleOwner: LifecycleOwner, searchBar: SearchBar) {
+    fun loadAvatar(context: Context, url: Any, lifecycleOwner: LifecycleOwner, searchBar: SearchBar) {
         try {
             Glide.with(context)
                 .load(url)
