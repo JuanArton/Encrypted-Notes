@@ -35,7 +35,7 @@
                 android:scaleX="1.7"
                 android:scaleY="1.7"
                 android:contentDescription="@string/app_logo"
-                android:src="@drawable/encnotes_final_transparent"
+                android:src="@drawable/privynote_final_transparent"
                 app:layout_constraintEnd_toStartOf="@+id/tvPrivyNote"
                 app:layout_constraintStart_toStartOf="parent"/>
         </com.google.android.material.card.MaterialCardView>

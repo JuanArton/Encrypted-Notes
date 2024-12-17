@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.juanarton.encnotes"
+    namespace = "com.juanarton.privynote"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.juanarton.encnotes"
+        applicationId = "com.juanarton.privynote"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

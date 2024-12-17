@@ -3,10 +3,10 @@ package com.juanarton
 import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
 import com.google.android.material.color.DynamicColors
-import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.DARK
-import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.LIGHT
-import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.SYSTEM
-import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.THEME
+import com.juanarton.privynote.ui.activity.settings.SettingsViewModel.Companion.DARK
+import com.juanarton.privynote.ui.activity.settings.SettingsViewModel.Companion.LIGHT
+import com.juanarton.privynote.ui.activity.settings.SettingsViewModel.Companion.SYSTEM
+import com.juanarton.privynote.ui.activity.settings.SettingsViewModel.Companion.THEME
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp

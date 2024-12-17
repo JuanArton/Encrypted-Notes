@@ -19,7 +19,7 @@
         <!-- Set the splash screen background, animated icon, and animation
         duration. -->
         <item name="windowSplashScreenBackground">?attr/colorPrimarySurface</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/encnotes_final_transparent</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/privynote_final_transparent</item>
         <item name="windowSplashScreenAnimationDuration">2000</item>
 
         <!-- Set the theme of the Activity that directly follows your splash
