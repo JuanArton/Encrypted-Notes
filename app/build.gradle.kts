@@ -9,12 +9,12 @@ plugins {
 
 android {
     namespace = "com.juanarton.privynote"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.juanarton.privynote"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -70,8 +70,6 @@ dependencies {
 
     implementation(libs.glide)
 
-    implementation(libs.androidx.paging.runtime.ktx)
-
     //debugImplementation(libs.leakcanary.android)
 
     implementation(libs.retrofit)
@@ -97,8 +95,6 @@ dependencies {
 
     implementation (libs.androidx.credentials)
     implementation (libs.androidx.credentials.play.services.auth)
-
-    implementation(libs.androidx.paging.runtime)
 
     implementation(libs.tink.android)
 
