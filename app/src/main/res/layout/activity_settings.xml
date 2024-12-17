@@ -149,7 +149,6 @@
                     app:layout_constraintTop_toBottomOf="@+id/cgThemeSelector" />
 
                 <TextView
-                    android:id="@+id/tvBiometricDesc"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
@@ -308,7 +307,6 @@
                         app:layout_constraintTop_toTopOf="parent" />
 
                     <TextView
-                        android:id="@+id/tvBackupDesc"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"
@@ -326,6 +324,7 @@
                         android:clickable="true"
                         android:focusable="true"
                         android:background="?attr/selectableItemBackground"
+                        android:contentDescription="@string/backup_notes"
                         app:layout_constraintTop_toTopOf="@id/clBackup"
                         app:layout_constraintBottom_toBottomOf="@id/clBackup" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
@@ -348,7 +347,6 @@
                         app:layout_constraintTop_toTopOf="parent" />
 
                     <TextView
-                        android:id="@+id/tvRestoreDesc"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"
@@ -366,6 +364,7 @@
                         android:layout_height="0dp"
                         android:clickable="true"
                         android:focusable="true"
+                        android:contentDescription="@string/restore_notes"
                         android:background="?attr/selectableItemBackground"
                         app:layout_constraintTop_toTopOf="@id/clRestore"
                         app:layout_constraintBottom_toBottomOf="@id/clRestore" />

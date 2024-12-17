@@ -1,7 +1,5 @@
 package com.juanarton.encnotes.core.utils
 
-import android.content.ContentResolver
-import android.net.Uri
 import com.google.android.gms.common.util.Base64Utils
 import com.google.crypto.tink.Aead
 import com.google.crypto.tink.BinaryKeysetReader
@@ -11,7 +9,6 @@ import com.google.crypto.tink.KeysetHandle
 import com.google.crypto.tink.aead.PredefinedAeadParameters
 import com.google.crypto.tink.config.TinkConfig
 import java.io.ByteArrayOutputStream
-import java.security.GeneralSecurityException
 
 
 class Cryptography {
@@ -58,12 +55,6 @@ class Cryptography {
         fun decrypt(data: ByteArray, keysetHandle: KeysetHandle): ByteArray {
             val aead = keysetHandle.getPrimitive(Aead::class.java)
             return aead.decrypt(data, null)
-        }
-
-        fun uriToByteArray(uri: Uri, contentResolver: ContentResolver): ByteArray {
-            contentResolver.openInputStream(uri).use { inputStream ->
-                return inputStream?.readBytes() ?: throw IllegalArgumentException("Unable to open URI: $uri")
-            }
         }
     }
 }

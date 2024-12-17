@@ -1,9 +1,7 @@
 package com.juanarton.encnotes.core.data.api
 
 import com.juanarton.encnotes.BuildConfig
-import com.juanarton.encnotes.core.data.api.download.ProgressResponseBody
 import com.juanarton.encnotes.ui.activity.main.MainActivity.Companion.baseUrl
-import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.CertificatePinner
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -30,12 +28,6 @@ object API {
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
         .certificatePinner(certificate)
-        .addNetworkInterceptor { chain ->
-            val originalResponse = chain.proceed(chain.request())
-            originalResponse.newBuilder()
-                .body(ProgressResponseBody(originalResponse.body, progressListener))
-                .build()
-        }
         .cache(null)
         .build()
 
@@ -46,9 +38,4 @@ object API {
         .build()
 
     val services: APIService = retrofit.create(APIService::class.java)
-
-    var progressListener: ProgressListener = object : ProgressListener {
-        override fun onProgress(bytesRead: Long, contentLength: Long, done: Boolean) {
-        }
-    }
 }

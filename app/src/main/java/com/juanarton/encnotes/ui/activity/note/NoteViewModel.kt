@@ -4,7 +4,6 @@ import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -19,8 +18,6 @@ import com.juanarton.encnotes.ui.utils.Utils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.viascom.nanoid.NanoId
 import kotlinx.coroutines.launch
-import java.io.BufferedInputStream
-import java.io.ByteArrayOutputStream
 import java.io.File
 import javax.inject.Inject
 

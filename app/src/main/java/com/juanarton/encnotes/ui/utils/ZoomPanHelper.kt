@@ -4,7 +4,6 @@ import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.graphics.Matrix
 import android.graphics.PointF
-import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector

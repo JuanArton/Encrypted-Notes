@@ -2,7 +2,6 @@ package com.juanarton.encnotes.core.adapter
 
 import android.content.Context
 import android.graphics.Color
-import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View

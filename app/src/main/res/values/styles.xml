@@ -1,13 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="RoundedCornersShape">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">8dp</item>
-    </style>
 
-    <style name="ShapeAppearanceOverlay.App.CornerSize20Percent" parent="">
-        <item name="strokeColor">#ffffff</item>
-        <item name="strokeWidth">2dp</item>
-        <item name="cornerSize">25%</item>
-    </style>
 </resources>

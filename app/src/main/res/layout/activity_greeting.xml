@@ -61,21 +61,23 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btRegister"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@string/create_an_account"
+            app:layout_constraintWidth_max="320dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/llLogo" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/bt_login"
-            android:layout_width="match_parent"
+            android:id="@+id/btLogin"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@string/login"
             android:backgroundTint="@android:color/transparent"
             android:textColor="?attr/colorPrimary"
             android:layout_marginTop="5dp"
+            app:layout_constraintWidth_max="320dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/btRegister" />

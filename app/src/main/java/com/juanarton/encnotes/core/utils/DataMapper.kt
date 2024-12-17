@@ -83,7 +83,7 @@ object DataMapper {
             attachment.id,
             attachment.noteId,
             attachment.url,
-            attachment.isDelete ?: false,
+            attachment.isDelete == true,
             attachment.type ?: "",
             attachment.lastModified ?: 0L
         )

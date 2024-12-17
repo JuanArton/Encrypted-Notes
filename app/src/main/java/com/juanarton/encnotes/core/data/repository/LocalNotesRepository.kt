@@ -2,7 +2,6 @@ package com.juanarton.encnotes.core.data.repository
 
 import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
-import android.util.Log
 import com.google.crypto.tink.KeysetHandle
 import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.domain.model.Attachment
@@ -19,7 +18,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import java.io.File

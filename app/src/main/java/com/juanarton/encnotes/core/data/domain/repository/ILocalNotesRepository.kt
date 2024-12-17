@@ -2,8 +2,6 @@ package com.juanarton.encnotes.core.data.domain.repository
 
 import android.content.Context
 import com.google.crypto.tink.KeysetHandle
-import com.juanarton.encnotes.core.data.api.APIResponse
-import com.juanarton.encnotes.core.data.api.authentications.login.LoginData
 import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.Notes
 import com.juanarton.encnotes.core.data.source.remote.Resource
@@ -14,8 +12,6 @@ interface ILocalNotesRepository {
     fun setIsLoggedIn(isLoggedIn: Boolean): Flow<Boolean>
 
     fun getIsLoggedIn(): Boolean
-
-    //fun getNotes(): Flow<PagingData<Notes>>
 
     fun getNotes(): Flow<List<Notes>>
 

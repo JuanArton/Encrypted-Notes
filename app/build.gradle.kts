@@ -115,7 +115,5 @@ dependencies {
 
     implementation(libs.ketch)
 
-    implementation("com.airbnb.android:lottie:6.6.0")
-
-    implementation("androidx.biometric:biometric:1.2.0-alpha05")
+    implementation(libs.biometric)
 }

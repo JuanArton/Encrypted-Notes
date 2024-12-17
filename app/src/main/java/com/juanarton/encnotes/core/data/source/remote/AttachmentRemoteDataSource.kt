@@ -1,9 +1,7 @@
 package com.juanarton.encnotes.core.data.source.remote
 
 import android.content.Context
-import android.net.Network
 import com.google.gson.Gson
-import com.juanarton.encnotes.R
 import com.juanarton.encnotes.core.data.api.API
 import com.juanarton.encnotes.core.data.api.APIResponse
 import com.juanarton.encnotes.core.data.api.attachments.getattachment.AttachmentData
@@ -16,19 +14,14 @@ import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.source.local.SharedPrefDataSource
 import com.juanarton.encnotes.core.data.source.remote.NoteRemoteDataSource.Companion.TOKEN_EXPIRED_MESSAGE
 import com.ketch.Ketch
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
 import org.json.JSONObject
 import retrofit2.Response
-import java.io.File
-import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
 

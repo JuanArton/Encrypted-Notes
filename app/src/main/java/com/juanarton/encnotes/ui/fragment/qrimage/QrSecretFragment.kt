@@ -3,12 +3,11 @@ package com.juanarton.encnotes.ui.fragment.qrimage
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Base64
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
-import com.juanarton.encnotes.R
 import com.juanarton.encnotes.databinding.FragmentQrSecretBinding
 
 class QrSecretFragment(

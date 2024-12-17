@@ -9,12 +9,13 @@
     tools:context=".ui.fragment.insertkey.InsertKeyFragment">
 
     <com.google.android.material.card.MaterialCardView
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="50dp"
         android:layout_marginEnd="50dp"
         android:fitsSystemWindows="true"
         android:backgroundTint="?attr/cardBackgroundColor"
+        app:layout_constraintWidth_max="500dp"
         app:strokeWidth="0dp"
         app:cardElevation="16dp"
         app:layout_constraintBottom_toBottomOf="parent"

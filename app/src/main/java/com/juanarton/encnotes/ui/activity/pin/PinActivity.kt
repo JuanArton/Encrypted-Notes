@@ -3,7 +3,6 @@ package com.juanarton.encnotes.ui.activity.pin
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -89,12 +88,12 @@ class PinActivity : AppCompatActivity() {
                                     binding?.btSubmit?.isEnabled = false
                                     FragmentBuilder.build(
                                         this@PinActivity,
-                                        InsertKeyFragment(false),
+                                        InsertKeyFragment(),
                                         android.R.id.content
                                     )
 
                                     if (isRegistered) {
-                                        val fragment = InsertKeyFragment(true)
+                                        val fragment = InsertKeyFragment()
                                         FragmentBuilder.build(this@PinActivity, fragment, android.R.id.content)
                                     } else {
                                         FragmentBuilder.destroyFragment(this@PinActivity, loadingDialog)

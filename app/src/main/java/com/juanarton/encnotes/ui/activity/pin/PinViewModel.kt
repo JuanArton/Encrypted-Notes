@@ -1,6 +1,5 @@
 package com.juanarton.encnotes.ui.activity.pin
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,9 +20,6 @@ class PinViewModel @Inject constructor(
     private val _registerUser = MutableLiveData<Resource<String>>()
     val registerUser = _registerUser
 
-    private val _checkTwoFactor: MutableLiveData<Resource<Boolean>> = MutableLiveData()
-    val checkTwoFactor: LiveData<Resource<Boolean>> = _checkTwoFactor
-
     private val _loginUser = MutableLiveData<Resource<Login>>()
     val loginUser = _loginUser
 
@@ -31,14 +27,6 @@ class PinViewModel @Inject constructor(
         viewModelScope.launch {
             remoteNotesRepoUseCase.registerUser(id, pin, username).collect {
                 _registerUser.value = it
-            }
-        }
-    }
-
-    fun checkTwoFactor(id: String) {
-        viewModelScope.launch {
-            remoteNotesRepoUseCase.checkTwoFactorSet(id).collect {
-                _checkTwoFactor.value = it
             }
         }
     }

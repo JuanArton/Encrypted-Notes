@@ -57,7 +57,7 @@ class TwoFactorActivity : AppCompatActivity() {
                                     binding?.btSubmit?.isEnabled = false
                                     FragmentBuilder.build(
                                         this@TwoFactorActivity,
-                                        InsertKeyFragment(false),
+                                        InsertKeyFragment(),
                                         android.R.id.content
                                     )
 

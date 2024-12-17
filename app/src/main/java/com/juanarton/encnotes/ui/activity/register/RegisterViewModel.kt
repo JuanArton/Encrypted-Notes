@@ -1,7 +1,6 @@
 package com.juanarton.encnotes.ui.activity.register
 
 import android.app.Activity
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,9 +22,6 @@ class RegisterViewModel @Inject constructor(
     private val _signInByEmail = MutableLiveData<Resource<LoggedUser>>()
     val signInByEmail = _signInByEmail
 
-    private val _checkRegistered: MutableLiveData<Resource<Boolean>> = MutableLiveData()
-    val checkRegistered: LiveData<Resource<Boolean>> = _checkRegistered
-
     fun singWithGoogleAcc(option: GetSignInWithGoogleOption, activity: Activity) {
         viewModelScope.launch {
             remoteNotesRepoUseCase.signInWithGoogle(option, activity).collect {
@@ -38,14 +34,6 @@ class RegisterViewModel @Inject constructor(
         viewModelScope.launch {
             remoteNotesRepoUseCase.signInByEmail(email, password).collect {
                 _signInByEmail.value = it
-            }
-        }
-    }
-
-    fun checkRegistered(id: String) {
-        viewModelScope.launch {
-            remoteNotesRepoUseCase.checkIsRegistered(id).collect {
-                _checkRegistered.value = it
             }
         }
     }

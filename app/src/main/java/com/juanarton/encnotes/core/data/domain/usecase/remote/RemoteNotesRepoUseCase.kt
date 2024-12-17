@@ -1,11 +1,7 @@
 package com.juanarton.encnotes.core.data.domain.usecase.remote
 
 import android.app.Activity
-import android.content.Context
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
-import com.juanarton.encnotes.core.data.api.APIResponse
-import com.juanarton.encnotes.core.data.api.authentications.login.LoginData
-import com.juanarton.encnotes.core.data.api.authentications.twofacor.TwoFactorData
 import com.juanarton.encnotes.core.data.domain.model.Attachment
 import com.juanarton.encnotes.core.data.domain.model.LoggedUser
 import com.juanarton.encnotes.core.data.domain.model.Login

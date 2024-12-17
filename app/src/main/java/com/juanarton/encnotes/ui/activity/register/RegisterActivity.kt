@@ -1,14 +1,11 @@
 package com.juanarton.encnotes.ui.activity.register
 
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
-import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -269,7 +266,6 @@ class RegisterActivity : AppCompatActivity(), CustomDialogListener {
                 loggedUser.data?.let {
                     uid = it.uid
                     username = it.displayName
-                    registerViewModel.checkRegistered(it.uid)
                 }
             }
             is Resource.Loading -> {

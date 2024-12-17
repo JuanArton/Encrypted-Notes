@@ -2,7 +2,6 @@ package com.juanarton.encnotes.ui.fragment.insertkey
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,24 +10,19 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.juanarton.encnotes.R
-import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.databinding.FragmentInsertKeyBinding
 import com.juanarton.encnotes.ui.activity.main.MainActivity
 import com.juanarton.encnotes.ui.fragment.SharedViewModel
-import com.juanarton.encnotes.ui.fragment.loading.LoadingFragment
-import com.juanarton.encnotes.ui.utils.FragmentBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class InsertKeyFragment(
-    private val login: Boolean
 ) : Fragment() {
 
     private val sharedViewModel: SharedViewModel by viewModels()
     private var _binding: FragmentInsertKeyBinding? = null
     private val binding get() = _binding
-    private var loadingDialog = LoadingFragment()
     private lateinit var key: String
 
     override fun onCreateView(

@@ -3,9 +3,6 @@
     <string name="login_using_google_account">Login using google account</string>
     <string name="login_failed">Login failed</string>
     <string name="unexpected_type_of_credential">Unexpected type of credential</string>
-    <string name="failed_to_get_credential">Failed to get credential</string>
-    <string name="error">Error</string>
-    <string name="login_success">Login success</string>
     <string name="insert_error">Insert aborted due to conflict</string>
     <string name="update_error">Update aborted due to conflict</string>
     <string name="delete_error">Unable to delete note</string>
@@ -14,17 +11,12 @@
     <string name="notes_title">Notes Title</string>
     <string name="notes_content">Notes Content</string>
     <string name="insert_your_pin">Insert your pin</string>
-    <string name="loading">Loading...</string>
-    <string name="register_failed">Register failed</string>
     <string name="pin_empty">Pin empty</string>
-    <string name="user_already_exist">User already exist!</string>
     <string name="add_new_note">Add new note</string>
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="important">Important!</string>
     <string name="save_key_message">Store this encryption key in a place you believe is secure, and make sure no one else knows it. This key will be used to encrypt and decrypt your notes. If you lose this key, no one will be able to recover your notes.</string>
     <string name="copy_encryption_key">Copy encryption key</string>
     <string name="done">Done</string>
-    <string name="key_copied">Encryption key copied!</string>
     <string name="insert_cipher_key">Insert cipher key</string>
     <string name="insert_key_message">The key is generated the first time you use the application. You should have already saved it somewhere you consider safe. The key looks like this:</string>
     <string name="cipher_key_sample">CM/dkuUPEmQKWAowdHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuQWVzR2Nt S2V5EiIaICcnFcxEMEo/c8zpa61k+xyOGNnt6gLiCzLZW9k+B0neGAEQARjP3ZLlDyAB</string>
@@ -34,9 +26,7 @@
     <string name="password">Password</string>
     <string name="login">Login</string>
     <string name="login_with">Login with :</string>
-    <string name="sign_in">Sign In</string>
     <string name="register_success">Please check your email to verify, and come back here to login with the same email you\'ve registered :)</string>
-    <string name="account_already_exist">Register failed. Account already exist?</string>
     <string name="failed_to_send_verification_email">Failed to send verification email</string>
     <string name="user_creation_failed">User creation failed</string>
     <string name="please_verify_email">Please verify your email first!</string>
@@ -45,24 +35,10 @@
     <string name="note">Note</string>
     <string name="empty_uid">Empty uid</string>
     <string name="unable_add_note">Unable to add note</string>
-    <string name="unable_add_attachment">Unable to add attachment</string>
-    <string name="unable_get_attachment">Unable to get attachment</string>
-    <string name="unable_delete_attachment">Unable to delete attachment</string>
-    <string name="update_key_failed">Update key failed</string>
-    <string name="get_notes_failed">Get notes failed</string>
-    <string name="update_notes_failed">Update notes failed</string>
-    <string name="delete_notes_failed">Delete notes failed</string>
-    <string name="restore_backup_failed">Restore backup to cloud failed</string>
-    <string name="set_two_factor_failed">Failed to set two factor authentication</string>
-    <string name="disable_two_factor_failed">Failed to disable two factor authentication</string>
-    <string name="check_two_factor_failed">Failed to get two factor status</string>
-    <string name="check_registered_failed">Failed to check is account registered</string>
-    <string name="notes_saved_in_cloud">Notes saved in cloud :)</string>
     <string name="failed_to_sync_notes">Failed to sync notes : </string>
     <string name="delete">Delete</string>
-    <string name="failed_to_download_attachment">Failed to load attachment</string>
     <string name="attachment_image">Attachment image</string>
-    <string name="delete_attachment_button">Delete attachment button</string>
+    <string name="delete_attachment_button">Delete attachment</string>
     <string name="delete_button">Delete button</string>
     <string name="search_your_notes">Search your notes</string>
     <string name="minutes_ago">minute(s) ago</string>
@@ -70,7 +46,6 @@
     <string name="edited">Edited</string>
     <string name="just_now">just now</string>
     <string name="yesterday">yesterday</string>
-    <string name="at">at</string>
     <string name="profile">Profile</string>
     <string name="general">General</string>
     <string name="theme">Theme</string>
@@ -129,8 +104,13 @@
     <string name="strong_password_hint">Strong password = has more than one capital letters and special character</string>
     <string name="app_logo">App logo</string>
     <string name="welcome">Welcome :)</string>
-    <string name="unexpected_error">Unexpected error</string>
     <string name="cant_reach_server">Can\'t reach server. Maybe check your connection?</string>
     <string name="request_timeout">Request timed out. Please try again later</string>
     <string name="network_error">Network error occurred. Please try again</string>
+    <string name="backup_notes">Backup notes</string>
+    <string name="restore_notes">Restore notes</string>
+    <string name="otp_input_field">OTP input field</string>
+    <string name="app_pin_input_field">App pin input field</string>
+    <string name="encryption_key_sample">Encryption key sample</string>
+    <string name="add_attachment">Add attachment</string>
 </resources>

@@ -1,6 +1,5 @@
 package com.juanarton.encnotes.core.utils
 
-import android.util.Log
 import com.juanarton.encnotes.core.data.domain.model.Notes
 
 object NoteSync {

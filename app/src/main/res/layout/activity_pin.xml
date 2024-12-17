@@ -10,7 +10,6 @@
     tools:context=".ui.activity.pin.PinActivity">
 
     <LinearLayout
-        android:id="@+id/llMain"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
@@ -61,6 +60,7 @@
             android:focusableInTouchMode="true"
             android:inputType="numberPassword"
             android:layout_marginTop="50dp"
+            android:contentDescription="@string/app_pin_input_field"
             app:OtpHideLineWhenFilled="true"
             app:OtpItemCount="6"
             app:OtpItemSpacing="10dp"

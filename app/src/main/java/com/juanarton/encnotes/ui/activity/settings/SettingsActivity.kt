@@ -1,8 +1,6 @@
 package com.juanarton.encnotes.ui.activity.settings
 
 import android.content.Intent
-import android.content.res.ColorStateList
-import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.os.Process
@@ -36,7 +34,6 @@ import com.juanarton.encnotes.ui.fragment.apppin.PinListener
 import com.juanarton.encnotes.ui.fragment.loading.LoadingFragment
 import com.juanarton.encnotes.ui.fragment.qrimage.QrSecretFragment
 import com.juanarton.encnotes.ui.utils.FragmentBuilder
-import com.juanarton.encnotes.ui.utils.Utils
 import dagger.hilt.android.AndroidEntryPoint
 import kotlin.getValue
 
@@ -157,8 +154,6 @@ class SettingsActivity : AppCompatActivity(), PinListener {
                 if (result.resultCode == RESULT_OK) {
                     val data: Uri? = result.data?.data
                     data?.let {
-                        val byteArray = Utils.uriToByteArray(it, contentResolver)
-
                         val key = settingsViewModel.getCipherKey()
                         if (!key.isNullOrEmpty()) {
                             keysetHandle = Cryptography.deserializeKeySet(key)

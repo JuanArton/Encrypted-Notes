@@ -2,18 +2,15 @@ package com.juanarton.encnotes.core.data.source.local
 
 import android.content.Context
 import android.os.Environment
-import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.google.crypto.tink.KeysetHandle
 import com.juanarton.encnotes.core.data.source.local.room.dao.NotesDAO
 import com.juanarton.encnotes.core.data.source.local.room.entity.NotesEntity
-import com.juanarton.encnotes.core.data.source.remote.Resource
 import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.di.DatabaseModule.Companion.DB_NAME
 import com.juanarton.encnotes.di.DatabaseModule.Companion.FILE_NAME
 import com.juanarton.encnotes.di.DatabaseModule.Companion.KEY_NAME
-import com.juanarton.encnotes.ui.activity.settings.SettingsActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -29,7 +26,6 @@ import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.printStackTrace
 
 @Singleton
 class NoteLocalDataSource @Inject constructor(

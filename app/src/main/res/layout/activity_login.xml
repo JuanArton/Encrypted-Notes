@@ -8,140 +8,164 @@
     android:fillViewport="true"
     tools:context=".ui.activity.login.LoginActivity">
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
-        android:fitsSystemWindows="true"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:gravity="center_vertical">
 
-        <LinearLayout
-            android:id="@+id/llLogo"
-            android:layout_width="wrap_content"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="vertical"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_gravity="center_vertical"
+            android:fitsSystemWindows="true">
 
-            <com.google.android.material.card.MaterialCardView
+            <LinearLayout
+                android:id="@+id/llLogo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:backgroundTint="@android:color/transparent"
-                app:strokeWidth="0dp"
-                app:strokeColor="?attr/colorPrimary"
-                app:cardCornerRadius="19dp">
-                <ImageView
-                    android:id="@+id/ivLogo"
-                    android:layout_width="95dp"
-                    android:layout_height="95dp"
-                    android:scaleX="1.7"
-                    android:scaleY="1.7"
-                    android:contentDescription="@string/app_logo"
-                    android:src="@drawable/encnotes_final_transparent"
-                    app:layout_constraintEnd_toStartOf="@+id/tvPrivyNote"
-                    app:layout_constraintStart_toStartOf="parent"/>
-            </com.google.android.material.card.MaterialCardView>
+                android:gravity="center"
+                android:orientation="vertical"
+                android:layout_marginTop="20dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@android:color/transparent"
+                    app:strokeWidth="0dp"
+                    app:strokeColor="?attr/colorPrimary"
+                    app:cardCornerRadius="19dp">
+                    <ImageView
+                        android:id="@+id/ivLogo"
+                        android:layout_width="95dp"
+                        android:layout_height="95dp"
+                        android:scaleX="1.7"
+                        android:scaleY="1.7"
+                        android:contentDescription="@string/app_logo"
+                        android:src="@drawable/encnotes_final_transparent"
+                        app:layout_constraintEnd_toStartOf="@+id/tvPrivyNote"
+                        app:layout_constraintStart_toStartOf="parent"/>
+                </com.google.android.material.card.MaterialCardView>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/welcome"
+                    android:textSize="26sp"
+                    android:layout_marginTop="10dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/ivLogo"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </LinearLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/textInputLayout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                app:boxStrokeColor="@color/text_input_outline_color"
+                app:counterTextColor="?attr/colorPrimary"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/llLogo"
+                app:layout_constraintWidth_max="320dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/email"
+                    android:textSize="14sp" />
+            </com.google.android.material.textfield.TextInputLayout>
 
             <TextView
-                android:id="@+id/tvWelcome"
+                android:id="@+id/tvEmailStatus"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toEndOf="@+id/textInputLayout"
+                app:layout_constraintStart_toStartOf="@+id/textInputLayout"
+                app:layout_constraintTop_toBottomOf="@+id/textInputLayout" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/textInputLayout3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                app:boxStrokeColor="@color/text_input_outline_color"
+                app:counterTextColor="?attr/colorPrimary"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvEmailStatus"
+                app:layout_constraintWidth_max="320dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/password"
+                    android:inputType="textPassword"
+                    android:textSize="14sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:id="@+id/tvPasswordStatus"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toEndOf="@+id/textInputLayout3"
+                app:layout_constraintStart_toStartOf="@+id/textInputLayout3"
+                app:layout_constraintTop_toBottomOf="@+id/textInputLayout3" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btLogin"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                android:text="@string/login"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvPasswordStatus"
+                app:layout_constraintWidth_max="320dp" />
+
+            <TextView
+                android:id="@+id/textView2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/welcome"
-                android:textSize="26sp"
-                android:layout_marginTop="10dp"
+                android:layout_gravity="start"
+                android:layout_marginTop="30dp"
+                android:text="@string/login_with"
+                app:layout_constraintStart_toStartOf="@+id/btLogin"
+                app:layout_constraintTop_toBottomOf="@+id/btLogin" />
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                android:backgroundTint="?attr/cardBackgroundColor"
+                android:layout_marginBottom="20dp"
+                app:cardCornerRadius="10dp"
+                app:cardElevation="8dp"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/ivLogo"
-                app:layout_constraintTop_toTopOf="parent" />
-        </LinearLayout>
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textView2">
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="30dp"
-            app:boxStrokeColor="@color/text_input_outline_color"
-            app:counterTextColor="?attr/colorPrimary">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etEmail"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/email"
-                android:textSize="14sp" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <TextView
-            android:id="@+id/tvEmailStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="12sp"/>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="30dp"
-            app:boxStrokeColor="@color/text_input_outline_color"
-            app:counterTextColor="?attr/colorPrimary">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etPassword"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textPassword"
-                android:hint="@string/password"
-                android:textSize="14sp" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <TextView
-            android:id="@+id/tvPasswordStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="12sp"/>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btLogin"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="30dp"
-            android:text="@string/login"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="35dp"
-            android:layout_gravity="start"
-            android:text="@string/login_with"/>
-
-        <androidx.cardview.widget.CardView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:backgroundTint="?attr/cardBackgroundColor"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="20dp"
-            app:cardCornerRadius="10dp"
-            app:cardElevation="8dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <ImageButton
-                android:id="@+id/ibGLogin"
-                android:layout_width="45dp"
-                android:layout_height="45dp"
-                android:backgroundTint="@android:color/transparent"
-                android:contentDescription="@string/login_using_google_account"
-                android:scaleType="centerCrop"
-                android:scaleX="1.3"
-                android:scaleY="1.3"
-                android:src="@drawable/glogo" />
-        </androidx.cardview.widget.CardView>
-    </LinearLayout>
+                <ImageButton
+                    android:id="@+id/ibGLogin"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:backgroundTint="@android:color/transparent"
+                    android:contentDescription="@string/login_using_google_account"
+                    android:scaleType="centerCrop"
+                    android:scaleX="1.3"
+                    android:scaleY="1.3"
+                    android:src="@drawable/glogo" />
+            </androidx.cardview.widget.CardView>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </FrameLayout>
 </ScrollView>

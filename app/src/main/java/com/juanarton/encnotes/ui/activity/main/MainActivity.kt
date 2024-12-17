@@ -8,7 +8,6 @@ import android.os.Handler
 import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.FrameLayout
@@ -47,7 +46,6 @@ import com.juanarton.encnotes.core.utils.Cryptography
 import com.juanarton.encnotes.core.utils.NoteSync
 import com.juanarton.encnotes.databinding.ActivityMainBinding
 import com.juanarton.encnotes.ui.activity.greeting.GreetingActivity
-import com.juanarton.encnotes.ui.activity.login.LoginActivity
 import com.juanarton.encnotes.ui.activity.note.NoteActivity
 import com.juanarton.encnotes.ui.activity.settings.SettingsActivity
 import com.juanarton.encnotes.ui.activity.settings.SettingsViewModel.Companion.APP_SETTINGS

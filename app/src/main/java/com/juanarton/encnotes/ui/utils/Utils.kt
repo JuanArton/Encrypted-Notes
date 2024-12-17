@@ -224,7 +224,7 @@ object Utils {
                     }
 
                 }).submit()
-        } catch (e: Exception) {}
+        } catch (_: Exception) {}
     }
 
     fun renderProfileImage(resource:Drawable, lifecycleOwner: LifecycleOwner, searchView: SearchBar) {
