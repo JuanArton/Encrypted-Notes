@@ -59,14 +59,14 @@ class SettingsViewModel @Inject constructor(
 
     fun setTheme(value: String) {
         editor.putString(THEME, value)
-        editor.apply()
+        editor.commit()
     }
 
     fun getTheme(): String? {
         return sPref.getString(THEME, SYSTEM)
     }
 
-    fun getBiometric(): Boolean? {
+    fun getBiometric(): Boolean {
         return sPref.getBoolean(BIOMETRIC, false)
     }
 
@@ -80,7 +80,7 @@ class SettingsViewModel @Inject constructor(
         editor.apply()
     }
 
-    fun getAppPin(): Int? {
+    fun getAppPin(): Int {
         return sPref.getInt(APP_PIN, 0)
     }
 
@@ -108,7 +108,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun getRefreshToken() = localNotesRepoUseCase.getRefreshKey()!!
+    private fun getRefreshToken() = localNotesRepoUseCase.getRefreshKey()!!
 
     fun logout() {
         viewModelScope.launch {

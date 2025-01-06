@@ -22,8 +22,8 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.juanarton.encnotes" />
-                  <option name="mobileSdkAppId" value="1:696494720728:android:a417ab649bcc9bf760f9ad" />
+                  <option name="appId" value="com.juanarton.privynote" />
+                  <option name="mobileSdkAppId" value="1:696494720728:android:29af587e43f78fdd60f9ad" />
                   <option name="projectId" value="notesapp-eb370" />
                   <option name="projectNumber" value="696494720728" />
                 </ConnectionSetting>

@@ -1,3 +1,5 @@
+import java.io.ByteArrayOutputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -8,6 +10,8 @@ plugins {
 }
 
 android {
+    val buildTime = System.currentTimeMillis()
+    val baseVersionName = "0.8"
     namespace = "com.juanarton.privynote"
     compileSdk = 35
 
@@ -16,9 +20,10 @@ android {
         minSdk = 24
         targetSdk = 35
         versionCode = 1
-        versionName = "1.0"
+        versionName = "$baseVersionName-git.$gitHash${if (isDirty) "-dirty" else ""}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("long", "BUILD_TIME", buildTime.toString())
     }
     externalNativeBuild {
         cmake {
@@ -31,7 +36,16 @@ android {
     }
     buildTypes {
         release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+        debug {
             isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -113,3 +127,28 @@ dependencies {
 
     implementation(libs.biometric)
 }
+
+val gitHash: String
+    get() {
+        val out = ByteArrayOutputStream()
+        val cmd = exec {
+            commandLine("git", "rev-parse", "--short", "HEAD")
+            standardOutput = out
+            isIgnoreExitValue = true
+        }
+        return if (cmd.exitValue == 0)
+            out.toString().trim()
+        else
+            "(error)"
+    }
+
+val isDirty: Boolean
+    get() {
+        val out = ByteArrayOutputStream()
+        exec {
+            commandLine("git", "diff", "--stat")
+            standardOutput = out
+            isIgnoreExitValue = true
+        }
+        return out.size() != 0
+    }

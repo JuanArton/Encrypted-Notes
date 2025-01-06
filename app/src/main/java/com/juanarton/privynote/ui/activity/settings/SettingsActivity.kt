@@ -12,7 +12,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -35,7 +34,6 @@ import com.juanarton.privynote.ui.fragment.loading.LoadingFragment
 import com.juanarton.privynote.ui.fragment.qrimage.QrSecretFragment
 import com.juanarton.privynote.ui.utils.FragmentBuilder
 import dagger.hilt.android.AndroidEntryPoint
-import kotlin.getValue
 
 @AndroidEntryPoint
 class SettingsActivity : AppCompatActivity(), PinListener {
@@ -47,7 +45,7 @@ class SettingsActivity : AppCompatActivity(), PinListener {
     private val loadingDialog = LoadingFragment()
     private lateinit var keysetHandle: KeysetHandle
     private var backupFile: ByteArray? = byteArrayOf()
-    val auth = Firebase.auth
+    private val auth = Firebase.auth
     private lateinit var selectBackUpLauncher: ActivityResultLauncher<Intent>
 
     companion object {
@@ -115,26 +113,27 @@ class SettingsActivity : AppCompatActivity(), PinListener {
                 }
             }
 
-            swTwoFactor.setOnCheckedChangeListener { _, isChecked ->
+            swTwoFactor.setOnCheckedChangeListener { _, _ ->
                 if (isUserAction) {
                     val pinFragment = AppPinFragment(getString(R.string.please_enter_pin), false, TWO_FACTOR)
                     FragmentBuilder.build(this@SettingsActivity, pinFragment, android.R.id.content)
                 }
+                isUserAction = true
             }
 
             cgThemeSelector.setOnCheckedStateChangeListener { group, _ ->
                 when (group.checkedChipId) {
                     chipSystem.id -> {
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
                         settingsViewModel.setTheme(SYSTEM)
+                        restartApp()
                     }
                     chipLight.id -> {
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
                         settingsViewModel.setTheme(LIGHT)
+                        restartApp()
                     }
                     chipDark.id -> {
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                         settingsViewModel.setTheme(DARK)
+                        restartApp()
                     }
                 }
             }
@@ -157,7 +156,7 @@ class SettingsActivity : AppCompatActivity(), PinListener {
                         val key = settingsViewModel.getCipherKey()
                         if (!key.isNullOrEmpty()) {
                             keysetHandle = Cryptography.deserializeKeySet(key)
-                            var inputStream = this@SettingsActivity.contentResolver.openInputStream(it)
+                            val inputStream = this@SettingsActivity.contentResolver.openInputStream(it)
                             backupFile = inputStream?.readBytes()
                             settingsViewModel.deleteAllNote()
                         } else {
@@ -253,20 +252,12 @@ class SettingsActivity : AppCompatActivity(), PinListener {
         }
 
         settingsViewModel.backupNotes.observe(this) {
-            if (true) {
-                Toast.makeText(this@SettingsActivity, getString(R.string.backup_msg), Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this@SettingsActivity, getString(R.string.backup_failed_msg), Toast.LENGTH_SHORT).show()
-            }
+            Toast.makeText(this@SettingsActivity, getString(R.string.backup_msg), Toast.LENGTH_SHORT).show()
         }
 
         settingsViewModel.restoreNotes.observe(this) {
-            if (true) {
-                Toast.makeText(this@SettingsActivity, getString(R.string.restore_msg), Toast.LENGTH_SHORT).show()
-                restartApp()
-            } else {
-                Toast.makeText(this@SettingsActivity, getString(R.string.restore_failed_msg), Toast.LENGTH_SHORT).show()
-            }
+            Toast.makeText(this@SettingsActivity, getString(R.string.restore_msg), Toast.LENGTH_SHORT).show()
+            restartApp()
         }
 
         settingsViewModel.deleteAllNote.observe(this) {
@@ -315,7 +306,6 @@ class SettingsActivity : AppCompatActivity(), PinListener {
     private fun setSwitchChecked(checked: Boolean) {
         isUserAction = false
         binding?.swTwoFactor?.isChecked = checked
-        isUserAction = true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

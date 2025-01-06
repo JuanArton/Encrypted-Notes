@@ -351,7 +351,7 @@ class MainActivity : AppCompatActivity(), PinListener {
                             (rvSearchResult.adapter as NotesAdapter).setData(ArrayList(filtered))
                         }
                     }
-                    handler.postDelayed(runnable, 500)
+                    handler.postDelayed(runnable!!, 500)
                 }
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun afterTextChanged(s: Editable?) {}
