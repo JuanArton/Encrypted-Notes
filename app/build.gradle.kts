@@ -19,7 +19,7 @@ android {
         applicationId = "com.juanarton.privynote"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
+        versionCode = 2
         versionName = "$baseVersionName-git.$gitHash${if (isDirty) "-dirty" else ""}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
