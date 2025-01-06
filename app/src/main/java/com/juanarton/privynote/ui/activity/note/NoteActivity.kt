@@ -22,12 +22,14 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityOptionsCompat
+import androidx.core.os.BundleCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.juanarton.privynote.R
 import com.juanarton.privynote.core.adapter.AttachmentAdapter
 import com.juanarton.privynote.core.adapter.GridSpacingItemDecoration
@@ -126,7 +128,7 @@ class NoteActivity : AppCompatActivity() {
                             etContent.text.toString()
                         )
                     }
-                    runnable.let { handler.postDelayed(it, 500) }
+                    runnable.let { handler.postDelayed(it!!, 500) }
                 }
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -175,11 +177,16 @@ class NoteActivity : AppCompatActivity() {
             rvImgAttachment.adapter = rvAdapter
         }
 
-        val notesTmp = if (Build.VERSION.SDK_INT >= 33) {
-            intent.getParcelableExtra("noteData", NotesPair::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            intent.getParcelableExtra("noteData")
+        val bundle = intent.extras
+        var notesTmp: NotesPair? = null
+
+        bundle?.let {
+            if (Build.VERSION.SDK_INT >= 33) {
+                notesTmp = BundleCompat.getParcelable(bundle, "noteData", NotesPair::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                notesTmp = bundle.getParcelable("noteData")
+            }
         }
 
         notesTmp?.let {
@@ -267,6 +274,7 @@ class NoteActivity : AppCompatActivity() {
         time = Date().time
         val key = noteViewModel.getCipherKey()
         val ownerId = auth.uid
+        FirebaseCrashlytics.getInstance().log("test $key")
 
         if (!key.isNullOrEmpty()) {
             val deserializedKey = Cryptography.deserializeKeySet(key)

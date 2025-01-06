@@ -213,8 +213,9 @@ class MainActivity : AppCompatActivity(), PinListener {
             }
 
              listener = { notes, materialCardView ->
-                val intent = Intent(this@MainActivity, NoteActivity::class.java)
-                intent.putExtra("noteData", notes)
+                val intent = Intent(this@MainActivity, NoteActivity::class.java).apply {
+                    putExtra("noteData", notes)
+                }
                 Intent.FLAG_ACTIVITY_NO_ANIMATION
                 val options =
                     ActivityOptionsCompat.makeSceneTransitionAnimation(
