@@ -11,7 +11,7 @@ plugins {
 
 android {
     val buildTime = System.currentTimeMillis()
-    val baseVersionName = "0.8"
+    val baseVersionName = "1.0.0"
     namespace = "com.juanarton.privynote"
     compileSdk = 35
 
