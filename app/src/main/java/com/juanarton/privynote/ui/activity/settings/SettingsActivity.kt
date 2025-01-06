@@ -12,6 +12,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -41,7 +42,7 @@ class SettingsActivity : AppCompatActivity(), PinListener {
     private var _binding: ActivitySettingsBinding? = null
     private val binding get() = _binding
     private val settingsViewModel: SettingsViewModel by viewModels()
-    private var isUserAction = true
+    private var isUserAction = false
     private val loadingDialog = LoadingFragment()
     private lateinit var keysetHandle: KeysetHandle
     private var backupFile: ByteArray? = byteArrayOf()
@@ -125,15 +126,15 @@ class SettingsActivity : AppCompatActivity(), PinListener {
                 when (group.checkedChipId) {
                     chipSystem.id -> {
                         settingsViewModel.setTheme(SYSTEM)
-                        restartApp()
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
                     }
                     chipLight.id -> {
                         settingsViewModel.setTheme(LIGHT)
-                        restartApp()
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
                     }
                     chipDark.id -> {
                         settingsViewModel.setTheme(DARK)
-                        restartApp()
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                     }
                 }
             }
