@@ -113,4 +113,19 @@
     <string name="app_pin_input_field">App pin input field</string>
     <string name="encryption_key_sample">Encryption key sample</string>
     <string name="add_attachment">Add attachment</string>
+
+    <string name="greeting_message">
+    <![CDATA[
+    <b>Welcome to PrivyNote!</b><br><br>
+    <p>Hi there! Thanks for choosing <b>PrivyNote</b>, an app that started as a passion project to bring you secure note-taking with cutting-edge encryption.</p>
+    <p>Your data is encrypted using <b>XChaCha20-Poly1305</b>, a modern algorithm recognized for its strong security and resilience—even against potential future quantum computing threats.</p>
+    <p><b><span style="color:red;">Important:</span></b> This app will provide you with a <b>unique decryption key</b> to access your encrypted notes. <b>Please save this key somewhere safe</b>, such as in a reliable password vault app. Without it, your notes cannot be recovered, and we will not be able to assist in retrieving them.</p>
+    <p><span style="color:red;"><i>The security of your data depends on the <b>XChaCha20-Poly1305 algorithm</b> and how securely you store your key. I cannot guarantee the security of your data!</i></span></p>
+    <p>Thank you for trusting <b>PrivyNote</b>. Happy note-taking!</p>
+    ]]>
+    </string>
+
+
+    <string name="greeting">Greeting</string>
+    <string name="agree">Agree</string>
 </resources>

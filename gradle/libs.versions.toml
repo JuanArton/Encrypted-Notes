@@ -1,6 +1,7 @@
 [versions]
 agp = "8.7.3"
 androidDatabaseSqlcipher = "4.5.4"
+aztec = "v1.6.2"
 biometric = "1.2.0-alpha05"
 converterGson = "2.9.0"
 coreSplashscreen = "1.0.1"
@@ -46,6 +47,7 @@ crashlyticsPlugins = "3.0.2"
 
 [libraries]
 android-database-sqlcipher = { module = "net.zetetic:android-database-sqlcipher", version.ref = "androidDatabaseSqlcipher" }
+aztec = { module = "org.wordpress:aztec", version.ref = "aztec" }
 biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }

@@ -9,7 +9,7 @@ import androidx.fragment.app.Fragment
 import com.juanarton.privynote.databinding.FragmentCustomDialogBinding
 
 class CustomDialogFragment(
-    private var title: String? = null, private var content: String? = null,
+    private var title: String? = null, private var content: CharSequence? = null,
     private var positiveButton: String? = null, private var negativeButton: String? = null
 ) : Fragment() {
 
