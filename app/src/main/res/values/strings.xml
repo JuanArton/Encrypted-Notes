@@ -128,4 +128,24 @@
 
     <string name="greeting">Greeting</string>
     <string name="agree">Agree</string>
+    <string name="show_formatting_control">Show formatting control</string>
+    <string name="format_header_1">Format header 1</string>
+    <string name="format_header_2">Format header 2</string>
+    <string name="format_header_3">Format header 3</string>
+    <string name="format_header_4">Format header 4</string>
+    <string name="format_header_5">Format header 5</string>
+    <string name="format_header_6">Format header 6</string>
+    <string name="format_align_left">Format align left</string>
+    <string name="format_align_right">Format align right</string>
+    <string name="format_align_justify">Format align justify</string>
+    <string name="format_align_center">Format align center</string>
+    <string name="format_bold">Format bold</string>
+    <string name="format_italict">Format italict</string>
+    <string name="format_underline">Format underline</string>
+    <string name="format_strikethrough">Format strikethrough</string>
+    <string name="format_subscript">Format subscript</string>
+    <string name="format_superscript">Format superscript</string>
+    <string name="format_quote">Format quote</string>
+    <string name="format_text_color">Format text color</string>
+    <string name="format_background_color">Format background color</string>
 </resources>

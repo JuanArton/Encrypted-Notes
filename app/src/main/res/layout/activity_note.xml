@@ -30,60 +30,60 @@
     </com.google.android.material.appbar.AppBarLayout>
 
     <ScrollView
+        android:id="@+id/scrollView2"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:scrollbars="none"
         android:fillViewport="true"
+        android:scrollbars="none"
         app:layout_constraintBottom_toTopOf="@+id/rlBottomTool"
         app:layout_constraintTop_toBottomOf="@id/appBarLayout">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fitsSystemWindows="true"
-            android:layout_marginBottom="20dp"
-            android:clipToPadding="false"
             android:clipChildren="false"
+            android:clipToPadding="false"
+            android:fitsSystemWindows="true"
             android:orientation="vertical">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvImgAttachment"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="1dp"
-                android:clipToPadding="false"
-                android:clipChildren="false"
                 android:layout_marginBottom="20dp"
-                android:nestedScrollingEnabled="false"/>
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:minHeight="1dp"
+                android:nestedScrollingEnabled="false" />
 
             <EditText
                 android:id="@+id/etTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
                 android:autofillHints="false"
                 android:background="@null"
                 android:fontFamily="@font/custom_font"
-                android:textStyle="bold"
                 android:hint="@string/title"
-                android:layout_marginEnd="20dp"
-                android:layout_marginStart="20dp"
                 android:inputType="textCapSentences|textMultiLine"
                 android:nestedScrollingEnabled="true"
-                android:textSize="22sp" />
+                android:textSize="22sp"
+                android:textStyle="bold" />
 
-            <EditText
+            <com.github.onecode369.wysiwyg.WYSIWYG
                 android:id="@+id/etContent"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginBottom="20dp"
                 android:autofillHints="false"
                 android:background="@null"
                 android:fontFamily="@font/custom_font"
                 android:gravity="top"
                 android:hint="@string/note"
-                android:layout_marginEnd="20dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="20dp"
                 android:inputType="textCapSentences|textMultiLine"
                 android:nestedScrollingEnabled="true"
                 android:textSize="16sp" />
@@ -110,15 +110,41 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <ImageButton
+            android:id="@+id/ibTextFormat"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:backgroundTint="@android:color/transparent"
+            android:contentDescription="@string/show_formatting_control"
+            android:src="@drawable/text_format"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <TextView
             android:id="@+id/tvEditedAt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="50dp"
             android:textSize="12sp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/ibTextFormat"
             app:layout_constraintStart_toEndOf="@+id/ibAdd"
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cvRtBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="-25dp"
+        app:cardCornerRadius="25dp"
+        app:strokeColor="@color/outlineColor"
+        app:strokeWidth="1dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/rlBottomTool">
+        <include
+            android:id="@+id/rtToolbar"
+            layout="@layout/rich_text_toolbar" />
+    </com.google.android.material.card.MaterialCardView>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

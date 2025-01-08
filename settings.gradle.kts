@@ -20,12 +20,6 @@ dependencyResolutionManagement {
         maven {
             setUrl("https://jitpack.io")
         }
-        maven {
-            setUrl("https://github.com/500px/greedo-layout-for-android/raw/master/releases/")
-        }
-        maven {
-            setUrl("https://a8c-libs.s3.amazonaws.com/android")
-        }
     }
 }
 

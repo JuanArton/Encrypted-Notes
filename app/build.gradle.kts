@@ -132,7 +132,7 @@ dependencies {
 
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
-    api(libs.aztec)
+    implementation(libs.wysiwyg)
 }
 
 val gitHash: String

@@ -1,7 +1,6 @@
 [versions]
 agp = "8.7.3"
 androidDatabaseSqlcipher = "4.5.4"
-aztec = "v1.6.2"
 biometric = "1.2.0-alpha05"
 converterGson = "2.9.0"
 coreSplashscreen = "1.0.1"
@@ -44,10 +43,10 @@ googleid = "1.1.1"
 tinkAndroid = "1.13.0"
 crashLytics = "22.1.2"
 crashlyticsPlugins = "3.0.2"
+wysiwyg = "4.0"
 
 [libraries]
 android-database-sqlcipher = { module = "net.zetetic:android-database-sqlcipher", version.ref = "androidDatabaseSqlcipher" }
-aztec = { module = "org.wordpress:aztec", version.ref = "aztec" }
 biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
@@ -92,6 +91,7 @@ retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
 googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
 tink-android = { module = "com.google.crypto.tink:tink-android", version.ref = "tinkAndroid" }
+wysiwyg = { module = "com.github.onecode369:WYSIWYG", version.ref = "wysiwyg" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
