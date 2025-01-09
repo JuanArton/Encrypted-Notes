@@ -1,6 +1,5 @@
 package com.juanarton.privynote.ui.activity.note
 
-import android.content.Context
 import android.content.Intent
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
@@ -11,14 +10,14 @@ import android.os.Handler
 import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
 import android.view.animation.AnimationUtils
-import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.addCallback
@@ -33,6 +32,7 @@ import androidx.core.os.BundleCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.GridLayoutManager
+import com.github.onecode369.wysiwyg.WYSIWYG
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
@@ -114,19 +114,34 @@ class NoteActivity : AppCompatActivity() {
                     rlParams.bottomMargin = imeInsets.bottom
                     keyboardHeight = imeInsets.bottom
                     ibTextFormat.isEnabled = true
-                    val color = etTitle.textColors.defaultColor
-                    ibTextFormat.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
+
+                    if (etTitle.isFocused) {
+                        val color = etTitle.hintTextColors.defaultColor
+                        ibTextFormat.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
+                    } else {
+                        val color = etTitle.textColors.defaultColor
+                        ibTextFormat.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
+                    }
+
                     rlBottomTool.setPadding(
                         Utils.dpToPx(10, this@NoteActivity), 0, Utils.dpToPx(10, this@NoteActivity), 0
                     )
+                    val layoutParams = rtToolbar.svRichTextToolbar.layoutParams
+                    layoutParams.height = keyboardHeight/2
+                    rtToolbar.svRichTextToolbar.layoutParams = layoutParams
                 } else {
                     rlParams.bottomMargin = 0
                     ibTextFormat.isEnabled = false
+
                     val color = etTitle.hintTextColors.defaultColor
                     ibTextFormat.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
+
                     rlBottomTool.setPadding(
                         Utils.dpToPx(10, this@NoteActivity), 0, Utils.dpToPx(10, this@NoteActivity), systemBars.bottom
                     )
+                    val layoutParams = rtToolbar.svRichTextToolbar.layoutParams
+                    layoutParams.height = keyboardHeight
+                    rtToolbar.svRichTextToolbar.layoutParams = layoutParams
                 }
                 rvParams.topMargin = -systemBars.top
             }
@@ -137,14 +152,14 @@ class NoteActivity : AppCompatActivity() {
         binding?.apply {
             RTEHelper(binding!!, this@NoteActivity)
 
-            val textWatcher = object : TextWatcher {
+            val titleWatcher = object : TextWatcher {
                 override fun afterTextChanged(s: Editable?) {
                     runnable?.let { handler.removeCallbacks(it) }
                     runnable = Runnable {
-                        /*handleSaveNote(
+                        handleSaveNote(
                             etTitle.text.toString(),
-                            etContent.text.toString()
-                        )*/
+                            etContent.html.toString()
+                        )
                     }
                     runnable.let { handler.postDelayed(it!!, 500) }
                 }
@@ -152,30 +167,43 @@ class NoteActivity : AppCompatActivity() {
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             }
 
-            //etContent.addTextChangedListener(textWatcher)
-            etTitle.addTextChangedListener(textWatcher)
+            val contentWatcher = object : WYSIWYG.OnTextChangeListener {
+                override fun onTextChange(text: String?) {
+                    runnable?.let { handler.removeCallbacks(it) }
+                    runnable = Runnable {
+                        handleSaveNote(
+                            etTitle.text.toString(),
+                            etContent.html.toString()
+                        )
+                    }
+                    runnable.let { handler.postDelayed(it!!, 500) }
+                }
+            }
+
+            etContent.setOnTextChangeListener(contentWatcher)
+            etTitle.addTextChangedListener(titleWatcher)
 
             ibAdd.setOnClickListener {
                 selectImage()
             }
 
             ibTextFormat.setOnClickListener {
+                val alphaAnim = AlphaAnimation(1.0f, 0.0f)
+                alphaAnim.duration = 300
 
-                Log.d("test", binding?.etContent?.html.toString())
-                val view = if (etTitle.isFocused) etTitle else etContent
-                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.hideSoftInputFromWindow(view.windowToken, 0)
+                alphaAnim.setAnimationListener(object : Animation.AnimationListener {
+                    override fun onAnimationStart(animation: Animation) {}
+                    override fun onAnimationEnd(animation: Animation) {
+                        val slideUp = AnimationUtils.loadAnimation(this@NoteActivity, R.anim.slide_up)
 
-                rtToolbar.apply {
-                    val layoutParams = svRichTextToolbar.layoutParams
-                    layoutParams.height = keyboardHeight
-                    svRichTextToolbar.layoutParams = layoutParams
-                }
+                        cvRtBar.visibility = View.VISIBLE
+                        cvRtBar.startAnimation(slideUp)
+                        basicToolbar.visibility = View.INVISIBLE
+                    }
 
-                val slideUp = AnimationUtils.loadAnimation(this@NoteActivity, R.anim.slide_up)
-
-                cvRtBar.visibility = View.VISIBLE
-                cvRtBar.startAnimation(slideUp)
+                    override fun onAnimationRepeat(animation: Animation) {}
+                })
+                basicToolbar.startAnimation(alphaAnim)
             }
         }
 
@@ -236,7 +264,6 @@ class NoteActivity : AppCompatActivity() {
             initTitle = it.notes.notesTitle.toString()
             binding?.apply {
                 etTitle.setText(notesPair.notes.notesTitle)
-                //etContent.setText(notesPair.notes.notesContent)
                 etContent.html = notesPair.notes.notesContent
                 tvEditedAt.text = Utils.parseTimeToDate(it.notes.lastModified, this@NoteActivity)
                 rvImgAttachment.layoutManager = GridLayoutManager(this@NoteActivity, calculateSpan())
@@ -260,7 +287,7 @@ class NoteActivity : AppCompatActivity() {
                                 notesPair.attachmentList.removeAt(index)
                                 val newSpan = calculateSpan()
                                 binding?.apply {
-                                    //handleSaveNote(etTitle.text.toString(), etContent.text.toString())
+                                    handleSaveNote(etTitle.text.toString(), etContent.html.toString())
                                     val layoutManager = binding?.rvImgAttachment?.layoutManager as GridLayoutManager
                                     layoutManager.spanCount = calculateSpan()
                                     if (previousSpan != newSpan) {
@@ -279,26 +306,28 @@ class NoteActivity : AppCompatActivity() {
     }
 
     private fun handleBackPress() {
-        /*binding?.apply {
+        binding?.apply {
             val title = etTitle.text.toString()
-            val content = etContent.text.toString()
+            val content = etContent.html.toString()
 
-            if (act == "add") {
-                if (title.isBlank() && content.isBlank() && !::notesPair.isInitialized) {
-                    ActivityCompat.finishAfterTransition(this@NoteActivity)
+            if(::notesPair.isInitialized) {
+                if (act == "add") {
+                    if (title.isBlank() && content.isBlank() && !::notesPair.isInitialized) {
+                        ActivityCompat.finishAfterTransition(this@NoteActivity)
+                    }
+                    else if (title.isNotBlank() || content.isNotBlank() || notesPair.attachmentList.isNotEmpty()) {
+                        setResult()
+                    }
+                    else { ActivityCompat.finishAfterTransition(this@NoteActivity) }
                 }
-                else if (title.isNotBlank() || content.isNotBlank() || notesPair.attachmentList.isNotEmpty()) {
-                    setResult()
+                else if (act == "update") {
+                    if (title != initTitle || content != initContent || notesPair.attachmentList != initAttachment) {
+                        setResult()
+                    }
+                    else { ActivityCompat.finishAfterTransition(this@NoteActivity) }
                 }
-                else { ActivityCompat.finishAfterTransition(this@NoteActivity) }
-            }
-            else if (act == "update") {
-                if (title != initTitle || content != initContent || notesPair.attachmentList != initAttachment) {
-                    setResult()
-                }
-                else { ActivityCompat.finishAfterTransition(this@NoteActivity) }
-            }
-        }*/
+            } else { ActivityCompat.finishAfterTransition(this@NoteActivity) }
+        }
     }
 
     private fun setResult () {
@@ -363,7 +392,7 @@ class NoteActivity : AppCompatActivity() {
                     this.id
                 } else notesPair.notes.id
                 binding?.apply {
-                    //handleSaveNote(etTitle.text.toString(), etContent.text.toString())
+                    handleSaveNote(etTitle.text.toString(), etContent.html.toString())
                 }
                 noteViewModel.insertAtt(
                     Attachment(NanoId.generate(16), id, it.second, false, "image", Date().time)
@@ -439,7 +468,7 @@ class NoteActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
-                ActivityCompat.finishAfterTransition(this@NoteActivity)
+                handleBackPress()
                 true
             }
             R.id.note_delete -> {

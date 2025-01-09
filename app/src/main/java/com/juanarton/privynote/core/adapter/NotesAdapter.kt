@@ -131,6 +131,7 @@ class NotesAdapter (
                 if (title.isNullOrEmpty()) {
                     tvNotesTitle.visibility = View.GONE
                     (tvNotesContent.layoutParams as ViewGroup.MarginLayoutParams).topMargin = 0
+                    (etNotesContent.layoutParams as ViewGroup.MarginLayoutParams).topMargin = 0
                 } else {
                     tvNotesTitle.visibility = View.VISIBLE
                     tvNotesTitle.text = title
@@ -139,8 +140,31 @@ class NotesAdapter (
                 if (content.isNullOrEmpty()) {
                     tvNotesContent.visibility = View.GONE
                 } else {
+                    etNotesContent.visibility = View.VISIBLE
                     tvNotesContent.visibility = View.VISIBLE
-                    tvNotesContent.text = content
+
+                    tvNotesContent.text = sanitizeHtml(content)
+                    etNotesContent.html = content
+
+                    tvNotesContent.post {
+                        etNotesContent.post {
+                            if (tvNotesContent.lineCount > 10) {
+                                val layoutParams = etNotesContent.layoutParams
+                                layoutParams.height = tvNotesContent.height
+                                etNotesContent.layoutParams = layoutParams
+                            } else {
+                                val layoutParams = tvNotesContent.layoutParams
+                                layoutParams.height = etNotesContent.height
+                                tvNotesContent.layoutParams = layoutParams
+                            }
+                        }
+                    }
+
+                    val surfaceColor = TypedValue()
+                    context.theme.resolveAttribute(com.google.android.material.R.attr.colorSurface, surfaceColor, true)
+
+                    etNotesContent.setEditorBackgroundColor(surfaceColor.data)
+                    etNotesContent.setEditorFontColor(tvNotesTitle.textColors.defaultColor)
                 }
 
                 if (title.isNullOrEmpty() && content.isNullOrEmpty() && notes.attachmentList.isNotEmpty()) {
@@ -172,5 +196,13 @@ class NotesAdapter (
                 override fun getPosition(): Int = bindingAdapterPosition
                 override fun getSelectionKey(): String = noteList[bindingAdapterPosition].notes.id
             }
+
+        private fun sanitizeHtml(input: String): String {
+            val removedTrailing = input.replace(Regex("<br>+$"), "")
+            val withNewLines = removedTrailing.replace("<br>", "\n", ignoreCase = true)
+            val cleanString = withNewLines.replace(Regex("<[^>]*>"), "")
+
+            return cleanString
+        }
     }
 }

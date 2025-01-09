@@ -3,25 +3,24 @@
     android:id="@+id/svRichTextToolbar"
     android:layout_width="match_parent"
     android:layout_height="300dp"
-    android:background="@color/imageBackground"
+    android:scrollbars="none"
+    android:padding="10dp"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/rlFormattingTool"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:backgroundTint="@color/imageBackground"
-        android:paddingTop="10dp"
-        android:paddingHorizontal="20dp"
-        android:paddingBottom="65dp"
+        android:background="?attr/colorSurfaceContainerLow"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
         <ImageButton
             android:id="@+id/ibCloseToolbar"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:background="@android:color/transparent"
             android:contentDescription="@string/format_header_1"
             android:src="@drawable/baseline_close_24"
@@ -45,7 +44,7 @@
                     android:id="@+id/ibHeader1"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
-                    android:background="@drawable/rounded_button"
+                    android:background="@drawable/rounded_button_selected"
                     android:contentDescription="@string/format_header_1"
                     android:src="@drawable/header1"
                     app:layout_constraintBottom_toBottomOf="parent"
@@ -257,18 +256,6 @@
                     android:background="@drawable/rounded_button"
                     android:contentDescription="@string/format_superscript"
                     android:src="@drawable/format_superscript"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageButton
-                    android:id="@+id/ibQuote"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:layout_marginStart="10dp"
-                    android:background="@drawable/rounded_button"
-                    android:contentDescription="@string/format_quote"
-                    android:src="@drawable/format_quote"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />

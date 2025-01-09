@@ -25,4 +25,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Encrypted Notes"
 include(":app")
- 
+include(":wysiwyg")

@@ -20,7 +20,7 @@ android {
         applicationId = "com.juanarton.privynote"
         minSdk = 24
         targetSdk = 35
-        versionCode = 8
+        versionCode = 9
         versionName = "$baseVersionName-git.$gitHash${if (isDirty) "-dirty" else ""}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -132,7 +132,7 @@ dependencies {
 
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
-    implementation(libs.wysiwyg)
+    implementation(project(":wysiwyg"))
 }
 
 val gitHash: String

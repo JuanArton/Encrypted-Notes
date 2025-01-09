@@ -101,3 +101,4 @@ kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize",  version.ref 
 hiltAndroid = { id = "com.google.dagger.hilt.android", version.ref ="hiltAndroid" }
 google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
 google-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "crashlyticsPlugins" }
+android-library = { id = "com.android.library", version.ref = "agp" }
