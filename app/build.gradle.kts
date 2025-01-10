@@ -12,7 +12,7 @@ plugins {
 
 android {
     val buildTime = System.currentTimeMillis()
-    val baseVersionName = "1.0.0"
+    val baseVersionName = "1.1.0"
     namespace = "com.juanarton.privynote"
     compileSdk = 35
 
@@ -20,7 +20,7 @@ android {
         applicationId = "com.juanarton.privynote"
         minSdk = 24
         targetSdk = 35
-        versionCode = 9
+        versionCode = 10
         versionName = "$baseVersionName-git.$gitHash${if (isDirty) "-dirty" else ""}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
