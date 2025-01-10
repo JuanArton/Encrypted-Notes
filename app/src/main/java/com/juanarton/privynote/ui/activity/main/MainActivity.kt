@@ -50,7 +50,7 @@ import com.juanarton.privynote.ui.activity.note.NoteActivity
 import com.juanarton.privynote.ui.activity.settings.SettingsActivity
 import com.juanarton.privynote.ui.activity.settings.SettingsViewModel.Companion.APP_SETTINGS
 import com.juanarton.privynote.ui.fragment.apppin.AppPinFragment
-import com.juanarton.privynote.ui.fragment.apppin.PinListener
+import com.juanarton.privynote.ui.fragment.apppin.PinCallback
 import com.juanarton.privynote.ui.utils.BiometricHelper
 import com.juanarton.privynote.ui.utils.FragmentBuilder
 import com.juanarton.privynote.ui.utils.Utils
@@ -58,7 +58,7 @@ import com.ketch.Ketch
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity(), PinListener {
+class MainActivity : AppCompatActivity(), PinCallback {
 
     private val mainViewModel: MainViewModel by viewModels()
     private var _binding: ActivityMainBinding? = null

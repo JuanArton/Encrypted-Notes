@@ -26,7 +26,7 @@ import com.juanarton.privynote.core.validation.UsernameValidation
 import com.juanarton.privynote.databinding.ActivityRegisterBinding
 import com.juanarton.privynote.ui.activity.login.LoginActivity
 import com.juanarton.privynote.ui.fragment.customdialog.CustomDialogFragment
-import com.juanarton.privynote.ui.fragment.customdialog.CustomDialogListener
+import com.juanarton.privynote.ui.fragment.customdialog.CustomDialogCallback
 import com.juanarton.privynote.ui.fragment.loading.LoadingFragment
 import com.juanarton.privynote.ui.utils.FragmentBuilder
 import dagger.hilt.android.AndroidEntryPoint
@@ -34,7 +34,7 @@ import java.security.MessageDigest
 import java.util.UUID
 
 @AndroidEntryPoint
-class RegisterActivity : AppCompatActivity(), CustomDialogListener {
+class RegisterActivity : AppCompatActivity(), CustomDialogCallback {
 
     private var _binding: ActivityRegisterBinding? = null
     private val binding get() = _binding

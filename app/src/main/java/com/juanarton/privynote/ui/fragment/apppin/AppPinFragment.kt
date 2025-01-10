@@ -19,12 +19,12 @@ class AppPinFragment(
 
     private var _binding: FragmentAppPinBinding? = null
     private val binding get() = _binding
-    private var listener: PinListener? = null
+    private var listener: PinCallback? = null
     private var firstPassword = 0
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        if (context is PinListener) {
+        if (context is PinCallback) {
             listener = context
         } else {
             throw RuntimeException("$context must implement FragmentListener")

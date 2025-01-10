@@ -22,7 +22,6 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="70dp"
-            android:gravity="center"
             app:contentInsetLeft="0dp"
             app:contentInsetStart="0dp"
             app:layout_scrollFlags="scroll|enterAlways">
@@ -115,6 +114,17 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <ImageButton
+                android:id="@+id/ibBottomMenu"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:backgroundTint="@android:color/transparent"
+                android:contentDescription="@string/show_formatting_control"
+                android:src="@drawable/three_dot"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageButton
                 android:id="@+id/ibTextFormat"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
@@ -122,14 +132,16 @@
                 android:contentDescription="@string/show_formatting_control"
                 android:src="@drawable/text_format"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/ibBottomMenu"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                 android:id="@+id/tvEditedAt"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
                 android:textSize="12sp"
+                android:layout_marginEnd="10dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/ibTextFormat"
                 app:layout_constraintStart_toEndOf="@+id/ibAdd"

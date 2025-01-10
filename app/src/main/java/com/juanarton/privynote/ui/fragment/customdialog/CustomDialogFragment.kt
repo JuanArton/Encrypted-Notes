@@ -15,11 +15,11 @@ class CustomDialogFragment(
 
     private var _binding: FragmentCustomDialogBinding? = null
     private val binding get() = _binding
-    private var listener: CustomDialogListener? = null
+    private var listener: CustomDialogCallback? = null
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        if (context is CustomDialogListener) {
+        if (context is CustomDialogCallback) {
             listener = context
         } else {
             throw RuntimeException("$context must implement FragmentListener")

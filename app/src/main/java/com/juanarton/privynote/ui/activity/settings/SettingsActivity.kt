@@ -30,14 +30,14 @@ import com.juanarton.privynote.ui.activity.settings.SettingsViewModel.Companion.
 import com.juanarton.privynote.ui.activity.settings.SettingsViewModel.Companion.LIGHT
 import com.juanarton.privynote.ui.activity.settings.SettingsViewModel.Companion.SYSTEM
 import com.juanarton.privynote.ui.fragment.apppin.AppPinFragment
-import com.juanarton.privynote.ui.fragment.apppin.PinListener
+import com.juanarton.privynote.ui.fragment.apppin.PinCallback
 import com.juanarton.privynote.ui.fragment.loading.LoadingFragment
 import com.juanarton.privynote.ui.fragment.qrimage.QrSecretFragment
 import com.juanarton.privynote.ui.utils.FragmentBuilder
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class SettingsActivity : AppCompatActivity(), PinListener {
+class SettingsActivity : AppCompatActivity(), PinCallback {
 
     private var _binding: ActivitySettingsBinding? = null
     private val binding get() = _binding

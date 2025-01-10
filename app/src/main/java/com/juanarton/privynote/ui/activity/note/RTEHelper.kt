@@ -10,12 +10,21 @@ import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.ImageButton
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.fragment.app.FragmentActivity
 import com.github.onecode369.wysiwyg.WYSIWYG
 import com.juanarton.privynote.R
 import com.juanarton.privynote.databinding.ActivityNoteBinding
+import com.juanarton.privynote.ui.fragment.colorpicker.ColorPickerCallback
+import com.juanarton.privynote.ui.fragment.colorpicker.ColorPickerFragment
+import com.juanarton.privynote.ui.utils.FragmentBuilder
 
 class RTEHelper(val binding: ActivityNoteBinding, val context: Activity) {
     private var headerButtons: ArrayList<ImageButton> = arrayListOf()
+
+    companion object {
+        const val BACKGROUND = "BACKGROUNDCOLOR"
+        const val TEXT = "TEXTCOLOR"
+    }
 
     init {
         binding.apply {
@@ -35,6 +44,7 @@ class RTEHelper(val binding: ActivityNoteBinding, val context: Activity) {
             setEditorBackgroundColor(surfaceColor.data)
             setEditorFontColor(tvEditedAt.textColors.defaultColor)
             setEditorFontSize(16)
+
             setPlaceholder(context.getString(R.string.note))
             setOnDecorationChangeListener(object : WYSIWYG.OnDecorationStateListener {
                 override fun onStateChangeListener(text: String?, types: List<WYSIWYG.Type>?) {
@@ -53,6 +63,11 @@ class RTEHelper(val binding: ActivityNoteBinding, val context: Activity) {
                     startAnimation(AlphaAnimation(0.0f, 1.0f).apply { duration = 300; startOffset = 300 })
                     visibility = View.VISIBLE
                 }
+            }
+
+            btClearFormatting.setOnClickListener {
+                resetToolbarButtons()
+                etContent.removeFormat()
             }
 
             etContent.apply {
@@ -76,7 +91,26 @@ class RTEHelper(val binding: ActivityNoteBinding, val context: Activity) {
                     button.setOnClickListener { handleToolbarButtonClick(button, action) }
                 }
 
-                ibTextColor.setOnClickListener { }
+                val colorPickerFragment = ColorPickerFragment()
+                colorPickerFragment.setOnColorSelected(object : ColorPickerCallback{
+                    override fun onColorSelected(color: Int, target: String) {
+                        if (target == TEXT) {
+                            etContent.setTextColor(color)
+                        } else {
+                            etContent.setTextBackgroundColor(color)
+                        }
+                    }
+                })
+
+                ibTextColor.setOnClickListener {
+                    colorPickerFragment.target(TEXT)
+                    FragmentBuilder.build(context as FragmentActivity, colorPickerFragment, android.R.id.content)
+                }
+
+                ibBackgroundColor.setOnClickListener {
+                    colorPickerFragment.target(BACKGROUND)
+                    FragmentBuilder.build(context as FragmentActivity, colorPickerFragment, android.R.id.content)
+                }
             }
         }
     }

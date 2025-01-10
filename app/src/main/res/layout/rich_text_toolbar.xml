@@ -263,6 +263,7 @@
         </HorizontalScrollView>
 
         <HorizontalScrollView
+            android:id="@+id/horizontalScrollView4"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
@@ -298,5 +299,17 @@
                     app:layout_constraintTop_toTopOf="parent" />
             </LinearLayout>
         </HorizontalScrollView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btClearFormatting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/clear_formatting"
+            android:layout_marginTop="20dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/outlineColor"
+            android:textColor="?attr/colorPrimary"
+            android:backgroundTint="@android:color/transparent"
+            app:layout_constraintTop_toBottomOf="@+id/horizontalScrollView4" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

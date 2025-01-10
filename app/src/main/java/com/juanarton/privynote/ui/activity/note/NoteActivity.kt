@@ -47,12 +47,14 @@ import com.juanarton.privynote.core.data.source.remote.Resource
 import com.juanarton.privynote.core.utils.Cryptography
 import com.juanarton.privynote.databinding.ActivityNoteBinding
 import com.juanarton.privynote.ui.activity.imagedetail.ImageDetailActivity
+import com.juanarton.privynote.ui.fragment.modalbottomsheet.NoteBottomSheet
+import com.juanarton.privynote.ui.fragment.modalbottomsheet.NoteBottomSheet.Companion.NOTEBOTTOMSHEET
+import com.juanarton.privynote.ui.fragment.modalbottomsheet.NoteBottomSheetCallback
 import com.juanarton.privynote.ui.utils.Utils
 import com.ketch.Ketch
 import dagger.hilt.android.AndroidEntryPoint
 import io.viascom.nanoid.NanoId
 import java.util.Date
-
 
 @AndroidEntryPoint
 class NoteActivity : AppCompatActivity() {
@@ -100,6 +102,7 @@ class NoteActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this) { handleBackPress() }
 
         observeViewModel()
+        prepareBottomSheet()
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -207,9 +210,7 @@ class NoteActivity : AppCompatActivity() {
             }
         }
 
-        selectImageLauncher = registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) { result ->
+        selectImageLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
                 val imageUri: Uri? = result.data?.data
                 imageUri?.let { noteViewModel.addAtt(it, contentResolver, this) }
@@ -460,8 +461,28 @@ class NoteActivity : AppCompatActivity() {
         selectImageLauncher.launch(intent)
     }
 
+    private fun prepareBottomSheet() {
+        val noteBottomSheet = NoteBottomSheet()
+        noteBottomSheet.onMenuSelected(object : NoteBottomSheetCallback {
+            override fun onMenuSelected(action: Int) {
+                when(action) {
+                    NoteBottomSheet.DELETE -> {
+                        act = "delete"
+                        setResult()
+                    }
+                }
+            }
+        })
+
+        binding?.apply {
+            ibBottomMenu.setOnClickListener {
+                noteBottomSheet.show(supportFragmentManager, NOTEBOTTOMSHEET)
+            }
+        }
+    }
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.select_menu_item, menu)
+        menuInflater.inflate(R.menu.note_activity_menu, menu)
         return super.onCreateOptionsMenu(menu)
     }
 
@@ -471,9 +492,12 @@ class NoteActivity : AppCompatActivity() {
                 handleBackPress()
                 true
             }
-            R.id.note_delete -> {
-                act = "delete"
-                setResult()
+            R.id.undo -> {
+                binding?.etContent?.undo()
+                true
+            }
+            R.id.redo -> {
+                binding?.etContent?.redo()
                 true
             }
             else -> super.onOptionsItemSelected(item)

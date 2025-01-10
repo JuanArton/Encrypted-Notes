@@ -13,10 +13,10 @@ import com.juanarton.privynote.databinding.ActivityGreetingBinding
 import com.juanarton.privynote.ui.activity.login.LoginActivity
 import com.juanarton.privynote.ui.activity.register.RegisterActivity
 import com.juanarton.privynote.ui.fragment.customdialog.CustomDialogFragment
-import com.juanarton.privynote.ui.fragment.customdialog.CustomDialogListener
+import com.juanarton.privynote.ui.fragment.customdialog.CustomDialogCallback
 import com.juanarton.privynote.ui.utils.FragmentBuilder
 
-class GreetingActivity : AppCompatActivity(), CustomDialogListener {
+class GreetingActivity : AppCompatActivity(), CustomDialogCallback {
 
     private var _binding: ActivityGreetingBinding? = null
     private val binding get() = _binding

@@ -148,4 +148,10 @@
     <string name="format_quote">Format quote</string>
     <string name="format_text_color">Format text color</string>
     <string name="format_background_color">Format background color</string>
+    <string name="clear_formatting">Clear Formatting</string>
+    <string name="undo">Undo</string>
+    <string name="redo">Redo</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="delete_note_button">Delete note button</string>
 </resources>
