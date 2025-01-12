@@ -18,6 +18,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -54,6 +55,7 @@ import com.juanarton.privynote.ui.fragment.apppin.PinCallback
 import com.juanarton.privynote.ui.utils.BiometricHelper
 import com.juanarton.privynote.ui.utils.FragmentBuilder
 import com.juanarton.privynote.ui.utils.Utils
+import com.juanarton.privynote.ui.utils.Utils.dpToPx
 import com.ketch.Ketch
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -236,12 +238,15 @@ class MainActivity : AppCompatActivity(), PinCallback {
                 if (rvNotes.itemDecorationCount < 1) {
                     rvNotes.addItemDecoration(
                         GridSpacingItemDecoration(
-                            Utils.dpToPx(7, this@MainActivity),
-                            tbParams.height + Utils.dpToPx(10, this@MainActivity),
+                            dpToPx(7, this@MainActivity),
+                            tbParams.height + dpToPx(10, this@MainActivity),
                             systemBars.bottom
                         )
                     )
                 }
+
+                val fabParams = fabAddNote.layoutParams as CoordinatorLayout.LayoutParams
+                fabParams.bottomMargin = systemBars.bottom + dpToPx(30, this@MainActivity)
 
                 val rvParams = rvNotes.layoutParams as FrameLayout.LayoutParams
                 rvParams.bottomMargin = systemBars.bottom
@@ -488,9 +493,11 @@ class MainActivity : AppCompatActivity(), PinCallback {
 
     private fun refreshRecyclerView() {
         Handler(Looper.getMainLooper()).postDelayed({
-            val layoutManager = binding?.rvNotes?.layoutManager as StaggeredGridLayoutManager
-            binding?.rvNotes?.smoothScrollToPosition(0)
-            layoutManager.invalidateSpanAssignments()
+            try {
+                val layoutManager = binding?.rvNotes?.layoutManager as StaggeredGridLayoutManager
+                binding?.rvNotes?.smoothScrollToPosition(0)
+                layoutManager.invalidateSpanAssignments()
+            } catch (_: Exception) {}
         }, 700)
     }
 

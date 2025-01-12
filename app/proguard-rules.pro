@@ -112,3 +112,4 @@
 
 # Keep Gson serialized fields
 -keep class com.google.gson.annotations.SerializedName { *; }
+
