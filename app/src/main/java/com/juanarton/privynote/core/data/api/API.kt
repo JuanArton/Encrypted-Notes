@@ -27,7 +27,7 @@ object API {
         })
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
-        .certificatePinner(certificate)
+        //.certificatePinner(certificate)
         .cache(null)
         .build()
 

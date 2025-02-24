@@ -85,13 +85,14 @@
                 <com.github.onecode369.wysiwyg.WYSIWYG
                     android:id="@+id/etNotesContent"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="0dp"
                     android:focusable="false"
                     android:hint="@string/notes_content"
                     android:layout_marginTop="10dp"
                     app:layout_constraintEnd_toEndOf="@+id/tvNotesContent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/tvNotesTitle"/>
+                    app:layout_constraintTop_toBottomOf="@+id/tvNotesTitle"
+                    app:layout_constraintBottom_toBottomOf="@id/tvNotesContent"/>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>

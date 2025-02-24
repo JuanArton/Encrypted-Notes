@@ -12,7 +12,7 @@ plugins {
 
 android {
     val buildTime = System.currentTimeMillis()
-    val baseVersionName = "1.1.0"
+    val baseVersionName = "1.3.0"
     namespace = "com.juanarton.privynote"
     compileSdk = 35
 
@@ -20,7 +20,7 @@ android {
         applicationId = "com.juanarton.privynote"
         minSdk = 24
         targetSdk = 35
-        versionCode = 11
+        versionCode = 14
         versionName = "$baseVersionName-git.$gitHash${if (isDirty) "-dirty" else ""}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -71,6 +71,8 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.firebase.auth)
     implementation(libs.googleid)
+    implementation(libs.androidx.hilt.common)
+    implementation(libs.androidx.hilt.work)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -101,6 +103,7 @@ dependencies {
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
+    ksp(libs.androidx.hilt.compiler)
 
     implementation(libs.androidx.security.crypto)
 
@@ -134,6 +137,13 @@ dependencies {
     implementation(libs.firebase.analytics)
 
     implementation(libs.colorpickerview)
+
+    implementation(libs.firebase.messaging)
+
+    implementation(libs.androidx.work.runtime.ktx)
+
+    implementation(libs.miui.autostart)
+
     implementation(project(":wysiwyg"))
 }
 

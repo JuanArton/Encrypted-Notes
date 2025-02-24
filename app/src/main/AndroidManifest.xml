@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission
         android:name="com.google.android.gms.permission.AD_ID"
         tools:node="remove" />
@@ -19,6 +20,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.App.Starting"
+        android:usesCleartextTraffic="true"
         tools:targetApi="35">
         <activity
             android:name=".ui.activity.register.RegisterActivity"
@@ -71,6 +73,30 @@
             android:configChanges="orientation|screenSize"
             android:exported="false"
             android:theme="@style/Theme.EncryptedNotes" />
+
+        <service
+            android:name=".service.PushNotificationService"
+            android:exported="false">
+            <intent-filter>
+                <action
+                    android:name="com.google.firebase.MESSAGING_EVENT">
+                </action>
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name=".receiver.BackupBroadcastReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.NOTIFY" />
+            </intent-filter>
+        </receiver>
+
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            tools:node="remove" />
     </application>
 
 </manifest>

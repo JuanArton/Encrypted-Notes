@@ -140,7 +140,7 @@
     <string name="format_align_justify">Format align justify</string>
     <string name="format_align_center">Format align center</string>
     <string name="format_bold">Format bold</string>
-    <string name="format_italict">Format italict</string>
+    <string name="format_italic">Format italic</string>
     <string name="format_underline">Format underline</string>
     <string name="format_strikethrough">Format strikethrough</string>
     <string name="format_subscript">Format subscript</string>
@@ -151,7 +151,15 @@
     <string name="clear_formatting">Clear Formatting</string>
     <string name="undo">Undo</string>
     <string name="redo">Redo</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="delete_note_button">Delete note button</string>
+    <string name="push_notification">"Push Notification"</string>
+    <string name="auto_backup">Auto Backup</string>
+    <string name="enable_mi_autostart">Please enable autostart to allow automatic backup to run properly.</string>
+    <string name="disable_optimization_message">Please disable battery optimization to allow automatic backup to run properly. Press cancel if it\'s already disabled.</string>
+    <string name="unable_to_open_battery_saver_settings">Please disable Battery Saver to allow automatic backup to run properly.</string>
+    <string name="backup_interval">Backup interval</string>
+    <string name="everyday">Everyday</string>
+    <string name="_3_days">3 Days</string>
+    <string name="_7_days">7 Days</string>
+    <string name="backup_complete">Backup Complete!</string>
 </resources>

@@ -28,6 +28,7 @@ import com.juanarton.privynote.core.data.api.user.register.RegisterData
 import com.juanarton.privynote.core.data.api.user.register.RegisterResponse
 import com.juanarton.privynote.core.data.domain.model.Notes
 import com.juanarton.privynote.core.data.source.local.SharedPrefDataSource
+import com.juanarton.privynote.core.utils.Cryptography
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -53,7 +54,10 @@ class NoteRemoteDataSource @Inject constructor(
 
     fun registerUser(id: String, pin: String, username: String): Flow<APIResponse<RegisterData>> =
         handleNetworkCall {
-            val response = API.services.register(PostRegister(id, pin, username))
+            val keyset = Cryptography.deserializeKeySet(Cryptography.publicKey())
+            val encryptedPin = sanitizeText(Cryptography.encryptHybrid(pin, keyset))
+
+            val response = API.services.register(PostRegister(id, encryptedPin, username))
 
             if (response.body() != null) {
                 val registerResponse = Gson().fromJson(response.body()!!.string(), RegisterResponse::class.java)
@@ -66,7 +70,10 @@ class NoteRemoteDataSource @Inject constructor(
 
     fun loginUser(id: String, pin: String, otp: String): Flow<APIResponse<LoginData>> =
         handleNetworkCall {
-            val response = API.services.login(PostLogin(id, pin, otp))
+            val keyset = Cryptography.deserializeKeySet(Cryptography.publicKey())
+            val encryptedPin = sanitizeText(Cryptography.encryptHybrid(pin, keyset))
+
+            val response = API.services.login(PostLogin(id, encryptedPin, otp))
 
             if (response.body() != null) {
                 val loginResponse = Gson().fromJson(response.body()!!.string(), LoginResponse::class.java)
@@ -83,7 +90,10 @@ class NoteRemoteDataSource @Inject constructor(
 
     fun twoFactorAuth(id: String, pin: String, otp: String): Flow<APIResponse<LoginData>> =
         handleNetworkCall {
-            val twoFA = API.services.twoFactorAuth(PostLogin(id, pin, otp))
+            val keyset = Cryptography.deserializeKeySet(Cryptography.publicKey())
+            val encryptedPin = sanitizeText(Cryptography.encryptHybrid(pin, keyset))
+
+            val twoFA = API.services.twoFactorAuth(PostLogin(id, encryptedPin, otp))
 
             if (twoFA.body() != null) {
                 val twoFAResponse = Gson().fromJson(twoFA.body()!!.string(), LoginResponse::class.java)
@@ -242,7 +252,10 @@ class NoteRemoteDataSource @Inject constructor(
 
     fun setTwoFactorAuth(id: String, pin: String): Flow<APIResponse<TwoFactorData>> =
         handleNetworkCall {
-            val response = makeSetTwoFactorRequest(id, pin)
+            val keyset = Cryptography.deserializeKeySet(Cryptography.publicKey())
+            val encryptedPin = sanitizeText(Cryptography.encryptHybrid(pin, keyset))
+
+            val response = makeSetTwoFactorRequest(id, encryptedPin)
 
             if (response.isSuccessful) {
                 val twoFactorResponse = Gson().fromJson(response.body()?.string(), TwoFactorResponse::class.java)
@@ -252,7 +265,7 @@ class NoteRemoteDataSource @Inject constructor(
 
                 if (errorResponse.message == TOKEN_EXPIRED_MESSAGE) {
                     refreshAccessKey()
-                    val retryResponse = makeSetTwoFactorRequest(id, pin)
+                    val retryResponse = makeSetTwoFactorRequest(id, encryptedPin)
 
                     if (retryResponse.isSuccessful) {
                         val retryTwoFactorResponse = Gson().fromJson(retryResponse.body()?.string(), TwoFactorResponse::class.java)
@@ -274,7 +287,10 @@ class NoteRemoteDataSource @Inject constructor(
 
     fun disableTwoFactorAuth(id: String, pin: String): Flow<APIResponse<String>> =
         handleNetworkCall {
-            val response = makeDisableTwoFactorRequest(id, pin)
+            val keyset = Cryptography.deserializeKeySet(Cryptography.publicKey())
+            val encryptedPin = sanitizeText(Cryptography.encryptHybrid(pin, keyset))
+
+            val response = makeDisableTwoFactorRequest(id, encryptedPin)
 
             if (response.isSuccessful) {
                 val twoFactorResponse = Gson().fromJson(response.body()?.string(), TwoFactorResponse::class.java)
@@ -284,7 +300,7 @@ class NoteRemoteDataSource @Inject constructor(
 
                 if (errorResponse.message == TOKEN_EXPIRED_MESSAGE) {
                     refreshAccessKey()
-                    val retryResponse = makeDisableTwoFactorRequest(id, pin)
+                    val retryResponse = makeDisableTwoFactorRequest(id, encryptedPin)
 
                     if (retryResponse.isSuccessful) {
                         val retryTwoFactorResponse = Gson().fromJson(retryResponse.body()?.string(), TwoFactorResponse::class.java)
@@ -392,5 +408,9 @@ class NoteRemoteDataSource @Inject constructor(
         val refreshKey = sharedPrefDataSource.getRefreshKey()!!
         val newAccessKey = API.services.updateAccessKey(PutUpdateKey(refreshKey))
         sharedPrefDataSource.setAccessKey(newAccessKey.updateKeyData.accessToken)
+    }
+
+    private fun sanitizeText(input: String): String {
+        return input.replace(Regex("[\\n\\r\\t ]+"), "")
     }
 }

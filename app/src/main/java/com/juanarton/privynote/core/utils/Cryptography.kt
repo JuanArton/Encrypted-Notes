@@ -5,6 +5,7 @@ import com.google.crypto.tink.Aead
 import com.google.crypto.tink.BinaryKeysetReader
 import com.google.crypto.tink.BinaryKeysetWriter
 import com.google.crypto.tink.CleartextKeysetHandle
+import com.google.crypto.tink.HybridEncrypt
 import com.google.crypto.tink.KeysetHandle
 import com.google.crypto.tink.aead.PredefinedAeadParameters
 import com.google.crypto.tink.config.TinkConfig
@@ -13,14 +14,22 @@ import java.io.ByteArrayOutputStream
 
 class Cryptography {
     companion object {
+        external fun publicKey(): String
 
         fun initTink() {
             TinkConfig.register()
+            System.loadLibrary("native-lib")
         }
 
         fun encrypt(data: String, keysetHandle: KeysetHandle): String {
             val aead = keysetHandle.getPrimitive(Aead::class.java)
             val cipherText = aead.encrypt(data.toByteArray(Charsets.UTF_8), null)
+            return Base64Utils.encode(cipherText)
+        }
+
+        fun encryptHybrid(data: String, keysetHandle: KeysetHandle): String {
+            val hybridEncrypt = keysetHandle.getPrimitive(HybridEncrypt::class.java)
+            val cipherText = hybridEncrypt.encrypt(data.toByteArray(Charsets.UTF_8), null)
             return Base64Utils.encode(cipherText)
         }
 

@@ -1,9 +1,13 @@
 package com.juanarton.privynote.ui.activity.settings
 
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.PowerManager
 import android.os.Process
+import android.provider.Settings
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
@@ -11,6 +15,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
@@ -25,6 +30,8 @@ import com.juanarton.privynote.core.data.source.remote.Resource
 import com.juanarton.privynote.core.utils.Cryptography
 import com.juanarton.privynote.databinding.ActivitySettingsBinding
 import com.juanarton.privynote.di.DatabaseModule.Companion.DB_NAME
+import com.juanarton.privynote.receiver.BackupBroadcastReceiver.Companion.cancelAlarm
+import com.juanarton.privynote.receiver.BackupBroadcastReceiver.Companion.setRepeatingAlarm
 import com.juanarton.privynote.ui.activity.settings.SettingsViewModel.Companion.APP_SETTINGS
 import com.juanarton.privynote.ui.activity.settings.SettingsViewModel.Companion.DARK
 import com.juanarton.privynote.ui.activity.settings.SettingsViewModel.Companion.LIGHT
@@ -34,7 +41,10 @@ import com.juanarton.privynote.ui.fragment.apppin.PinCallback
 import com.juanarton.privynote.ui.fragment.loading.LoadingFragment
 import com.juanarton.privynote.ui.fragment.qrimage.QrSecretFragment
 import com.juanarton.privynote.ui.utils.FragmentBuilder
+import com.juanarton.privynote.worker.BackupWorker.Companion.cancelBackupWork
+import com.juanarton.privynote.worker.BackupWorker.Companion.scheduleBackupWork
 import dagger.hilt.android.AndroidEntryPoint
+import xyz.kumaraswamy.autostart.Autostart
 
 @AndroidEntryPoint
 class SettingsActivity : AppCompatActivity(), PinCallback {
@@ -42,7 +52,7 @@ class SettingsActivity : AppCompatActivity(), PinCallback {
     private var _binding: ActivitySettingsBinding? = null
     private val binding get() = _binding
     private val settingsViewModel: SettingsViewModel by viewModels()
-    private var isUserAction = false
+    private var is2FAUserAction = false
     private val loadingDialog = LoadingFragment()
     private lateinit var keysetHandle: KeysetHandle
     private var backupFile: ByteArray? = byteArrayOf()
@@ -115,11 +125,11 @@ class SettingsActivity : AppCompatActivity(), PinCallback {
             }
 
             swTwoFactor.setOnCheckedChangeListener { _, _ ->
-                if (isUserAction) {
+                if (is2FAUserAction) {
                     val pinFragment = AppPinFragment(getString(R.string.please_enter_pin), false, TWO_FACTOR)
                     FragmentBuilder.build(this@SettingsActivity, pinFragment, android.R.id.content)
                 }
-                isUserAction = true
+                is2FAUserAction = true
             }
 
             cgThemeSelector.setOnCheckedStateChangeListener { group, _ ->
@@ -137,6 +147,67 @@ class SettingsActivity : AppCompatActivity(), PinCallback {
                         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                     }
                 }
+            }
+
+            cgIntervalSelector.setOnCheckedStateChangeListener { group, _ ->
+                when (group.checkedChipId) {
+                    chip1.id -> {
+                        cancelAlarm(this@SettingsActivity)
+                        settingsViewModel.setBackupInterval(1)
+
+                        setRepeatingAlarm(this@SettingsActivity, 1)
+                        scheduleBackupWork(this@SettingsActivity, 1)
+                    }
+                    chip3.id -> {
+                        cancelAlarm(this@SettingsActivity)
+                        settingsViewModel.setBackupInterval(3)
+
+                        setRepeatingAlarm(this@SettingsActivity, 3)
+                        scheduleBackupWork(this@SettingsActivity, 3)
+                    }
+                    chip7.id -> {
+                        cancelAlarm(this@SettingsActivity)
+                        settingsViewModel.setBackupInterval(7)
+
+                        setRepeatingAlarm(this@SettingsActivity, 7)
+                        scheduleBackupWork(this@SettingsActivity, 7)
+                    }
+                }
+            }
+
+            swAutoBackup.setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked) {
+                    settingsViewModel.setAutoBackup(true)
+
+                    val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+                    val packageName = packageName
+                    val isIgnoringOptimization = powerManager.isIgnoringBatteryOptimizations(packageName)
+
+                    if (!isIgnoringOptimization) {
+                        disableOptimizationDialog()
+                    }
+
+                    if (!Autostart.getSafeState(this@SettingsActivity)) {
+                        showXiaomiAutostartDialog()
+                    }
+
+                    setRepeatingAlarm(this@SettingsActivity, settingsViewModel.getBackupInterval())
+                    scheduleBackupWork(this@SettingsActivity, settingsViewModel.getBackupInterval())
+                } else {
+                    settingsViewModel.setAutoBackup(false)
+
+                    cancelAlarm(this@SettingsActivity)
+                    cancelBackupWork(this@SettingsActivity)
+
+                    cgIntervalSelector.clearCheck()
+                    chip1.isChecked = false
+                    chip3.isChecked = false
+                    chip7.isChecked = false
+                }
+                chip1.isEnabled = isChecked
+                chip3.isEnabled = isChecked
+                chip7.isEnabled = isChecked
+                getBackUpInterval()
             }
 
             restoreClickMask.setOnClickListener {
@@ -196,7 +267,7 @@ class SettingsActivity : AppCompatActivity(), PinCallback {
                         it.data?.let { isEnabled ->
                             cpiTFALoading.visibility = View.INVISIBLE
                             swTwoFactor.visibility = View.VISIBLE
-                            setSwitchChecked(isEnabled)
+                            set2FASwitchChecked(isEnabled)
                         }
                     }
                     is Resource.Loading -> {
@@ -294,6 +365,30 @@ class SettingsActivity : AppCompatActivity(), PinCallback {
             settingsViewModel.getBiometric().let {
                 swBiometric.isChecked = it == true
             }
+
+            settingsViewModel.getAutoBackup().let {
+                swAutoBackup.isChecked = it
+                chip1.isEnabled = it
+                chip3.isEnabled = it
+                chip7.isEnabled = it
+
+                if (it) {
+                    getBackUpInterval()
+                }
+            }
+        }
+    }
+
+    private fun getBackUpInterval() {
+        settingsViewModel.getBackupInterval().let { interval ->
+            binding?.cgIntervalSelector?.check(
+                when (interval) {
+                    1 -> R.id.chip1
+                    3 -> R.id.chip3
+                    7 -> R.id.chip7
+                    else -> { R.id.chip1 }
+                }
+            )
         }
     }
 
@@ -304,9 +399,39 @@ class SettingsActivity : AppCompatActivity(), PinCallback {
         Process.killProcess(Process.myPid())
     }
 
-    private fun setSwitchChecked(checked: Boolean) {
-        isUserAction = false
+    private fun set2FASwitchChecked(checked: Boolean) {
+        is2FAUserAction = false
         binding?.swTwoFactor?.isChecked = checked
+    }
+
+    private fun showXiaomiAutostartDialog() {
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.auto_backup))
+            .setMessage(getString(R.string.enable_mi_autostart))
+            .setPositiveButton(getString(R.string.ok)) { _, _ ->
+                startActivity(
+                    Intent().setComponent(
+                        ComponentName(
+                            "com.miui.securitycenter",
+                            "com.miui.permcenter.autostart.AutoStartManagementActivity"
+                        )
+                    )
+                )
+            }
+            .setNegativeButton(getString(R.string.cancel), null)
+            .show()
+    }
+
+    private fun disableOptimizationDialog() {
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.auto_backup))
+            .setMessage(getString(R.string.disable_optimization_message))
+            .setPositiveButton(getString(R.string.ok)) { _, _ ->
+                val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                startActivity(intent)
+            }
+            .setNegativeButton(getString(R.string.cancel), null)
+            .show()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

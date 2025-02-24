@@ -41,4 +41,12 @@ JNIEXPORT jstring JNICALL
         const char *nakedHost = "privynoteapp.my.id";
         return env->NewStringUTF(nakedHost);
     }
+
+    JNIEXPORT jstring JNICALL
+    Java_com_juanarton_privynote_core_utils_Cryptography_00024Companion_publicKey(
+            JNIEnv *env, jobject thiz
+    ) {
+        const char *publicKey = "CM745wsS8wEK5wEKPXR5cGUuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmNyeXB0by50aW5rLkVjaWVzQWVhZEhrZGZQdWJsaWNLZXkSowESXAoECAIQAxJSElAKOHR5cGUuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmNyeXB0by50aW5rLkFlc0N0ckhtYWNBZWFkS2V5EhIKBgoCCBAQEBIICgQIAxAQECAYARgBGiAnMK3NhFHavAIadY/L52XhjxjZmCCCWBy1scXreoDCSCIhAKaW44ndb0YJJtOjY+BYCOcyUz+f2231pn6RNzJZRPfPGAMQARjO+OcLIAE=";
+        return env->NewStringUTF(publicKey);
+    }
 }

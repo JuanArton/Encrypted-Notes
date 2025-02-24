@@ -3,6 +3,7 @@ package com.juanarton.privynote.ui.activity.pin
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -46,6 +47,7 @@ class PinActivity : AppCompatActivity() {
             insets
         }
 
+        Cryptography.initTink()
         val uid = intent.getStringExtra("uid")
         val username = intent.getStringExtra("username")?: buildString {
             append("User")

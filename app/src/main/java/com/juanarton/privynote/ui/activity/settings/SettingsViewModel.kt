@@ -52,6 +52,8 @@ class SettingsViewModel @Inject constructor(
         const val LIGHT = "LIGHT"
         const val SYSTEM = "SYSTEM"
         const val BIOMETRIC = "BIOMETRIC"
+        const val AUTO_BACKUP = "AUTO BACKUP"
+        const val BACKUP_INTERVAL = "BACKUP INTERVAL"
         const val APP_PIN = "AppPin"
     }
 
@@ -73,6 +75,24 @@ class SettingsViewModel @Inject constructor(
     fun setBiometric(value: Boolean) {
         editor.putBoolean(BIOMETRIC, value)
         editor.apply()
+    }
+
+    fun getAutoBackup(): Boolean {
+        return sPref.getBoolean(AUTO_BACKUP, true)
+    }
+
+    fun setAutoBackup(value: Boolean) {
+        editor.putBoolean(AUTO_BACKUP, value)
+        editor.apply()
+    }
+
+    fun setBackupInterval(value: Int) {
+        editor.putInt(BACKUP_INTERVAL, value)
+        editor.commit()
+    }
+
+    fun getBackupInterval(): Int {
+        return sPref.getInt(BACKUP_INTERVAL, 1)
     }
 
     fun setAppPin(value: Int) {
