@@ -62,26 +62,29 @@ class NoteViewModel @Inject constructor(
     fun permanentDelete(id: String) = localNotesRepoUseCase.permanentDeleteNotes(id)
 
     fun addAtt(
-        uri: Uri, contentResolver: ContentResolver, context: Context
+        uri: List<Uri>, contentResolver: ContentResolver, context: Context
     ) {
-        val key = getCipherKey()
-        if (!key.isNullOrEmpty()) {
-            val deserializedKey = Cryptography.deserializeKeySet(key)
+        var resultTmp =
+        uri.forEach { fileUri ->
+            val key = getCipherKey()
+            if (!key.isNullOrEmpty()) {
+                val deserializedKey = Cryptography.deserializeKeySet(key)
 
-            val originalBytes = Utils.uriToByteArray(uri, contentResolver)
-            val encryptedBytes = Cryptography.encrypt(originalBytes, deserializedKey)
+                val originalBytes = Utils.uriToByteArray(fileUri, contentResolver)
+                val encryptedBytes = Cryptography.encrypt(originalBytes, deserializedKey)
 
-            val imagesDir = File(context.filesDir, "images")
-            if (!imagesDir.exists()) {
-                imagesDir.mkdirs()
-            }
+                val imagesDir = File(context.filesDir, "images")
+                if (!imagesDir.exists()) {
+                    imagesDir.mkdirs()
+                }
 
-            val fileName = getFileNameFromUri(uri, contentResolver) ?: "encrypted_file"
-            val file = File("${context.filesDir}"+"/images" , fileName)
+                val fileName = getFileNameFromUri(fileUri, contentResolver) ?: "encrypted_file"
+                val file = File("${context.filesDir}"+"/images" , fileName)
 
-            viewModelScope.launch {
-                localNotesRepoUseCase.writeFileToDisk(file, encryptedBytes).collect {
-                    _addAtt.value = it
+                viewModelScope.launch {
+                    localNotesRepoUseCase.writeFileToDisk(file, encryptedBytes).collect {
+                        _addAtt.value = it
+                    }
                 }
             }
         }

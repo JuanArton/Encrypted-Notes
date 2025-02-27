@@ -212,10 +212,22 @@ class NoteActivity : AppCompatActivity() {
 
         selectImageLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
-                val imageUri: Uri? = result.data?.data
-                imageUri?.let { noteViewModel.addAtt(it, contentResolver, this) }
+                val clipData = result.data?.clipData
+                val imageUris = mutableListOf<Uri>()
+
+                if (clipData != null) {
+                    for (i in 0 until clipData.itemCount) {
+                        val imageUri = clipData.getItemAt(i).uri
+                        imageUris.add(imageUri)
+                    }
+                } else {
+                    result.data?.data?.let { imageUris.add(it) }
+                }
+
+                noteViewModel.addAtt(imageUris, contentResolver, this)
             }
         }
+
     }
 
     private fun initNoteData() {
@@ -455,9 +467,11 @@ class NoteActivity : AppCompatActivity() {
     }
 
     private fun selectImage() {
-        val intent = Intent(Intent.ACTION_PICK).apply {
+        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
             type = "image/*"
+            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
         }
+
         selectImageLauncher.launch(intent)
     }
 
